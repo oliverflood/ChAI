@@ -14,9 +14,12 @@ var images = [i in imagesD]
     Tensor.load(baseDir + "examples/data/datasets/mnist/image_idx_" + i:string + ".chdata"): real(32);
 
 // Load model across target locales.
-const model = loadModel(specFile = baseDir + "scripts/models/cnn/specification.json",
-                        weightsFolder = baseDir + "scripts/models/cnn/",
-                        targetLocales = Locales);
+const model = loadModelAcrossLocales(
+                specFile = baseDir + "scripts/models/cnn/specification.json",
+                weightsFolder = baseDir + "scripts/models/cnn/",
+                targetLocales = Locales,
+                inputShape = images[0].array(3).shape
+              );
 
 // Create array of output results.
 var preds: [imagesD] int;
