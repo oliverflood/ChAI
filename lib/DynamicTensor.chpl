@@ -341,7 +341,7 @@ proc type dynamicTensor.matvecmulFast(m: dynamicTensor(?eltType),v: dynamicTenso
 }
 
 proc dynamicTensor.topk(k: int): dynamicTensor(int) {
-  return staticTensor.topk(this.tensorize(1),k).eraseRank();
+    return staticTensor.topk(this.tensorize(1),k).eraseRank();
 }
 
 proc dynamicTensor.argmax(): int {
