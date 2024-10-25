@@ -719,19 +719,45 @@ class Module {
     // iter modules(): borrowed Module(eltType) {
     //     for (n,m) in this.moduleFields()
     // }
-    proc loadPyTorchDump(modelPath: string, param debug = false) {
-        forall (n,m) in namedModules() {
-            const name = m.moduleName;
-            if debug then writeln((n,name,m.signature));
+
+
+    proc loadSingleParameter(parameter: Parameter(?), mod: Module(?), modelPath: string, prefix: string = "", indent: string, param debug) {
+        const paramName = parameter.moduleName;
+        const name = prefix + paramName[(mod.moduleName.size + 1)..];
+        const paramPath = modelPath + name + ".chdata";
+        if debug then
+            writeln(indent,"Loading ", name, " from ", paramPath);
+        parameter.data = Tensor.load(paramPath) : eltType;
+    }
+
+    // Define the loadParameters function
+    proc loadParameters(mod, modelPath: string, prefix: string = "", indent: string, param debug) {
+        for (_, m) in mod.subModules.items() {
+            const modName = m.moduleName;
             if var p = m : borrowed Parameter(eltType)? {
-                const paramName = name[(moduleName.size + 1)..];
-                const paramPath = modelPath + paramName + ".chdata";
-                if debug then writeln("Loading ",paramName," from ", paramPath);
-                var loaded = Tensor.load(paramPath) : eltType;
-                p!.data = loaded;
+                loadSingleParameter(p, mod, modelPath, prefix, indent+"\t", debug);
+            }
+            else if var sm = m : borrowed Sequential(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=2);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+            } else if var sm = m : borrowed Module(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=1);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+            } else {
+                halt("Unknown module type: ", m);
             }
         }
     }
+
+    // Modify the loadPyTorchDump method to call loadParameters
+    proc loadPyTorchDump(modelPath: string, param debug = false) {
+        loadParameters(this, modelPath, prefix="", indent="", debug);
+    }
+
 
     proc attributes(): moduleAttributes {
         var ms = new map(string,moduleAttributes);
