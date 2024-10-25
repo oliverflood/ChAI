@@ -949,21 +949,25 @@ class Conv2D : Module(?) {
 class MaxPool : Module(?) {
     var poolSize: int;
     var stride: int;
+    var padding: int;
+    var dilation: int;
 
-    proc init(type eltType = real, poolSize: int, stride: int = -1) {
+    proc init(type eltType = real, poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) {
         super.init(eltType);
         this.poolSize = poolSize;
         if stride == -1 then
           this.stride = poolSize;
         else
           this.stride = stride;
+        this.padding = padding;
+        this.dilation = dilation;
     }
 
-    proc init(poolSize: int, stride: int = -1) do
-        this.init(real,poolSize, stride);
+    proc init(poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) do
+        this.init(real,poolSize, stride, padding, dilation);
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
-        return input.maxPool(poolSize, stride);
+        return input.maxPool(poolSize, stride, padding, dilation);
     }
 
     override proc attributes(): moduleAttributes {
@@ -971,7 +975,9 @@ class MaxPool : Module(?) {
             "MaxPool",
             moduleName,
             ("poolSize", poolSize),
-            ("stride", stride));
+            ("stride", stride),
+            ("padding", padding),
+            ("dilation", dilation));
     }
 }
 

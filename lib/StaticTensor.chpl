@@ -288,13 +288,13 @@ proc staticTensor.dilate(dil: int): staticTensor(3,eltType) where this.rank == 3
     return dilated;
 }
 
-proc staticTensor.maxPool(poolSize:int) do return this.maxPool(poolSize,poolSize);
-proc staticTensor.maxPool(poolSize: int, stride: int): staticTensor(3,eltType) where this.rank == 3 {
+proc staticTensor.maxPool(poolSize:int) do return this.maxPool(poolSize,poolSize,padding=0,dilation=1);
+proc staticTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: int): staticTensor(3,eltType) where this.rank == 3 {
     var pool = new staticTensor(3,eltType);
     on this.device {
         ref dat = this.array;
         ref pl = pool.array;
-        const p = ndarray.maxPool(dat,poolSize, stride);
+        const p = ndarray.maxPool(dat,poolSize, stride, padding, dilation);
         pl.reshapeDomain(p.domain);
         pl = p;
     }

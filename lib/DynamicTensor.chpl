@@ -262,11 +262,11 @@ proc dynamicTensor.softmax(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.maxPool(poolSize: int) do return this.maxPool(poolSize,stride=poolSize);
-proc dynamicTensor.maxPool(poolSize: int, stride: int): dynamicTensor(eltType) {
+proc dynamicTensor.maxPool(poolSize: int) do return this.maxPool(poolSize,stride=poolSize, padding=0, dilation=1);
+proc dynamicTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: int): dynamicTensor(eltType) {
     for param rank in 3..3 {
         if this.checkRank(rank) then
-            return this.tensorize(rank).maxPool(poolSize, stride).eraseRank();
+            return this.tensorize(rank).maxPool(poolSize, stride, padding, dilation).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.maxPool.");
     return new dynamicTensor(eltType);

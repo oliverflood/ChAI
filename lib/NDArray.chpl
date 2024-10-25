@@ -975,32 +975,50 @@ proc type ndarray.convolve(features: ndarray(3,?eltType), kernel: ndarray(4,eltT
 
 
 proc type ndarray.maxPool(features: ndarray(3, ?eltType), poolSize: int) do return this.maxPool(features,poolSize,poolSize);
-proc type ndarray.maxPool(features: ndarray(3,?eltType),poolSize: int, stride: int): ndarray(3,eltType) {
+proc type ndarray.maxPool(features: ndarray(3,?eltType),poolSize: int, stride: int, padding: int = 0, dilation: int = 1): ndarray(3,eltType) {
+    const (channels, height, width) = features.shape;
 
-    const (channels,height,width) = features.shape;
-    if (height % poolSize != 0) || (width % poolSize != 0) {
-        const moreH = (Math.ceil(height:real / poolSize:real): int) * poolSize;
-        const moreW = (Math.ceil(width:real / poolSize:real): int) * poolSize;
-        return ndarray.maxPool(features.reshape(channels,moreH,moreW),poolSize,stride);
-    }
+    // Calculate the effective pool size considering dilation
+    // effectivePoolSize = poolSize + (poolSize - 1) * (dilation - 1)
+    // Ex: poolSize = 2, dilation = 1 -> effectivePoolSize = 2
+    // Ex: poolSize = 3, dilation = 2 -> effectivePoolSize = 5
+    // The dilation controls the stride within the pooling window
+    const effectivePoolSize = poolSize + (poolSize - 1) * (dilation - 1);
 
-    const newHeight: int = (height - poolSize) / stride + 1;
-    const newWidth: int = (width - poolSize) / stride + 1;
-    const dom = util.domainFromShape(channels,newHeight,newWidth);
-    var pool = new ndarray(dom,eltType);
+    // Calculate the new height and width after padding
+    // Add zeroes to the height and width only, not channels
+    const paddedHeight = height + 2 * padding;
+    const paddedWidth = width + 2 * padding;
+
+    // Calculate the new height and width after pooling
+    // hOut = floor((hIn + 2 * padding - dilation *(poolSize -1 ) - 1) / stride) + 1
+    // wOut = floor((wIn + 2 * padding - dilation *(poolSize -1 ) - 1) / stride) + 1
+    const newHeight: int = Math.floor((paddedHeight - dilation * (poolSize - 1) - 1) / stride):int + 1;
+    const newWidth: int = Math.floor((paddedWidth - dilation * (poolSize - 1) - 1) / stride):int + 1;
+
+    // Create a new domain and ndarray for the result
+    const dom = util.domainFromShape(channels, newHeight, newWidth);
+    var pool = new ndarray(dom, eltType);
     ref dat = pool.data;
     ref fet = features.data;
-    const poolDom = util.domainFromShape(poolSize,poolSize);
-    // @assertOnGpu
-    forall (c,h,w) in dom.every() {
-        const hs = h * stride;
-        const ws = w * stride;
-        var mx: eltType = fet[c,h,w];
-        for (ph,pw) in poolDom {
-            const x: eltType = fet[c,ph + hs,pw + ws];
-            mx = Math.max(x,mx);
+
+    // Create a domain for the pooling window
+    const poolDom = util.domainFromShape(poolSize, poolSize);
+
+    // Perform max pooling with padding and dilation
+    forall (c, h, w) in dom.every() {
+        const hs = h * stride - padding;
+        const ws = w * stride - padding;
+        var mx: eltType = -Math.inf: eltType; // Initialize to negative infinity for max pooling
+        for (ph, pw) in poolDom {
+            const hIndex = hs + ph * dilation;
+            const wIndex = ws + pw * dilation;
+            if hIndex >= 0 && hIndex < height && wIndex >= 0 && wIndex < width {
+                const x: eltType = fet[c, hIndex, wIndex];
+                mx = Math.max(x, mx);
+            }
         }
-        dat[c,h,w] = mx;
+        dat[c, h, w] = mx;
     }
     return pool;
 }
