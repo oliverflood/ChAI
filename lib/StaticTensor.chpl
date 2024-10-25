@@ -333,6 +333,7 @@ proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: e
     const v = value;
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType;
+    A = value;
     var t = new staticTensor(A);
     return t;
 }
