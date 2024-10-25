@@ -185,10 +185,15 @@ proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor
                     return (at - bt).eraseRank();
                 when "*" do
                     return (at * bt).eraseRank();
-                // when "/" do
-                //     te = (at / bt).meta;
+                when "/" do
+                    return (at / bt).eraseRank();
             }
         }
+        if a.checkRank(rank) then
+            for param rankB in 1..maxRank {
+                if b.checkRank(rankB) then
+                    halt("Rank mismatch in zipBinOp \"" +opName+ "\".  a has rank " + rank : string + " and b has rank " + rankB : string);
+            }
     }
     halt("Degenerate initialization of dynamicTensor.");
 
@@ -215,6 +220,9 @@ operator -(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(
 
 operator *(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("*",a,b);
+
+operator /(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
+    return zipBinOp("/",a,b);
 
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
