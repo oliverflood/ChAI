@@ -367,6 +367,36 @@ proc type dynamicTensor.ones(args...) do
 proc type dynamicTensor.zeros(args...) do
     return staticTensor.zeros((...args)).eraseRank();
 
+proc type dynamicTensor.valueLike(t: dynamicTensor(?eltType), value: eltType): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.valueLike(t.tensorize(rank),value).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.valueLike.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.broadcast(shape: int...): dynamicTensor(eltType) {
+    for param rank in 3..3 {
+        if this.checkRank(rank) {
+            return this.tensorize(rank).broadcast((...shape)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.broadcast.");
+    return new dynamicTensor(eltType);
+}
+
+proc type dynamicTensor.sqrt(t: dynamicTensor(real)): dynamicTensor(real) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.sqrt(t.tensorize(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in sqrt.");
+    return new dynamicTensor(real);
+}
+
 proc main() {
 
     // Just some examples. 

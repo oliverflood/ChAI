@@ -349,7 +349,25 @@ proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,real) do
 proc type staticTensor.ones(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),value=1 : eltType);
 
+proc type staticTensor.valueLike(t: staticTensor(?rank,?eltType),value: eltType): staticTensor(rank,eltType) {
+    return staticTensor.fromShape(eltType,(...t.array.domain.shape),value);
+}
 
+proc staticTensor.broadcast(shape: int...rank): staticTensor(rank,eltType) {
+    return this.expand((...shape));
+}
+
+proc type staticTensor.sqrt(t: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) {
+    var retVal = new staticTensor(rank,eltType);
+    on t.device {
+        ref dat = t.array;
+        ref ret = retVal.array;
+        const r = ndarray.sqrt(dat);
+        ret.reshapeDomain(r.domain);
+        ret = r;
+    }
+    return retVal;
+}
 
 config const n = 100;
 config const diag = false;

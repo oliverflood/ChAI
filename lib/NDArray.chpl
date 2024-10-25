@@ -1046,6 +1046,21 @@ proc type ndarray.adaptiveAvgPool2d(features: ndarray(3,?eltType),outputSize: in
     return pool;
 }
 
+
+
+
+proc type ndarray.sqrt(array: ndarray(?rank,?eltType)): ndarray(rank,eltType) {
+    const dom = array.domain;
+    var sqrtArr = new ndarray(dom,eltType);
+    ref sqrtData = sqrtArr.data;
+    const ref thisData = array.data;
+    // @assertOnGpu
+    forall i in dom.every() {
+        sqrtData[i] = Math.sqrt(thisData[i]);
+    }
+    return sqrtArr;
+}
+
 proc type ndarray.matvecmul(mat: ndarray(2,?eltType),vec: ndarray(1,eltType)): ndarray(1,eltType) {
     const (m,n) = mat.shape;
     const (n_,) = vec.shape;
