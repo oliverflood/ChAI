@@ -882,15 +882,18 @@ class Conv2D : Module(?) {
     var stride: int;
     var padding: int;
     var kernel: owned Parameter(eltType);
-    var bias: owned Parameter(eltType);
+    var bias: owned Parameter(eltType)?;
 
-    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0) {
+    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0, bias: bool = true) {
         super.init(eltType);
         this.kernelShape = (features,channels,kernel,kernel);
         this.stride = stride;
         this.padding = padding;
         this.kernel = new Parameter(Tensor.arange(features,channels,kernel,kernel) : eltType);
-        this.bias = new Parameter(Tensor.arange(features) : eltType);
+        if bias then
+            this.bias = new Parameter(Tensor.arange(features) : eltType);
+        else
+            this.bias = nil;
         init this;
     }
 
@@ -920,7 +923,8 @@ class Conv2D : Module(?) {
         // var bias = Tensor.arange(features);
 
         addModule("weight",kernel);
-        addModule("bias",bias);
+        if bias != nil then
+            addModule("bias",bias!);
     }
 
     proc init(channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0) {
@@ -929,7 +933,7 @@ class Conv2D : Module(?) {
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
         var weights = this.kernel.data;
-        var bias = this.bias.data;
+        var bias = if this.bias != nil then this.bias!.data else Tensor.zeros(this.kernelShape[0]);
         return Tensor.convolve(input,weights,bias,stride,padding);
     }
 
