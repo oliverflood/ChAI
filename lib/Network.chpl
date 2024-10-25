@@ -800,17 +800,19 @@ class Sequential : Module(?) {
         init this;
         if overrideName then
             this.moduleName = moduleName;
+        else
+            this.moduleName = "sequential";
         for (name,m) in ms {
             addModule(name,m.borrow());
             mds.pushBack(m);
         }
     }
 
-    proc init(type eltType = real, in ms) {
+    proc init(type eltType = real, in ms, moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        this.moduleName = "sequential";
+        this.moduleName = moduleName;
         for param i in 0..<ms.size {
             var m : shared Module(eltType) = shared.adopt(owned.release(ms[i])!);
             addModule(i: string,m.borrow());
@@ -835,6 +837,21 @@ class Sequential : Module(?) {
 
     proc init(in ms: (owned Module(real)?)...?rank) do
         this.init(real, ms);
+
+    proc init(type eltType, param overrideName = false, moduleName: string = "sequential") {
+        super.init(eltType);
+        this.mds = new list(shared Module(eltType));
+        init this;
+        if overrideName then
+            this.moduleName = moduleName;
+        else
+            this.moduleName = "sequential";
+    }
+
+    proc addModule(name: string, m: shared Module(eltType)) {
+        mds.pushBack(m);
+        addModule(name,m.borrow());
+    }
 
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
