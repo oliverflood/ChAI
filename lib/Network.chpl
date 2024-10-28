@@ -976,7 +976,7 @@ class Conv2D : Module(?) {
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
         var weights = this.kernel.data;
-        var bias = if this.bias != nil then this.bias!.data else Tensor.zeros(this.kernelShape[0]);
+        var bias = if this.bias != nil then this.bias!.data else Tensor.zeros(this.kernelShape[0]):eltType;
         return Tensor.convolve(input,weights,bias,stride,padding);
     }
 
