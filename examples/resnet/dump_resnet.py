@@ -9,5 +9,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 
 import chai
 
+os.makedirs('models', exist_ok=True)
 model.chai_dump('models/resnet50','resnet50', with_json=False, verbose=True)
 
