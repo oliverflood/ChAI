@@ -134,7 +134,7 @@ module Resnet {
                     , "downsample"
                     );
             } else {
-                this.downsample = new Sequential(eltType, true, "downsample");
+                this.downsample = new Sequential(eltType, "downsample");
                 this.emptyDownsample = true;
             }
 
@@ -182,7 +182,7 @@ module Resnet {
             var width = planes; // width = int(planes * (base_width / 64.0)) * groups but groups = 1 and base_width = 64
             this.conv1 = new Conv2D(eltType, inplanes, width, kernel=1, stride=1, bias=false);
             this.bn1 = new BatchNorm2D(eltType, size=width);
-            this.conv2 = new Conv2D(eltType, width, width, kernel=3, stride=stride, padding=1, bias=false); // we don't have padding implemented yet
+            this.conv2 = new Conv2D(eltType, width, width, kernel=3, stride=stride, padding=1, bias=false);
             this.bn2 = new BatchNorm2D(eltType, size=width);
             this.conv3 = new Conv2D(eltType, width, planes * expansion, kernel=1, bias=false);
             this.bn3 = new BatchNorm2D(eltType, size=planes * expansion);
@@ -193,7 +193,7 @@ module Resnet {
                     , "downsample"
                     );
             } else {
-                this.downsample = new Sequential(eltType, true, "downsample");
+                this.downsample = new Sequential(eltType, "downsample");
                 this.emptyDownsample = true;
             }
 
@@ -311,28 +311,3 @@ module Resnet {
     }
 
 }  // End of module Resnet
-
-
-// Use Resnet50
-
-// var model = Network.loadModel(specFile="./models/resnet50/specification.json",
-//               weightsFolder="./models/resnet50/",
-//               dtype=dtype);
-
-module LoadTest {
-    use Resnet;
-
-    // proc main(){
-    //     const modelPath = "models/resnet50/";
-
-    //     var resnet = new ResNet50(dtype, numClasses=1000);
-
-
-    //     for (n,_) in resnet.moduleFields() {
-    //         writeln(n);
-    //         // writeln("\t", m);
-    //     }
-
-    //     resnet.loadPyTorchDump(modelPath);
-    // }
-}

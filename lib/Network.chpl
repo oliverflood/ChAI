@@ -794,14 +794,12 @@ class Parameter : Module(?) {
 class Sequential : Module(?) {
     var mds: list(shared Module(eltType));
 
-    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), param overrideName = false, moduleName: string = "") {
+    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        if overrideName then
-            this.moduleName = moduleName;
-        else
-            this.moduleName = "sequential";
+
+        this.moduleName = moduleName;
         for (name,m) in ms {
             addModule(name,m.borrow());
             mds.pushBack(m);
@@ -838,14 +836,12 @@ class Sequential : Module(?) {
     proc init(in ms: (owned Module(real)?)...?rank) do
         this.init(real, ms);
 
-    proc init(type eltType, param overrideName = false, moduleName: string = "sequential") {
+    proc init(type eltType, moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        if overrideName then
-            this.moduleName = moduleName;
-        else
-            this.moduleName = "sequential";
+
+        this.moduleName = moduleName;
     }
 
     proc addModule(name: string, m: shared Module(eltType)) {

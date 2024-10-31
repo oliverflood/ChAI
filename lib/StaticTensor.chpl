@@ -97,12 +97,12 @@ proc tensorFromCtx(param rank: int, type eltType, ctx): staticTensor(rank,eltTyp
 
 operator +(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new addOp(rank,eltType,a.meta,b.meta);
-    return tensorFromCtx(rank,eltType,ctx);    
+    return tensorFromCtx(rank,eltType,ctx);
 }
 
 operator -(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new subOp(a.meta,b.meta);
-    return tensorFromCtx(rank,eltType,ctx); 
+    return tensorFromCtx(rank,eltType,ctx);
 }
 
 operator *(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
@@ -333,7 +333,7 @@ proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: e
     const v = value;
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType;
-    A = value;
+    A = v;
     var t = new staticTensor(A);
     return t;
 }

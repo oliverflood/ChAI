@@ -43,13 +43,6 @@ proc main(args: [] string) {
   const modelPath = "models/resnet50/";
   resnet.loadPyTorchDump(modelPath);
 
-  // for (n,_) in resnet.namedModules() {
-  //     writeln(n);
-  //     // writeln("\t", m);
-  // }
-
-  // writeln(resnet.signature);
-
   var files = args[1..];
 
   for f in files {
