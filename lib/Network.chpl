@@ -295,7 +295,7 @@ proc moduleFromSpec(
                 }
             }
 
-            return new Sequential(dtype,sms,overrideName=true,moduleName=ms.layerType);
+            return new Sequential(dtype, sms, moduleName=ms.layerType);
         }
     }
     halt("This should not happen");
