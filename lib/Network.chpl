@@ -719,19 +719,45 @@ class Module {
     // iter modules(): borrowed Module(eltType) {
     //     for (n,m) in this.moduleFields()
     // }
-    proc loadPyTorchDump(modelPath: string, param debug = false) {
-        forall (n,m) in namedModules() {
-            const name = m.moduleName;
-            if debug then writeln((n,name,m.signature));
+
+
+    proc loadSingleParameter(parameter: Parameter(?), mod: Module(?), modelPath: string, prefix: string = "", indent: string, param debug) {
+        const paramName = parameter.moduleName;
+        const name = prefix + paramName[(mod.moduleName.size + 1)..];
+        const paramPath = modelPath + name + ".chdata";
+        if debug then
+            writeln(indent,"Loading ", name, " from ", paramPath);
+        parameter.data = Tensor.load(paramPath) : eltType;
+    }
+
+    // Define the loadParameters function
+    proc loadParameters(mod, modelPath: string, prefix: string = "", indent: string, param debug) {
+        for (_, m) in mod.subModules.items() {
+            const modName = m.moduleName;
             if var p = m : borrowed Parameter(eltType)? {
-                const paramName = name[(moduleName.size + 1)..];
-                const paramPath = modelPath + paramName + ".chdata";
-                if debug then writeln("Loading ",paramName," from ", paramPath);
-                var loaded = Tensor.load(paramPath) : eltType;
-                p!.data = loaded;
+                loadSingleParameter(p, mod, modelPath, prefix, indent+"\t", debug);
+            }
+            else if var sm = m : borrowed Sequential(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=2);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+            } else if var sm = m : borrowed Module(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=1);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+            } else {
+                halt("Unknown module type: ", m);
             }
         }
     }
+
+    // Modify the loadPyTorchDump method to call loadParameters
+    proc loadPyTorchDump(modelPath: string, param debug = false) {
+        loadParameters(this, modelPath, prefix="", indent="", debug);
+    }
+
 
     proc attributes(): moduleAttributes {
         var ms = new map(string,moduleAttributes);
@@ -768,23 +794,23 @@ class Parameter : Module(?) {
 class Sequential : Module(?) {
     var mds: list(shared Module(eltType));
 
-    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), param overrideName = false, moduleName: string = "") {
+    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        if overrideName then
-            this.moduleName = moduleName;
+
+        this.moduleName = moduleName;
         for (name,m) in ms {
             addModule(name,m.borrow());
             mds.pushBack(m);
         }
     }
 
-    proc init(type eltType = real, in ms) {
+    proc init(type eltType = real, in ms, moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        this.moduleName = "sequential";
+        this.moduleName = moduleName;
         for param i in 0..<ms.size {
             var m : shared Module(eltType) = shared.adopt(owned.release(ms[i])!);
             addModule(i: string,m.borrow());
@@ -809,6 +835,19 @@ class Sequential : Module(?) {
 
     proc init(in ms: (owned Module(real)?)...?rank) do
         this.init(real, ms);
+
+    proc init(type eltType, moduleName: string = "sequential") {
+        super.init(eltType);
+        this.mds = new list(shared Module(eltType));
+        init this;
+
+        this.moduleName = moduleName;
+    }
+
+    proc addModule(name: string, m: shared Module(eltType)) {
+        mds.pushBack(m);
+        addModule(name,m.borrow());
+    }
 
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
@@ -882,15 +921,18 @@ class Conv2D : Module(?) {
     var stride: int;
     var padding: int;
     var kernel: owned Parameter(eltType);
-    var bias: owned Parameter(eltType);
+    var bias: owned Parameter(eltType)?;
 
-    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0) {
+    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0, bias: bool = true) {
         super.init(eltType);
         this.kernelShape = (features,channels,kernel,kernel);
         this.stride = stride;
         this.padding = padding;
         this.kernel = new Parameter(Tensor.arange(features,channels,kernel,kernel) : eltType);
-        this.bias = new Parameter(Tensor.arange(features) : eltType);
+        if bias then
+            this.bias = new Parameter(Tensor.arange(features) : eltType);
+        else
+            this.bias = nil;
         init this;
     }
 
@@ -920,7 +962,8 @@ class Conv2D : Module(?) {
         // var bias = Tensor.arange(features);
 
         addModule("weight",kernel);
-        addModule("bias",bias);
+        if bias != nil then
+            addModule("bias",bias!);
     }
 
     proc init(channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0) {
@@ -929,7 +972,7 @@ class Conv2D : Module(?) {
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
         var weights = this.kernel.data;
-        var bias = this.bias.data;
+        var bias = if this.bias != nil then this.bias!.data else Tensor.zeros(this.kernelShape[0]):eltType;
         return Tensor.convolve(input,weights,bias,stride,padding);
     }
 
@@ -949,21 +992,25 @@ class Conv2D : Module(?) {
 class MaxPool : Module(?) {
     var poolSize: int;
     var stride: int;
+    var padding: int;
+    var dilation: int;
 
-    proc init(type eltType = real, poolSize: int, stride: int = -1) {
+    proc init(type eltType = real, poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) {
         super.init(eltType);
         this.poolSize = poolSize;
         if stride == -1 then
           this.stride = poolSize;
         else
           this.stride = stride;
+        this.padding = padding;
+        this.dilation = dilation;
     }
 
-    proc init(poolSize: int, stride: int = -1) do
-        this.init(real,poolSize, stride);
+    proc init(poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) do
+        this.init(real,poolSize, stride, padding, dilation);
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
-        return input.maxPool(poolSize, stride);
+        return input.maxPool(poolSize, stride, padding, dilation);
     }
 
     override proc attributes(): moduleAttributes {
@@ -971,7 +1018,9 @@ class MaxPool : Module(?) {
             "MaxPool",
             moduleName,
             ("poolSize", poolSize),
-            ("stride", stride));
+            ("stride", stride),
+            ("padding", padding),
+            ("dilation", dilation));
     }
 }
 

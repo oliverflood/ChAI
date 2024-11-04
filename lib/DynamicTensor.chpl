@@ -185,10 +185,15 @@ proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor
                     return (at - bt).eraseRank();
                 when "*" do
                     return (at * bt).eraseRank();
-                // when "/" do
-                //     te = (at / bt).meta;
+                when "/" do
+                    return (at / bt).eraseRank();
             }
         }
+        if a.checkRank(rank) then
+            for param rankB in 1..maxRank {
+                if b.checkRank(rankB) then
+                    halt("Rank mismatch in zipBinOp \"" +opName+ "\".  a has rank " + rank : string + " and b has rank " + rankB : string);
+            }
     }
     halt("Degenerate initialization of dynamicTensor.");
 
@@ -215,6 +220,9 @@ operator -(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(
 
 operator *(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("*",a,b);
+
+operator /(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
+    return zipBinOp("/",a,b);
 
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
@@ -262,11 +270,11 @@ proc dynamicTensor.softmax(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.maxPool(poolSize: int) do return this.maxPool(poolSize,stride=poolSize);
-proc dynamicTensor.maxPool(poolSize: int, stride: int): dynamicTensor(eltType) {
+proc dynamicTensor.maxPool(poolSize: int) do return this.maxPool(poolSize,stride=poolSize, padding=0, dilation=1);
+proc dynamicTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: int): dynamicTensor(eltType) {
     for param rank in 3..3 {
         if this.checkRank(rank) then
-            return this.tensorize(rank).maxPool(poolSize, stride).eraseRank();
+            return this.tensorize(rank).maxPool(poolSize, stride, padding, dilation).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.maxPool.");
     return new dynamicTensor(eltType);
@@ -333,7 +341,7 @@ proc type dynamicTensor.matvecmulFast(m: dynamicTensor(?eltType),v: dynamicTenso
 }
 
 proc dynamicTensor.topk(k: int): dynamicTensor(int) {
-  return staticTensor.topk(this.tensorize(1),k).eraseRank();
+    return staticTensor.topk(this.tensorize(1),k).eraseRank();
 }
 
 proc dynamicTensor.argmax(): int {
@@ -358,6 +366,36 @@ proc type dynamicTensor.ones(args...) do
 
 proc type dynamicTensor.zeros(args...) do
     return staticTensor.zeros((...args)).eraseRank();
+
+proc type dynamicTensor.valueLike(t: dynamicTensor(?eltType), value: eltType): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.valueLike(t.tensorize(rank),value).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.valueLike.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.broadcast(shape: int...): dynamicTensor(eltType) {
+    for param rank in 3..3 {
+        if this.checkRank(rank) {
+            return this.tensorize(rank).broadcast((...shape)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.broadcast.");
+    return new dynamicTensor(eltType);
+}
+
+proc type dynamicTensor.sqrt(t: dynamicTensor(real)): dynamicTensor(real) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.sqrt(t.tensorize(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in sqrt.");
+    return new dynamicTensor(real);
+}
 
 proc main() {
 

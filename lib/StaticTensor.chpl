@@ -97,12 +97,12 @@ proc tensorFromCtx(param rank: int, type eltType, ctx): staticTensor(rank,eltTyp
 
 operator +(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new addOp(rank,eltType,a.meta,b.meta);
-    return tensorFromCtx(rank,eltType,ctx);    
+    return tensorFromCtx(rank,eltType,ctx);
 }
 
 operator -(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new subOp(a.meta,b.meta);
-    return tensorFromCtx(rank,eltType,ctx); 
+    return tensorFromCtx(rank,eltType,ctx);
 }
 
 operator *(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
@@ -288,13 +288,13 @@ proc staticTensor.dilate(dil: int): staticTensor(3,eltType) where this.rank == 3
     return dilated;
 }
 
-proc staticTensor.maxPool(poolSize:int) do return this.maxPool(poolSize,poolSize);
-proc staticTensor.maxPool(poolSize: int, stride: int): staticTensor(3,eltType) where this.rank == 3 {
+proc staticTensor.maxPool(poolSize:int) do return this.maxPool(poolSize,poolSize,padding=0,dilation=1);
+proc staticTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: int): staticTensor(3,eltType) where this.rank == 3 {
     var pool = new staticTensor(3,eltType);
     on this.device {
         ref dat = this.array;
         ref pl = pool.array;
-        const p = ndarray.maxPool(dat,poolSize, stride);
+        const p = ndarray.maxPool(dat,poolSize, stride, padding, dilation);
         pl.reshapeDomain(p.domain);
         pl = p;
     }
@@ -333,6 +333,7 @@ proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: e
     const v = value;
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType;
+    A = v;
     var t = new staticTensor(A);
     return t;
 }
@@ -349,7 +350,25 @@ proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,real) do
 proc type staticTensor.ones(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),value=1 : eltType);
 
+proc type staticTensor.valueLike(t: staticTensor(?rank,?eltType),value: eltType): staticTensor(rank,eltType) {
+    return staticTensor.fromShape(eltType,(...t.array.domain.shape),value);
+}
 
+proc staticTensor.broadcast(shape: int...rank): staticTensor(rank,eltType) {
+    return this.expand((...shape));
+}
+
+proc type staticTensor.sqrt(t: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) {
+    var retVal = new staticTensor(rank,eltType);
+    on t.device {
+        ref dat = t.array;
+        ref ret = retVal.array;
+        const r = ndarray.sqrt(dat);
+        ret.reshapeDomain(r.domain);
+        ret = r;
+    }
+    return retVal;
+}
 
 config const n = 100;
 config const diag = false;
@@ -716,7 +735,7 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
             writer.write("[");
         }
         writer.writef("%{##.#}",x);
-        
+
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
                 writer.write("  ");
