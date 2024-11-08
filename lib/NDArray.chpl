@@ -539,7 +539,7 @@ record ndarray : serializable {
         use Sort;
         record cmp: keyComparator { proc key(x) do return x(1); }
         var paired = [i in 0..<k] (topK(i), topKData(i));
-        sort(paired, comparator=new ReverseComparator(new cmp()));
+        sort(paired, comparator=new reverseComparator(new cmp()));
         var res = [p in paired] p(0);
         return new ndarray(res);
     }
