@@ -1,4 +1,3 @@
-
 import ChapelArray;
 import IO;
 use Remote;
@@ -1024,28 +1023,72 @@ proc type ndarray.maxPool(features: ndarray(3,?eltType),poolSize: int, stride: i
 }
 
 // adaptiveAvgPool2d
-proc type ndarray.adaptiveAvgPool2d(features: ndarray(3,?eltType),outputSize: int): ndarray(3,eltType) {
-    const (channels,height,width) = features.shape;
+proc type ndarray.adaptiveAvgPool2d(features: ndarray(3, ?eltType), outputSize: int): ndarray(3, eltType) {
+    const (channels, height, width) = features.shape;
     const newHeight = outputSize;
     const newWidth = outputSize;
-    const dom = util.domainFromShape(channels,newHeight,newWidth);
-    var pool = new ndarray(dom,eltType);
+    const dom = util.domainFromShape(channels, newHeight, newWidth);
+    var pool = new ndarray(dom, eltType);
     ref dat = pool.data;
     ref fet = features.data;
-    const poolDom = util.domainFromShape(height,width);
-    // @assertOnGpu
-    forall (c,h,w) in dom.every() {
-        const hs = h * height / newHeight;
-        const ws = w * width / newWidth;
+
+    // Calculate the size of each pooling region
+    const poolHeight = (height + newHeight - 1) / newHeight;
+    const poolWidth = (width + newWidth - 1) / newWidth;
+
+    // Perform adaptive average pooling
+    forall (c, h, w) in dom.every() {
+        const hs = (h * height) / newHeight;
+        const ws = (w * width) / newWidth;
+        const he = ((h + 1) * height + newHeight - 1) / newHeight;
+        const we = ((w + 1) * width + newWidth - 1) / newWidth;
+
         var sum: eltType = 0;
-        for (ph,pw) in poolDom {
-            sum += fet[c,ph + hs,pw + ws];
+        var count: int = 0;
+        for ph in hs..<he {
+            for pw in ws..<we {
+                if ph < height && pw < width {
+                    sum += fet[c, ph, pw];
+                    count += 1;
+                }
+            }
         }
-        dat[c,h,w] = sum / (height * width);
+        dat[c, h, w] = sum / count;
     }
     return pool;
 }
 
+
+proc type ndarray.mean(array: ndarray(?rank, ?eltType), axes: _tuple(int), keepDim: bool) {
+    // const newShape = if keepDim then array.shape else array.shape.removeIdx(axes); // FIXME
+    const newDom = util.domainFromShape((...array.shape));
+    var meanArr = new ndarray(newDom, eltType);
+
+    ref meanData = meanArr.data;
+    const ref thisData = array.data;
+
+    // @assertOnGpu
+    forall idx in newDom.every() {
+        var sum: eltType = 0;
+        var count: int = 0;
+        var origIdx: rank * int;
+        if idx.type == int {
+            origIdx(0) = idx;
+        } else {
+            origIdx = idx;
+        }
+
+        for i in 0..<array.shape(axes[0]) { // fixme
+            origIdx(axes[0]) = i;
+            sum += thisData(origIdx);
+            count += 1;
+        }
+
+        meanData(idx) = sum / count;
+    }
+
+    return meanArr;
+}
 
 
 
