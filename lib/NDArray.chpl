@@ -1059,39 +1059,6 @@ proc type ndarray.adaptiveAvgPool2d(features: ndarray(3, ?eltType), outputSize: 
 }
 
 
-proc type ndarray.mean(array: ndarray(?rank, ?eltType), axes: _tuple(int), keepDim: bool) {
-    // const newShape = if keepDim then array.shape else array.shape.removeIdx(axes); // FIXME
-    const newDom = util.domainFromShape((...array.shape));
-    var meanArr = new ndarray(newDom, eltType);
-
-    ref meanData = meanArr.data;
-    const ref thisData = array.data;
-
-    // @assertOnGpu
-    forall idx in newDom.every() {
-        var sum: eltType = 0;
-        var count: int = 0;
-        var origIdx: rank * int;
-        if idx.type == int {
-            origIdx(0) = idx;
-        } else {
-            origIdx = idx;
-        }
-
-        for i in 0..<array.shape(axes[0]) { // fixme
-            origIdx(axes[0]) = i;
-            sum += thisData(origIdx);
-            count += 1;
-        }
-
-        meanData(idx) = sum / count;
-    }
-
-    return meanArr;
-}
-
-
-
 proc type ndarray.sqrt(array: ndarray(?rank,?eltType)): ndarray(rank,eltType) {
     const dom = array.domain;
     var sqrtArr = new ndarray(dom,eltType);
