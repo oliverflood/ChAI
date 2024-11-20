@@ -1,11 +1,12 @@
 # Reference script to generate the correct answers for the module tests
 # You will need to install pytorch to run
+import argparse
 import torch
 import torch.nn as nn
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'ChAI', 'scripts')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scripts')))
 import chai
 
 
@@ -147,17 +148,30 @@ def test_dropout():
 
 
 def main():
-    # torch.manual_seed(5)
-    # test_dummy()
-    # test_load()
-    # test_linear()
-    # test_conv2d()
-    # test_maxpool2d()
-    # test_adaptiveavgpool2d()
-    # test_flatten()
-    # test_relu()
-    # test_softmax()
-    test_dropout()
+    torch.manual_seed(5)
+
+    parser = argparse.ArgumentParser(description="Run layer tests")
+    parser.add_argument('--dummy', action='store_const', const=test_dummy, help='Run test_dummy')
+    parser.add_argument('--load', action='store_const', const=test_load, help='Run test_load')
+    parser.add_argument('--linear', action='store_const', const=test_linear, help='Run test_linear')
+    parser.add_argument('--conv2d', action='store_const', const=test_conv2d, help='Run test_conv2d')
+    parser.add_argument('--maxpool2d', action='store_const', const=test_maxpool2d, help='Run test_maxpool2d')
+    parser.add_argument('--adaptiveavgpool2d', action='store_const', const=test_adaptiveavgpool2d, help='Run test_adaptiveavgpool2d')
+    parser.add_argument('--flatten', action='store_const', const=test_flatten, help='Run test_flatten')
+    parser.add_argument('--relu', action='store_const', const=test_relu, help='Run test_relu')
+    parser.add_argument('--softmax', action='store_const', const=test_softmax, help='Run test_softmax')
+    parser.add_argument('--dropout', action='store_const', const=test_dropout, help='Run test_dropout')
+
+    args = parser.parse_args()
+
+    # If no test function is selected, print help
+    if not any(vars(args).values()):
+        parser.print_help()
+
+    # Run the selected test function
+    for _, func in vars(args).items():
+        if func:
+            func()
 
 if __name__ == "__main__":
     main()
