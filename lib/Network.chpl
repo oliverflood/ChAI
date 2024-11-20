@@ -905,7 +905,7 @@ class Linear : Module(?) {
     }
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) do
-        return Tensor.matvecmulFast(par["weight"],input) + par["bias"];
+        return Tensor.matvecmulFast(weight.data,input) + bias.data;
 
     override proc attributes(): moduleAttributes {
         return new moduleAttributes(

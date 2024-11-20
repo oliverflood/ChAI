@@ -734,7 +734,7 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
             }
             writer.write("[");
         }
-        writer.writef("%{##.#}",x);
+        writer.writef("%{##.####}",x);
 
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
@@ -784,8 +784,8 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
             }
             writer.write("[");
         }
-        writer.writef("%{##.#}",x);
-        
+        writer.writef("%{##.####}",x);
+
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
                 writer.write("  ");

@@ -1,4 +1,3 @@
-
 import ChapelArray;
 import IO;
 use Remote;
@@ -1024,29 +1023,40 @@ proc type ndarray.maxPool(features: ndarray(3,?eltType),poolSize: int, stride: i
 }
 
 // adaptiveAvgPool2d
-proc type ndarray.adaptiveAvgPool2d(features: ndarray(3,?eltType),outputSize: int): ndarray(3,eltType) {
-    const (channels,height,width) = features.shape;
+proc type ndarray.adaptiveAvgPool2d(features: ndarray(3, ?eltType), outputSize: int): ndarray(3, eltType) {
+    const (channels, height, width) = features.shape;
     const newHeight = outputSize;
     const newWidth = outputSize;
-    const dom = util.domainFromShape(channels,newHeight,newWidth);
-    var pool = new ndarray(dom,eltType);
+    const dom = util.domainFromShape(channels, newHeight, newWidth);
+    var pool = new ndarray(dom, eltType);
     ref dat = pool.data;
     ref fet = features.data;
-    const poolDom = util.domainFromShape(height,width);
-    // @assertOnGpu
-    forall (c,h,w) in dom.every() {
-        const hs = h * height / newHeight;
-        const ws = w * width / newWidth;
+
+    // Calculate the size of each pooling region
+    const poolHeight = (height + newHeight - 1) / newHeight;
+    const poolWidth = (width + newWidth - 1) / newWidth;
+
+    // Perform adaptive average pooling
+    forall (c, h, w) in dom.every() {
+        const hs = (h * height) / newHeight;
+        const ws = (w * width) / newWidth;
+        const he = ((h + 1) * height + newHeight - 1) / newHeight;
+        const we = ((w + 1) * width + newWidth - 1) / newWidth;
+
         var sum: eltType = 0;
-        for (ph,pw) in poolDom {
-            sum += fet[c,ph + hs,pw + ws];
+        var count: int = 0;
+        for ph in hs..<he {
+            for pw in ws..<we {
+                if ph < height && pw < width {
+                    sum += fet[c, ph, pw];
+                    count += 1;
+                }
+            }
         }
-        dat[c,h,w] = sum / (height * width);
+        dat[c, h, w] = sum / count;
     }
     return pool;
 }
-
-
 
 
 proc type ndarray.sqrt(array: ndarray(?rank,?eltType)): ndarray(rank,eltType) {
