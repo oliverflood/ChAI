@@ -19,7 +19,7 @@ void setup() {
   println(Paths.get(".").toAbsolutePath().normalize().toString());
   println(Path.of("").toAbsolutePath().toString());
   println(this.getClass().getClassLoader().getResource("").getPath().toString());
-  chaiPath = Paths.get(sketchPath()).getParent().getParent();
+  chaiPath = Paths.get(sketchPath());//.getParent().getParent();
   imageSavePath = chaiPath.resolve("number.png");
   println(chaiPath.toString());
   println(imageSavePath.toString());
