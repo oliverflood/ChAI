@@ -1,0 +1,4 @@
+*.chdata
+*.json
+__pycache__/
+models/**

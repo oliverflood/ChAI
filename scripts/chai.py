@@ -83,7 +83,7 @@ def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=Tr
 
 
 def chai_dump(self,path_prefix,model_name,with_json=True,verbose=True):
-    return dump_model_parameters(self,path_prefix,model_name,with_json=True,verbose=True)
+    return dump_model_parameters(self,path_prefix,model_name,with_json,verbose)
 
 torch.nn.Module.chai_dump = chai_dump
 
