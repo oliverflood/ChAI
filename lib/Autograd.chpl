@@ -529,21 +529,12 @@ record sumOp : serializable {
 
     proc forward() {
         param newDim = rank - sumRank;
-        compilerAssert(newDim == outRank);
-        if newDim != outRank {
-            compilerWarning("rank = " + rank:string + ", sumRank = " + sumRank:string);
-            compilerWarning("newDim = " + newDim:string + ", outRank = " + outRank:string);
-        }
         if newDim == 0 {
             if rank == 1 {
                 return input.array.sum(0);
             }
             return input.array.sum((...axes)).squeeze(1);
         }
-        compilerWarning("rank = " + rank:string + ", sumRank = " + sumRank:string);
-        compilerWarning("newDim = " + newDim:string + ", outRank = " + outRank:string);
-        compilerWarning("got here!");
-        compilerWarning(input.array.sum((...axes)).type:string);
         return input.array.sum((...axes)).squeeze(outRank);
     }
     proc backward(grad: ndarray(outRank,eltType)): (ndarray(rank,eltType),) {
