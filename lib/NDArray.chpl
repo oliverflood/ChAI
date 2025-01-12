@@ -447,11 +447,17 @@ record ndarray : serializable {
                 newShape(i + offset) = oldShape(i);
             }
         }
+
         const dom = util.domainFromShape((...newShape));
         var me = new ndarray(dom,eltType);
         me.reshapeDomain(dom);
         ref meData = me.data;
-        forall (i,a) in zip(dom,this.data) do meData[i] = a;
+        // I had to change this 
+        // forall (i,a) in zip(dom,this.data) do meData[i] = a;
+        // to this 
+        forall i in 0..<dom.size do
+            meData[util.indexAt(i,(...newShape))] = this.data[util.indexAt(i,(...oldShape))];
+        // because of a type error about the dimensionality of `dom` and `this.data`. The new version is likely less performant. 
         return me;
     }
 

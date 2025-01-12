@@ -167,7 +167,8 @@ proc staticTensor.sum(axes: int...?r) {
     }
     var ctx = new sumOp(rank,eltType,r,axes,meta);
 
-    param newDim = if rank - r == 0 then 1 else rank - r;
+    param newDim = ctx.outRank; // if rank - r == 0 then 1 else rank - r;
+    compilerWarning(newDim:string);
     return tensorFromCtx(newDim,eltType,ctx);
 }
 
