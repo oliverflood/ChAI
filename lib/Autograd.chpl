@@ -411,6 +411,8 @@ record reshapeOp : serializable {
         const g = grad.reshape((...inputDom.shape));
         return (g,);
     }
+
+    proc spec : GradOpSpec do return new dict(("operation","Reshape"),("shape",shape:string));
 }
 
 record permuteOp : serializable {
@@ -429,6 +431,8 @@ record permuteOp : serializable {
         const inversePermutation = util.argsort((...permutation)); // This should be computed only once, in the initializer. 
         return (grad.permute((...inversePermutation)),);
     } 
+
+    proc spec : GradOpSpec do return new dict(("operation","Permute"),("axes",permutation:string));
 }
 
 
@@ -462,7 +466,7 @@ record expandOp : serializable {
         // return (g_,);
     } 
 
-
+    proc spec : GradOpSpec do return new dict(("operation","Expand"),("shape",expandedShape:string));
 }
 
 record padOp : serializable {
@@ -490,6 +494,7 @@ record padOp : serializable {
         return (g,);
     }
 
+    proc spec : GradOpSpec do return new dict(("operation","Pad"),("shape",arg:string),("value",value:string));
 }
 
 record shrinkOp : serializable {
@@ -516,6 +521,7 @@ record shrinkOp : serializable {
         return (g,);
     }
 
+    proc spec : GradOpSpec do return new dict(("operation","Shrink"),("shape",arg:string));
 }
 
 record sliceOp : serializable {
@@ -536,6 +542,7 @@ record sliceOp : serializable {
         return (g,);
     }
 
+    proc spec : GradOpSpec do return new dict(("operation","Slice"),("domain",dom:string));
 }
 
 record layerSliceOp : serializable {
@@ -563,6 +570,7 @@ record layerSliceOp : serializable {
         return (gBase,gMask);
     }
 
+    proc spec : GradOpSpec do return new dict(("operation","LayerSlice"),("maskDomain",maskDomain:string));
 }
 
 record sumOp : serializable {
@@ -635,6 +643,7 @@ record sumOp : serializable {
     //     return (grad.reshape(input.domain),);
     // } 
 
+    proc spec : GradOpSpec do return new dict(("operation","Sum"),("axes",axes:string));
 
 }
 
@@ -659,6 +668,7 @@ record maxOp : serializable {
         return input.array;
     }
     
+    proc spec : GradOpSpec do return new dict(("operation","Max"),("axes",axes:string));
 
 }
 
@@ -755,4 +765,6 @@ record conv2DOp : serializable {
 
         return (fetGrad,kerGrad);
     }
+
+    proc spec : GradOpSpec do return new dict(("operation","Conv2D"),("stride",stride:string),("padding",padding:string));
 }
