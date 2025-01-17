@@ -301,7 +301,7 @@ proc moduleFromSpec(
     halt("This should not happen");
 }
 
-proc modelFromSpecFile(path: string, type dtype=real(32), targetLocales: [] locale = empty_locales, inputShape: optional(?)) : owned Module(dtype) {
+proc modelFromSpecFile(path: string, type dtype=real(32), targetLocales: [] locale = empty_locales, inputShape: optional(?), debug = false) : owned Module(dtype) {
     import IO;
     import JSON;
     var fl = IO.open(path, IO.ioMode.r);
@@ -311,10 +311,10 @@ proc modelFromSpecFile(path: string, type dtype=real(32), targetLocales: [] loca
     return moduleFromSpec(ms,dtype,targetLocales,inputShape);
 }
 
-proc loadModel(specFile: string, weightsFolder: string, type dtype = real(32)): owned Module(dtype) {
+proc loadModel(specFile: string, weightsFolder: string, type dtype = real(32),debug = false): owned Module(dtype) {
     var model: owned Module(f32) = modelFromSpecFile(specFile, dtype, empty_locales, optional.empty(1*int));
 
-    model.loadPyTorchDump(weightsFolder);
+    model.loadPyTorchDump(weightsFolder,dtype = dtype, debug = debug);
     return model;
 }
 
@@ -721,32 +721,32 @@ class Module {
     // }
 
 
-    proc loadSingleParameter(parameter: Parameter(?), mod: Module(?), modelPath: string, prefix: string = "", indent: string, param debug) {
+    proc loadSingleParameter(parameter: Parameter(?), mod: Module(?), modelPath: string, prefix: string = "", indent: string, param debug, type dtype = real(32)) {
         const paramName = parameter.moduleName;
         const name = prefix + paramName[(mod.moduleName.size + 1)..];
         const paramPath = modelPath + name + ".chdata";
         if debug then
             writeln(indent,"Loading ", name, " from ", paramPath);
-        parameter.data = Tensor.load(paramPath) : eltType;
+        parameter.data = Tensor.load(paramPath, dtype=dtype) : eltType;
     }
 
     // Define the loadParameters function
-    proc loadParameters(mod, modelPath: string, prefix: string = "", indent: string, param debug) {
+    proc loadParameters(mod, modelPath: string, prefix: string = "", indent: string, param debug, type dtype = real(32)) {
         for (_, m) in mod.subModules.items() {
             const modName = m.moduleName;
             if var p = m : borrowed Parameter(eltType)? {
-                loadSingleParameter(p, mod, modelPath, prefix, indent+"\t", debug);
+                loadSingleParameter(p, mod, modelPath, prefix, indent+"\t", debug, dtype);
             }
             else if var sm = m : borrowed Sequential(eltType)? {
                 // Split the modName by the first period
                 // And add the second part to the prefix
                 const msplit = modName.split(".", maxsplit=2);
-                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug, dtype);
             } else if var sm = m : borrowed Module(eltType)? {
                 // Split the modName by the first period
                 // And add the second part to the prefix
                 const msplit = modName.split(".", maxsplit=1);
-                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug, dtype);
             } else {
                 halt("Unknown module type: ", m);
             }
@@ -754,8 +754,8 @@ class Module {
     }
 
     // Modify the loadPyTorchDump method to call loadParameters
-    proc loadPyTorchDump(modelPath: string, param debug = false) {
-        loadParameters(this, modelPath, prefix="", indent="", debug);
+    proc loadPyTorchDump(modelPath: string, param debug = false, type dtype = real(32)) {
+        loadParameters(this, modelPath, prefix="", indent="", debug, dtype);
     }
 
 

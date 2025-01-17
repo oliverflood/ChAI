@@ -59,12 +59,15 @@ def get_summary(model,global_name,parent_name=None):
     }
     return d
 
-def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=True,dtype=None):
+def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=True,dtype=None,with_meta=True):
     Path(path_prefix).mkdir(exist_ok=True)
     for param_tensor in model.state_dict():
         if verbose: print("Serializing ", param_tensor)
         t = model.state_dict()[param_tensor]
-        t = ChapelTensor(t.to(torch.float64))
+        if dtype is None:
+            dtype = t.dtype
+        t = ChapelTensor(t.to(dtype))
+        meta_path = Path(path_prefix) / (param_tensor + '.meta.json')
         json_path = Path(path_prefix) / (param_tensor + '.json')
         chai_path = Path(path_prefix) / (param_tensor + '.chdata')
         if with_json:
@@ -73,6 +76,17 @@ def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=Tr
             f = open(json_path, 'w+')
             f.write(t_json)
             f.close()
+        if with_meta:
+            if verbose: print("Writing meta.")
+            with open(meta_path,'w') as f:
+                meta = {
+                    'name': param_tensor,
+                    'shape': t.shape,
+                    'rank': t.rank,
+                    'size': t.data.size,
+                    'dtype': str(t.dtype)
+                    }
+                f.write(json.dumps(meta,indent=2))
 
         if verbose: print("Writing bytes.")
         f = open(chai_path,'wb')
@@ -82,12 +96,12 @@ def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=Tr
         f.write(json.dumps(get_summary(model,model_name),indent=2))
 
 
-def chai_dump(self,path_prefix,model_name,with_json=True,verbose=True,dtype=None):
-    return dump_model_parameters(self,path_prefix,model_name,with_json,verbose,dtype)
+def chai_dump(self,path_prefix,model_name,with_json=True,verbose=True,dtype=None,with_meta=True):
+    return dump_model_parameters(self,path_prefix,model_name,with_json,verbose,dtype,with_meta)
 
 torch.nn.Module.chai_dump = chai_dump
 
-def chai_save(self,path,name,with_json=True,verbose=True,dtype=None):
+def chai_save(self,path,name,with_json=True,verbose=True,dtype=None,with_meta=True):
     if dtype is None:
         dtype = self.dtype
     Path(path).mkdir(exist_ok=True)
@@ -99,6 +113,19 @@ def chai_save(self,path,name,with_json=True,verbose=True,dtype=None):
         f = open(path / (name + '.json'), 'w+')
         f.write(t_json)
         f.close()
+
+    meta_path = path / (name + '.meta.json')
+    if with_meta:
+        if verbose: print("Writing meta.")
+        with open(meta_path,'w') as f:
+            meta = {
+                'name': name,
+                'shape': t.shape,
+                'rank': t.rank,
+                'size': t.data.size,
+                'dtype': str(t.dtype)
+                }
+            f.write(json.dumps(meta,indent=2))
 
     if verbose: print("Writing bytes.")
     f = open(path / (name + '.chdata'),'wb')
