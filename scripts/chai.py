@@ -59,7 +59,7 @@ def get_summary(model,global_name,parent_name=None):
     }
     return d
 
-def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=True):
+def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=True,dtype=None):
     Path(path_prefix).mkdir(exist_ok=True)
     for param_tensor in model.state_dict():
         if verbose: print("Serializing ", param_tensor)
@@ -82,8 +82,8 @@ def dump_model_parameters(model,path_prefix,model_name,with_json=True,verbose=Tr
         f.write(json.dumps(get_summary(model,model_name),indent=2))
 
 
-def chai_dump(self,path_prefix,model_name,with_json=True,verbose=True):
-    return dump_model_parameters(self,path_prefix,model_name,with_json,verbose)
+def chai_dump(self,path_prefix,model_name,with_json=True,verbose=True,dtype=None):
+    return dump_model_parameters(self,path_prefix,model_name,with_json,verbose,dtype)
 
 torch.nn.Module.chai_dump = chai_dump
 

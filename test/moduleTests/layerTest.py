@@ -147,6 +147,18 @@ def test_dropout():
     y.chai_save('./savedTensors', 'dropoutAnswer', with_json=False, verbose=False, dtype=torch.float64)
 
 
+def test_all():
+    test_dummy()
+    test_load()
+    test_linear()
+    test_conv2d()
+    test_maxpool2d()
+    test_adaptiveavgpool2d()
+    test_flatten()
+    test_relu()
+    test_softmax()
+    test_dropout()
+
 def main():
     torch.manual_seed(5)
 
@@ -161,6 +173,7 @@ def main():
     parser.add_argument('--relu', action='store_const', const=test_relu, help='Run test_relu')
     parser.add_argument('--softmax', action='store_const', const=test_softmax, help='Run test_softmax')
     parser.add_argument('--dropout', action='store_const', const=test_dropout, help='Run test_dropout')
+    parser.add_argument('--all', action='store_const', const=test_all, help='Run all tests')
 
     args = parser.parse_args()
 
