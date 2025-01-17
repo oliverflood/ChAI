@@ -82,7 +82,7 @@ record staticTensor : serializable {
     }
 
     proc eraseHistory(): staticTensor(rank,eltType) {
-        resource = resource.eraseHistory();
+        resource = shared.adopt(resource.eraseHistory());
         return this;
     }
 }

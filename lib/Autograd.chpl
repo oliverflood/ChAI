@@ -1,9 +1,13 @@
 use NDArray;
 use Remote;
 
+import IO;
+
 import Utilities as util;
 
 import Math.exp;
+
+use OrderedDict;
 
 
 inline proc checkRank(te: shared TensorEssence(?eltType), param rank: int): bool {
@@ -28,6 +32,8 @@ proc forceRank(te: shared TensorEssence(?eltType),param rank: int): shared BaseT
     //     halt("Unable to force this TensorEssence to rank " + rank : string + " .");
 }
 
+type GradOpSpec = dict(string,string);
+
 class TensorEssence : serializable {
     type eltType = real;
     proc runtimeRank: int {
@@ -49,6 +55,14 @@ class TensorEssence : serializable {
             mx = max(mx,c.treeHeight());
         return mx + 1;
     }
+
+    proc eraseChildHistory() do halt("Not implemented.");
+
+    proc opSpec() : GradOpSpec {
+        halt("Not implemented.");
+    }
+
+    proc showGraph(indent: bool = false): string do halt("Not implemented.");
 }
 
 
@@ -103,8 +117,10 @@ class BaseTensorResource : TensorEssence, serializable{
     override proc runtimeRank: int do
         return rank;
 
-    proc eraseHistory(): owned BaseTensorResource(eltType,rank) do
+    proc eraseHistory(): owned BaseTensorResource(eltType,rank) {
+        eraseChildHistory();
         return new TensorResource(dataResource,nil,new baseValue());
+    }
 }
 
 
@@ -201,16 +217,50 @@ class TensorResource : BaseTensorResource(?), serializable {
         }
     }
 
+    override proc eraseChildHistory() {
+        var childs = operationCtx.children;
+        for param i in 0..<childs.size {
+            if isSubtype(childs(i).type,shared TensorEssence(eltType)) {
+                ref c = operationCtx.children(i);
+                c = shared.adopt(childs(i).eraseHistory());
+            }
+        }
+    }
+
+    override proc opSpec() : GradOpSpec do
+        return operationCtx.spec;
+
+    override proc showGraph(indent: bool = false): string {
+        var s: string;
+
+        const os = opSpec();
+        const opName = os["operation"];
+        const opOptions = os.createWithout("operation");
+
+        const sep = ", ";
+
+        s += opName + "(";
+
+        const options = for v in opOptions do " = ".join(v);
+        s += sep.join(options);
+
+        const childSpecs = for c in children() do c.showGraph();
+        if childSpecs.size > 0 then s += sep.join(childSpecs);
+
+        s += ")";
+        return s;
+    }
 }
-
-
 
 
 // Operations
 
+
+
 record baseValue : serializable {
     proc forward() do halt("Unimplemented baseValue forward.");
     proc children do return (false,);
+    proc spec : GradOpSpec do return new dict(("operation","Const"));
 }
 
 
@@ -224,6 +274,8 @@ record reluOp : serializable {
     }
     inline proc _relu(x) do
         return ((0.0 < x):input.eltType) * x;
+
+    proc spec : GradOpSpec do return new dict(("operation","ReLU"));
 }
 
 record expOp : serializable {
@@ -241,6 +293,8 @@ record expOp : serializable {
         }
         return output;
     }
+
+    proc spec : GradOpSpec do return new dict(("operation","Exp"));
 }
 
 
@@ -274,6 +328,8 @@ record addOp : serializable {
 
     proc backward(grad: ndarray(rank,eltType)): (ndarray(rank,eltType),ndarray(rank,eltType)) do
         return (grad,grad);
+
+    proc spec : GradOpSpec do return new dict(("operation","Add"));
 }
 
 
@@ -287,6 +343,7 @@ record subOp : serializable {
     proc forward() do
         return lhs.array - rhs.array;
     
+    proc spec : GradOpSpec do return new dict(("operation","Sub"));
 }
 
 record divOp : serializable {
@@ -299,6 +356,7 @@ record divOp : serializable {
         return lhs.array / rhs.array;
     }
     
+    proc spec : GradOpSpec do return new dict(("operation","Div"));
 }
 
 record multOp : serializable {
@@ -330,6 +388,8 @@ record multOp : serializable {
         }
         return (AG,BG);
     }
+
+    proc spec : GradOpSpec do return new dict(("operation","Mul"));
 }
 
 
@@ -695,6 +755,4 @@ record conv2DOp : serializable {
 
         return (fetGrad,kerGrad);
     }
-
 }
-
