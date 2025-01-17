@@ -767,7 +767,15 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
     const prevDev = this.device;
     this.to(here);
 
-
+    const precision = min(3,max reduce util.roundingPrecision(this.array.data));
+    var format = "%{##";
+    for i in 0..<precision {
+        if i == 0 then
+            format += ".";
+        format += "#";
+    }
+    format += "}";
+    
     writer.write("tensor(");
     const shape = this.array.shape;
     var first: bool = true;
@@ -779,7 +787,7 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
             }
             writer.write("[");
         }
-        writer.writef("%{##.####}",x);
+        writer.writef(format,x);
 
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
