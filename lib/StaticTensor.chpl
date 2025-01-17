@@ -177,8 +177,8 @@ proc staticTensor.relu() {
 
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
-    on device {
-        t.array = array.gelu();
+    on this.device {
+        t.array = this.array.gelu();
     }
     return t;
 }

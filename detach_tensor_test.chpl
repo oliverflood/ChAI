@@ -25,4 +25,4 @@ writeln(c.meta.showGraph());
 // writeln((a + b + c).meta.showGraph(indent=true));
 
 
-
+writeln(b.gelu());
