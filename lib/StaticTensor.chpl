@@ -80,6 +80,11 @@ record staticTensor : serializable {
     proc detach(copy: bool = true, keepGrad: bool = false): staticTensor(rank,eltType) {
         return new staticTensor(meta.detach(copy,keepGrad));
     }
+
+    proc eraseHistory(): staticTensor(rank,eltType) {
+        resource = resource.eraseHistory();
+        return this;
+    }
 }
 
 operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,toType) {
@@ -113,6 +118,46 @@ operator *(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
 operator /(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new divOp(a.meta,b.meta);
     return tensorFromCtx(rank,eltType,ctx);
+}
+
+operator +(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) + a;
+}
+
+operator +(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a + staticTensor.valueLike(a,c : eltType);
+}
+
+operator -(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) - a;
+}
+
+operator -(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a - staticTensor.valueLike(a,c : eltType);
+}
+
+operator *(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) * a;
+}
+
+operator *(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a * staticTensor.valueLike(a,c : eltType);
+}
+
+operator /(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) / a;
+}
+
+operator /(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a / staticTensor.valueLike(a,c : eltType);
 }
 
 proc staticTensor.reshape(dom: domain(?)) {

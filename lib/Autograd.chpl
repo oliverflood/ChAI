@@ -51,10 +51,6 @@ class TensorEssence : serializable {
     }
 }
 
-class ForgetfulTensor : TensorEssence {
-    param rank: int; 
-    
-}
 
 class BaseTensorResource : TensorEssence, serializable{
     param rank: int;
@@ -106,6 +102,9 @@ class BaseTensorResource : TensorEssence, serializable{
 
     override proc runtimeRank: int do
         return rank;
+
+    proc eraseHistory(): owned BaseTensorResource(eltType,rank) do
+        return new TensorResource(dataResource,nil,new baseValue());
 }
 
 
