@@ -175,6 +175,14 @@ proc staticTensor.relu() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.gelu() {
+    var t = new staticTensor(rank,eltType);
+    on device {
+        t.array = array.gelu();
+    }
+    return t;
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);
