@@ -1,3 +1,3 @@
-# *.chdata
+*.chdata
 # *.json
 __pycache__/
