@@ -88,6 +88,8 @@ record staticTensor : serializable {
 }
 
 operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,toType) {
+    if toType == t.eltType then
+        return t;
     const a = t.array;
     const b = a : toType;
     return new staticTensor(b);

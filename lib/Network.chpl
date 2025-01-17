@@ -727,7 +727,7 @@ class Module {
         const paramPath = modelPath + name + ".chdata";
         if debug then
             writeln(indent,"Loading ", name, " from ", paramPath);
-        parameter.data = Tensor.load(paramPath, dtype=dtype) : eltType;
+        parameter.data = Tensor.load(paramPath, debug=debug, dtype=dtype) : eltType;
     }
 
     // Define the loadParameters function
