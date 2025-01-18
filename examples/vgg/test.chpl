@@ -25,7 +25,7 @@ proc confidence(x: []): [] {
 
 // returns (top k indicies, top k condiences)
 proc run(model: borrowed, file: string) {
-  const img = Tensor.load(file):real(64);
+  const img = Tensor.load(file):real(32);
   const output = model(img);
 
   const top = output.topk(k);
@@ -38,7 +38,7 @@ proc run(model: borrowed, file: string) {
 
 proc main(args: [] string) {
   const labels = getLabels();
-  const vgg = new VGG16(real(64));
+  const vgg = new VGG16(real(32));
   vgg.loadPyTorchDump("models/vgg16/", false);
 
 

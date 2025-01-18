@@ -51,6 +51,16 @@ module Utilities {
         }
     }
 
+    proc roundingPrecision(x: numeric): int {
+        for i in 0..<10 {
+            const dec = 10 ** i;
+            const ax = Math.abs(x);
+            if Math.floor(ax * dec) == Math.round(ax * dec) then
+                return i;
+        }
+        return 10;
+    }
+
     iter cartesian(X,Y) {
         for x in X {
             for y in Y {

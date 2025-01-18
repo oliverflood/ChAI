@@ -1,5 +1,5 @@
 import torch
-from torchvision.io import read_image
+from torchvision.io import read_image, ImageReadMode
 import sys
 import os
 from torchvision.transforms import Resize, Normalize
@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 import chai
 
 def process(img_path):
-    img = read_image(img_path).double()
+    img = read_image(img_path,mode=ImageReadMode.RGB).float()
     print(img.shape, img.dtype)
     # write the image tensor to a file
 
