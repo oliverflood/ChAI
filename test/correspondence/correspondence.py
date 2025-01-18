@@ -1,8 +1,7 @@
 import os
 import sys
 from pathlib import Path
-
-
+import torch
 
 correspondence_dir = Path(__file__).parent # Path('.')
 chai_dir = correspondence_dir.parent.parent
@@ -65,15 +64,24 @@ class Printer(object):
         self.data.append(args)
 
     def __str__(self):
+        def process(x):
+            if isinstance(x,torch.Tensor):
+                dtype = torch.get_default_dtype() # TODO: This may need to change for global coherency.
+                xs = x.to(dtype).flatten().tolist()
+                xss = ' '.join([str(x) for x in xs])
+                return xss
+            else:
+                return str(x)
+            
         spacer = ' ' # '\t' # TODO: This may need to change!
         lines = []
         for d in self.data:
             if isinstance(d,tuple):
-                lines.append(spacer.join([str(x) for x in d]))
+                lines.append(spacer.join([process(x) for x in d]))
             elif isinstance(d,list):
-                lines.append(spacer.join([str(x) for x in d]))
+                lines.append(spacer.join([process(x) for x in d]))
             else:
-                lines.append(str(d))
+                lines.append(process(d))
         return '\n'.join(lines)
 
 def run_python_test(test_name,test_path):

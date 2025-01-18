@@ -1,5 +1,6 @@
 import torch
 
+torch.set_default_dtype(torch.float32)
 
 def test(imports):
     print = imports['print_fn']
