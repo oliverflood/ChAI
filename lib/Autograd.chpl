@@ -269,13 +269,17 @@ record reluOp : serializable {
 
     proc children do return (input,);
 
-    proc forward() {
+    proc forward() do
         return input.array.relu();
-    }
-    inline proc _relu(x) do
-        return ((0.0 < x):input.eltType) * x;
+}
 
-    proc spec : GradOpSpec do return new dict(("operation","ReLU"));
+record siluOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.silu();
 }
 
 record expOp : serializable {

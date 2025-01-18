@@ -582,6 +582,18 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc silu() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = x / (1 + Math.exp(-x));
+        }
+        return rl;
+    }
+
     inline proc gelu() {
         const ref thisData = data;
         const dom = this.domain;
