@@ -107,14 +107,14 @@ for test in tests:
 
     # print(f'Running {test_name}...')
     chapel_output = run_chapel_test(test_name,test_path)
-
-    print('-------- done --------')
-    print('Python output:')
-    print(python_output)
-    print('Chapel output:')
-    print(chapel_output)
-
-    print(chapel_output == python_output)
+    if chapel_output != python_output:
+        print('-------- failed --------')
+        print('Python output:')
+        print(python_output)
+        print('Chapel output:')
+        print(chapel_output)
+    else:
+        print('[passed]', test_name)
 
     # python_test_path = test['absolute_path'] / f'{test_name}.py'
 

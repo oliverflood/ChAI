@@ -425,6 +425,13 @@ proc type staticTensor.sqrt(t: staticTensor(?rank,?eltType)): staticTensor(rank,
     return retVal;
 }
 
+proc staticTensor.degenerateFlatten(): [] eltType {
+    var t: [0..<this.domain.size] eltType;
+    on this.device do
+        t = this.array.degenerateFlatten();
+    return t;
+}
+
 config const n = 100;
 config const diag = false;
 config const size = 3;
