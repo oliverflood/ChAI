@@ -312,14 +312,14 @@ proc modelFromSpecFile(path: string, type dtype=real(32), targetLocales: [] loca
 }
 
 proc loadModel(specFile: string, weightsFolder: string, type dtype = real(32),debug = false): owned Module(dtype) {
-    var model: owned Module(f32) = modelFromSpecFile(specFile, dtype, empty_locales, optional.empty(1*int));
+    var model: owned Module(dtype) = modelFromSpecFile(specFile, dtype, empty_locales, optional.empty(1*int));
 
     model.loadPyTorchDump(weightsFolder,dtype = dtype, debug = debug);
     return model;
 }
 
 proc loadModelAcrossLocales(specFile: string, weightsFolder: string, targetLocales: [] locale, inputShape: ?N*int, type dtype = real(32)): owned Module(dtype) {
-    var model: owned Module(f32) = modelFromSpecFile(specFile, dtype, targetLocales, optional.some(inputShape));
+    var model: owned Module(dtype) = modelFromSpecFile(specFile, dtype, targetLocales, optional.some(inputShape));
 
     model.loadPyTorchDump(weightsFolder);
     return model;
