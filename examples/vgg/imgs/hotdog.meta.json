@@ -1,0 +1,11 @@
+{
+  "name": "hotdog",
+  "shape": [
+    3,
+    224,
+    224
+  ],
+  "rank": 3,
+  "size": 150528,
+  "dtype": "float32"
+}

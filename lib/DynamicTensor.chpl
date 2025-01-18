@@ -149,6 +149,7 @@ record dynamicTensor : serializable {
 }
 
 operator :(in t: dynamicTensor(?eltType), type toType): dynamicTensor(toType) {
+    if eltType == toType then return t;
     for param rank in 1..maxRank do
         if t.checkRank(rank) then
             return (t.tensorize(rank) : toType).eraseRank();
@@ -240,6 +241,15 @@ proc dynamicTensor.relu(): dynamicTensor(eltType) {
             return this.tensorize(rank).relu().eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.relu.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.gelu(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.tensorize(rank).gelu().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.gelu.");
     return new dynamicTensor(eltType);
 }
 
@@ -508,12 +518,22 @@ proc type dynamicTensor.multiReader(path: string) {
     return fr;
 }
 
-proc type dynamicTensor.load(path: string,param precision = 64): dynamicTensor(real) {
-    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),precision);
+proc type dynamicTensor.load(path: string,type dtype = real(32), param debug = false): dynamicTensor(dtype) 
+        where isRealType(dtype) {
+    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),dtype = dtype, debug = debug);
+}
+
+proc type dynamicTensor.load(path: string,param precision: int,param debug = false): dynamicTensor(real(precision)) {
+    compilerWarning("Don't use me. Use type specifying version (dtype = real(precision)) instead.");
+    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),dtype = real(precision),debug = debug);
 }
 
 
-proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),param precision = 64): dynamicTensor(real) {
+proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),type dtype = real(32), param debug = false): dynamicTensor(dtype) 
+        where isRealType(dtype) {
+    compilerAssert(isRealType(dtype));
+    param precision = numBits(dtype);
+    compilerAssert(real(precision) == dtype);
     fr.mark();
     const r = fr.read(int);
     // writeln("rank: ",r);
@@ -525,18 +545,15 @@ proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),param precision = 64): 
                     shape(i) = fr.read(int);
                 const dom = util.domainFromShape((...shape));
                 var A: [dom] real(precision);
-                // for i in dom do 
-                //     a.data[i] = fr.read(real);
                 fr.read(A);
-                const AReal: [dom] real = A : real(64);
-                var a: ndarray(rank,real) = new ndarray(AReal);
+                var a: ndarray(rank,dtype) = new ndarray(A);
                 fr.commit();
                 return new dynamicTensor(a);
             } catch e : IO.UnexpectedEofError {
                 IO.stderr.writeln(e);
-                IO.stderr.writeln("Error reading from ", fr.getFile().path, " . Going to try read with 32 bit precision instead of ", precision);
+                IO.stderr.writeln("Error reading from ", fr.getFile().path, " . Going to try read with 64 bit precision instead of ", precision);
                 fr.revert();
-                return dynamicTensor.readInPlace(fr,precision=32);
+                return dynamicTensor.readInPlace(fr,dtype = real(64),debug = true) : dtype;
             }
         }
     }

@@ -80,9 +80,16 @@ record staticTensor : serializable {
     proc detach(copy: bool = true, keepGrad: bool = false): staticTensor(rank,eltType) {
         return new staticTensor(meta.detach(copy,keepGrad));
     }
+
+    proc eraseHistory(): staticTensor(rank,eltType) {
+        resource = shared.adopt(resource.eraseHistory());
+        return this;
+    }
 }
 
 operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,toType) {
+    if toType == t.eltType then
+        return t;
     const a = t.array;
     const b = a : toType;
     return new staticTensor(b);
@@ -115,6 +122,46 @@ operator /(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+operator +(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) + a;
+}
+
+operator +(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a + staticTensor.valueLike(a,c : eltType);
+}
+
+operator -(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) - a;
+}
+
+operator -(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a - staticTensor.valueLike(a,c : eltType);
+}
+
+operator *(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) * a;
+}
+
+operator *(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a * staticTensor.valueLike(a,c : eltType);
+}
+
+operator /(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) {
+    return staticTensor.valueLike(a,c : eltType) / a;
+}
+
+operator /(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
+        where isNumericType(scalarType) {
+    return a / staticTensor.valueLike(a,c : eltType);
+}
+
 proc staticTensor.reshape(dom: domain(?)) {
     param newRank = dom.rank;
     var ctx = new reshapeOp(rank,newRank,eltType,dom.shape,meta);
@@ -128,6 +175,14 @@ proc staticTensor.reshape(newShape: int ...?newRank) {
 proc staticTensor.relu() {
     var ctx = new reluOp(meta);
     return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.gelu() {
+    var t = new staticTensor(rank,eltType);
+    on this.device {
+        t.array = this.array.gelu();
+    }
+    return t;
 }
 
 proc staticTensor.permute(axes: int...rank) {
@@ -722,7 +777,15 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
     const prevDev = this.device;
     this.to(here);
 
-
+    const precision = min(3,max reduce util.roundingPrecision(this.array.data));
+    var format = "%{##";
+    for i in 0..<precision {
+        if i == 0 then
+            format += ".";
+        format += "#";
+    }
+    format += "}";
+    
     writer.write("tensor(");
     const shape = this.array.shape;
     var first: bool = true;
@@ -734,7 +797,7 @@ proc staticTensor.serialize(writer: IO.fileWriter(locking=false, IO.defaultSeria
             }
             writer.write("[");
         }
-        writer.writef("%{##.####}",x);
+        writer.writef(format,x);
 
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then

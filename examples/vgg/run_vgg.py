@@ -2,7 +2,7 @@ import torch.nn as nn
 import sys
 import os
 import torch
-from torchvision.io import read_image
+from torchvision.io import read_image, ImageReadMode
 from torchvision.transforms import Resize, Normalize
 
 
@@ -14,7 +14,7 @@ img_path = sys.argv[1] if len(sys.argv) > 1 else None
 if img_path is None:
     print("Please provide an image path")
     sys.exit(1)
-img = read_image(img_path).float()
+img = read_image(img_path,mode=ImageReadMode.RGB).float()
 
 
 img = Resize((224, 224))(img) # resize
