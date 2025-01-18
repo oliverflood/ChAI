@@ -4,12 +4,12 @@ use Random;
 config const seed = 41;
 
 proc main() {
-  var A : [1..3, 1..3] real;
+  var A : [1..3, 1..2] real;
   fillRandom(A, seed);
 
   writeln("A's domain: ", A.domain);
 
-  var (U, S, VT) = svd(A, compute_uv = true, full_matrices = true);
+  var (U, S, VT) = svd(A, full_matrices = false);
 
   writeln("Matrix A:\n", A);
   writeln("Matrix U:\n", U);
