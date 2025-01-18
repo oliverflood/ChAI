@@ -593,6 +593,18 @@ record ndarray : serializable {
         }
         return rl;
     }
+
+    proc degenerateFlatten(): [] eltType {
+        const myDom = this.domain;
+        const mySize = myDom.size;
+        var flat: [0..<mySize] eltType;
+        var i = 0;
+        for x in this.data {
+            flat[i] = x;
+            i += 1;
+        }
+        return flat;
+    }
 }
 
 

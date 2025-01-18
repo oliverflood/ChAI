@@ -407,6 +407,16 @@ proc type dynamicTensor.sqrt(t: dynamicTensor(real)): dynamicTensor(real) {
     return new dynamicTensor(real);
 }
 
+proc dynamicTensor.degenerateFlatten(): [] eltType {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) {
+            return this.tensorize(rank).array.degenerateFlatten();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.degenerateFlatten.");
+    return new dynamicTensor(eltType);
+}
+
 proc main() {
 
     // Just some examples. 
