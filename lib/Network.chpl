@@ -7,7 +7,7 @@
 
 // use DynamicTensor
 
-
+prototype module Network {
 use Tensor;
 
 use Map; // only map;
@@ -18,7 +18,7 @@ use Reflection;
 
 
 
-proc helpFindModuleByName(arg, x: string) : borrowed Module(?) {
+proc helpFindModuleByName(arg, x: string) : borrowed Module(?)? {
   param myFields = getNumFields(arg.type);
   for param i in 0..<myFields {
     if !isType(getField(arg, i)) &&
@@ -28,6 +28,7 @@ proc helpFindModuleByName(arg, x: string) : borrowed Module(?) {
         }
   }
   halt("Could not find module with name: ", x);
+  return nil;
 }
 
 proc helpFindParamDataByName(arg, x: string) ref : Tensor(?) {
@@ -56,9 +57,13 @@ record moduleChildren {
     iter ref these(): borrowed Module(eltType) do
         for k in 0..<order.size do
             yield childDict[order(k)];
-    
-    iter ref items(): (string,borrowed Module(eltType)) do 
-        for n in 0..<order.size do 
+
+    iter ref items(): (string,borrowed Module(eltType)) do
+        for n in 0..<order.size do
+            yield (order(n),childDict[order(n)]);
+
+    iter ref itemsPar(): (string,borrowed Module(eltType)) do
+        foreach n in 0..<order.size do
             yield (order(n),childDict[order(n)]);
 
     proc ref add(name: string,m: borrowed Module(eltType)) {
@@ -206,7 +211,29 @@ class ModuleSpecification : serializable {
     var subModuleOrder: list(string);
 }
 
-proc moduleFromSpec(ms_: borrowed ModuleSpecification?,type dtype = real(32)): owned Module(dtype) {
+@chpldoc.nodoc
+const empty_locales: [1..0] locale;
+
+@chpldoc.nodoc
+record optional {
+    type t;
+    var x: t;
+    var isSome: bool;
+    proc type some(x: ?t): optional(t) {
+        return new optional(t,x,true);
+    }
+    proc type empty(type t): optional(t) {
+        var x: t;
+        return new optional(t,x,false);
+    }
+}
+
+proc moduleFromSpec(
+    ms_: borrowed ModuleSpecification?,
+    type dtype = real(32),
+    targetLocales: [] locale = empty_locales,
+    inputShape: optional(?) = optional.empty(1*int)
+): owned Module(dtype) {
     var ms = ms_!;
     select ms.layerType {
         when "Conv2d" {
@@ -228,41 +255,356 @@ proc moduleFromSpec(ms_: borrowed ModuleSpecification?,type dtype = real(32)): o
         }
         when "MaxPool2d" {
             var ma = new moduleAttributes("MaxPool","unknown",ms.attributes);
-            return new MaxPool(dtype,ma.getInt("kernel_size"));
+            return new MaxPool(dtype,ma.getInt("kernel_size"),ma.getInt("stride"));
+        }
+        when "AdaptiveAvgPool2d" {
+            var ma = new moduleAttributes("AdaptiveAvgPool2D","unknown",ms.attributes);
+            return new AdaptiveAvgPool2D(dtype,ma.getInt("output_size"));
         }
         when "LogSoftmax" {
             return new Softmax(dtype);
         }
         otherwise {
             var sms: dict(string,shared Module(dtype)) = new dict(string,shared Module(dtype));
-            for k in ms.subModuleOrder {
-                const sma = ms.subModules[k];
-                const sm: shared Module(dtype) = shared.adopt(moduleFromSpec(sma,dtype=dtype));
-                sms.insert(k,sm);
+            if targetLocales.size > 0 {
+                import this.SubModDistribution.{partitionModulesAcrossLocales, interModuleComms, memorySize, printPartitioningInfo};
+
+                // split the modules into groups across locales, keeping the amount of data roughly balanced
+                // and minimizing the amount of communication between locales
+                const subModSizes = [k in ms.subModuleOrder] memorySize(ms.subModules[k]!),
+                      subModComms = interModuleComms(ms, inputShape),
+                      locPartition = partitionModulesAcrossLocales(subModSizes, subModComms, targetLocales.size, 0.75, 0.25),
+                      layerTypes = [k in ms.subModuleOrder] ms.subModules[k]!.layerType;
+
+                printPartitioningInfo(layerTypes, subModSizes, subModComms, locPartition, targetLocales);
+
+                for i in 0..<targetLocales.size {
+                    for k in locPartition[i]..<locPartition[i+1] {
+                        const sma = ms.subModules[ms.subModuleOrder[k]];
+                        on targetLocales[targetLocales.domain.orderToIndex(i)] {
+                            const sm: shared Module(dtype) = shared.adopt(moduleFromSpec(sma,dtype=dtype));
+                            sms.insert(ms.subModuleOrder[k],sm);
+                        }
+                    }
+                }
+            } else {
+                for k in ms.subModuleOrder {
+                    const sma = ms.subModules[k];
+                    const sm: shared Module(dtype) = shared.adopt(moduleFromSpec(sma,dtype=dtype));
+                    sms.insert(k,sm);
+                }
             }
-            return new Sequential(dtype,sms,overrideName=true,moduleName=ms.layerType);
+
+            return new Sequential(dtype, sms, moduleName=ms.layerType);
         }
     }
     halt("This should not happen");
 }
 
-
-proc modelFromSpecFile(path: string, type dtype=real(32)) : owned Module(dtype) {
+proc modelFromSpecFile(path: string, type dtype=real(32), targetLocales: [] locale = empty_locales, inputShape: optional(?), debug = false) : owned Module(dtype) {
     import IO;
     import JSON;
     var fl = IO.open(path, IO.ioMode.r);
     var reader = fl.reader(deserializer=new JSON.jsonDeserializer());
     var ms = reader.read(owned ModuleSpecification);
     fl.close();
-    return moduleFromSpec(ms,dtype);
+    return moduleFromSpec(ms,dtype,targetLocales,inputShape);
 }
 
-proc loadModel(specFile: string, weightsFolder: string, type dtype = real(32)): owned Module(dtype) {
-    var model: owned Module(f32) = modelFromSpecFile(specFile, dtype);
+proc loadModel(specFile: string, weightsFolder: string, type dtype = real(32),debug = false): owned Module(dtype) {
+    var model: owned Module(dtype) = modelFromSpecFile(specFile, dtype, empty_locales, optional.empty(1*int));
+
+    model.loadPyTorchDump(weightsFolder,dtype = dtype, debug = debug);
+    return model;
+}
+
+proc loadModelAcrossLocales(specFile: string, weightsFolder: string, targetLocales: [] locale, inputShape: ?N*int, type dtype = real(32)): owned Module(dtype) {
+    var model: owned Module(dtype) = modelFromSpecFile(specFile, dtype, targetLocales, optional.some(inputShape));
+
     model.loadPyTorchDump(weightsFolder);
     return model;
 }
 
+// helper procedures for intelligently partitioning modules across locales
+private prototype module SubModDistribution {
+    use List;
+    import super.{ModuleSpecification, optional};
+
+    // parameters for genetic optimization used below
+    private const generationSize = 20,
+                poolSize = 2,
+                numGenerations = 20;
+
+    /*
+        Partition 'n' sub-modules across 'N' locales, minimizing both the variance in
+        the total amount of sub-module data on each locale, and the total amount of
+        communication between locales. In other words, partitions should be chosen such
+        that the amount of data stored on each locale is roughly even, and the amount
+        of data communicated between locales (by sub-modules that are sequential in the
+        network, but located on different locales) is minimized.
+
+        The cost function is a weighted sum of the normalized variance in the total
+        amount of data on each locale, and the normalized total amount of communication
+        between locales. The weights are given by 'alpha' and 'beta', respectively.
+
+        Returns an array 'p' of 'N+1' integers, where 'p[i]..<p[i+1]' represents the range
+        of sub-module indices assigned to the ith locale. The first element is always 0,
+        and the last element is always 'n' (where 'n' is the number of sub-modules).
+
+        This procedure uses a simple genetic algorithm to search for an optimal partitioning.
+    */
+    proc partitionModulesAcrossLocales(
+        const ref sizes: [?d] int,
+        const ref comms: [d] int,
+        N: int,
+        alpha: real,
+        beta: real
+    ): [] int {
+        use Random;
+
+        const n = d.size; // number of sub-modules
+
+        // mean data-size-per-locale (equivalent to mean-data-size multiplied by (n/N))
+        const meanSize: real = (+ reduce sizes):real / N;
+
+        // variance of per-locale data-size for a given partitioning
+        proc sizeVariance(const ref p: [] int): real {
+            var ssum = 0.0;
+            for i in 0..<N do
+                ssum += ((+ reduce sizes[p[i]..<p[i+1]]) - meanSize) ** 2;
+            return sqrt(ssum / (N - 1));
+        }
+
+        // total amount of comm between locales for a given partitioning
+        proc totalComm(const ref p: [] int): int {
+            return + reduce for i in 1..<N do comms[p[i]];
+        }
+
+        // overall cost function
+        const sizeSum = + reduce sizes,
+            commSum = + reduce comms;
+        proc cost(const ref p): real {
+            return alpha * sizeVariance(p) / sizeSum +
+                beta * totalComm(p) / commSum;
+        }
+
+        // yield 'popSize' random mutations from the given genetic pool
+        iter randomMutations(pool /* : [] [] int */, popSize: int, ref rs: randomStream(int)): [] int {
+            const deltaP = N / 2; // max change in partitioning
+            var delta: [pool[0].domain] int,
+                count = 0;
+            while count < (popSize - pool.size) {
+                // generate a random mutation of a random sample from the pool
+                rs.fill(delta, -deltaP, deltaP + 2);
+                for d in delta do if d > deltaP then d = 0; // simple way of making 0 more likely
+                var pm: [pool[0].domain] int = rs.choose(pool) + delta;
+                pm[0] = 0;
+                pm[N] = n;
+
+                // only yield valid partitions
+                if && reduce for i in 0..<N do pm[i] < pm[i+1] {
+                    yield pm;
+                    count += 1;
+                }
+            }
+
+            // yield the original pool
+            for p in pool do yield p;
+        }
+
+        // initial guess for partitioning: give each locale a roughly equal number of sub-modules
+        proc goodGuess(): [] int {
+            var p: [0..N] int;
+            const q = n / N,
+                r = n % N;
+            p[0] = 0;
+            p[N] = n;
+            for i in 1..<N do
+                p[i] = p[i-1] + q + if i <= r then 1 else 0;
+            return p;
+        }
+
+        var pmin = goodGuess(),
+            rs = new randomStream(int, seed=314159),
+            pool = for i in 0..poolSize do pmin;
+
+        for 1..numGenerations {
+            const population = randomMutations(pool, generationSize, rs),
+                costs = for p in population do cost(p),
+                (_, minIdx) = minloc reduce zip(costs, costs.domain);
+
+            pmin = population[minIdx];
+
+            // new pool with the best and a few random mutations
+            pool[0] = pmin;
+            pool[1..] = rs.sample(population, poolSize);
+        }
+
+        return pmin;
+    }
+
+    record commSize {
+        var sizes: list(int);
+
+        proc init() {
+            this.sizes = new list(int);
+        }
+
+        proc init(in sizes: [] int) {
+            this.sizes = new list(sizes);
+        }
+
+        proc init(x: int ...?N) {
+            this.sizes = new list(int);
+            init this;
+            for i in 0..<N do
+                sizes.pushBack(x[i]);
+        }
+
+        proc size: int {
+            var total = 1;
+            for s in sizes do total *= s;
+            return total;
+        }
+
+        proc this(x: int): int {
+            return sizes[x];
+        }
+    }
+
+    /*
+        using a unit-sized input tensor, compute the size of the output tensor for each sub-module
+    */
+    proc interModuleComms(ms: borrowed ModuleSpecification, inputShape: optional(?t)): [] int throws {
+        const n = ms.subModuleOrder.size;
+        var comms: [-1..<n] commSize;
+
+        // create a 'commSize' representing the size of the network's input tensor
+        const ir = inputRank(ms.subModules[ms.subModuleOrder[0]]!);
+        var inputShape_ = [i in 0..<ir] 1;
+        if inputShape.isSome && isHomogeneousTuple(t) {
+            if inputShape.x.size != ir then
+                throw new Error("rank of provided 'inputShape' does not match module's input rank");
+            inputShape_ = [i in 0..<ir] inputShape.x[i];
+        }
+        comms[-1] = new commSize(inputShape_);
+
+        // compute the output size of each module
+        for i in 0..<n do comms[i] = outputSize(ms.subModules[ms.subModuleOrder[i]]!, comms[i-1]);
+
+        const moduleComms = [i in 0..<n] comms[i].size;
+        return moduleComms;
+    }
+
+    // Get the number of elements stored in the module's tensors.
+    // Used to evenly partition modules across locales
+    // note: when a new module with a non-trivial memory footprint is added,
+    //       a corresponding when-clause should be added here
+    proc memorySize(ms: borrowed ModuleSpecification): int {
+        select ms.layerType {
+            when "Conv2d" {
+                const ic = ms.attributes["in_channels"]: int,
+                      oc = ms.attributes["out_channels"]: int,
+                      ks = ms.attributes["kernel_size"]: int;
+                //            weights    + bias
+                return ic * oc * ks * ks + oc;
+            }
+            when "Linear" {
+                const ifs = ms.attributes["in_features"]: int,
+                      ofs = ms.attributes["out_features"]: int;
+                //       weights + bias
+                return ifs * ofs + ofs;
+            }
+            otherwise {
+                return 0;
+            }
+        }
+    }
+
+    // Get the number of elements in the output tensor of the module
+    // note: when a new module whose output shape doesn't match its input shape is added,
+    //       a corresponding when-clause should be added here
+    proc outputSize(ms: borrowed ModuleSpecification, inputSize: commSize): commSize {
+        select ms.layerType {
+            when "Conv2d" {
+                const oc = ms.attributes["out_channels"]: int,
+                      ks = ms.attributes["kernel_size"]: int,
+                      s = ms.attributes["stride"]: int;
+
+                const outHeight = ((inputSize[1] - ks) / s) + 1,
+                      outWidth = ((inputSize[2] - ks) / s) + 1;
+
+                return new commSize(oc, outHeight, outWidth);
+            }
+            when "Linear" {
+                return new commSize(ms.attributes["out_features"]: int);
+            }
+            when "MaxPool" {
+                const ps = ms.attributes["pool_size"]: int,
+                      s = ms.attributes["stride"]: int;
+
+                const channels = inputSize[0],
+                      outHeight = ((inputSize[1] - ps) / s) + 1,
+                      outWidth = ((inputSize[2] - ps) / s) + 1;
+
+                return new commSize(channels, outHeight, outWidth);
+            }
+            when "AdaptiveAvgPool2D" {
+                const os = ms.attributes["output_size"]: int;
+                return new commSize(inputSize[0], os, os);
+            }
+            when "Flatten" do return new commSize(inputSize.size);
+            otherwise do return inputSize;
+        }
+    }
+
+    // rank of the tensor that each layer type takes as an input
+    // used for computing the amount of data communicated between layers
+    proc inputRank(ms: borrowed ModuleSpecification): int {
+        select ms.layerType {
+            when "Conv2d" do return 3;
+            when "Linear" do return 1; // (not true, but works for communication estimation)
+            when "MaxPool" do return 3;
+            when "AdaptiveAvgPool2D" do return 3;
+            when "Flatten" do return 1;
+            otherwise do return 1;
+        }
+    }
+
+    proc printPartitioningInfo(names: [?d] string, sizes: [d] int, comms: [d] int, partition: [?dp] int, locales: [?dl] locale) {
+        proc nChars(x: int): int(8) {
+            use Math;
+            return ceil(log10(x:real)):int(8);
+        }
+
+        var maxNChars = 0;
+        for n in names do maxNChars = max(maxNChars, n.size);
+        for s in sizes do maxNChars = max(maxNChars, nChars(s));
+        for c in comms do maxNChars = max(maxNChars, nChars(c));
+
+        const charsPerLoc = [i in dl] (maxNChars+1) * (partition[i+1] - partition[i]);
+
+        proc printInfoLine(const ref a, name: string, fmt: string) {
+            write(name, " |");
+            for p in 0..<dp.size-1 {
+                for i in partition[p]..<partition[p+1] do
+                    writef("%*" + fmt + " ", maxNChars, a[i]); // "
+                write("|");
+            }
+            writeln();
+        }
+
+        writeln("sub-module distribution");
+        writeln("-----------------------");
+        write("      |"); for (loc, i) in zip(locales, dl) do
+            writef(" %<*s|", charsPerLoc[i]-1, "LOCALE"+loc.id:string); writeln();
+
+        printInfoLine(names, "layer", "s");
+        printInfoLine(sizes, "size ", "i");
+        printInfoLine(comms, "comms", "i");
+        writeln("-----------------------");
+    }
+}
 
 var moduleInstances = 0;
 
@@ -365,23 +707,57 @@ class Module {
             }
         }
     }
+    iter namedModules(param tag: iterKind): (string,borrowed Module(eltType)) where tag == iterKind.standalone {
+        foreach (n,m) in subModules.itemsPar() {
+            yield (n,m);
+            foreach (n_,m_) in m.namedModules() {
+                yield (n_,m_);
+            }
+        }
+    }
 
     // iter modules(): borrowed Module(eltType) {
     //     for (n,m) in this.moduleFields()
     // }
-    proc loadPyTorchDump(modelPath: string, param debug = false) {
-        for (n,m) in namedModules() {
-            const name = m.moduleName;
-            if debug then writeln((n,name,m.signature));
+
+
+    proc loadSingleParameter(parameter: Parameter(?), mod: Module(?), modelPath: string, prefix: string = "", indent: string, param debug, type dtype = real(32)) {
+        const paramName = parameter.moduleName;
+        const name = prefix + paramName[(mod.moduleName.size + 1)..];
+        const paramPath = modelPath + name + ".chdata";
+        if debug then
+            writeln(indent,"Loading ", name, " from ", paramPath);
+        parameter.data = Tensor.load(paramPath, debug=debug, dtype=dtype) : eltType;
+    }
+
+    // Define the loadParameters function
+    proc loadParameters(mod, modelPath: string, prefix: string = "", indent: string, param debug, type dtype = real(32)) {
+        for (_, m) in mod.subModules.items() {
+            const modName = m.moduleName;
             if var p = m : borrowed Parameter(eltType)? {
-                const paramName = name[(moduleName.size + 1)..];
-                const paramPath = modelPath + paramName + ".chdata";
-                if debug then writeln("Loading ",paramName," from ", paramPath);
-                var loaded = Tensor.load(paramPath) : eltType;
-                p!.data = loaded;
+                loadSingleParameter(p, mod, modelPath, prefix, indent+"\t", debug, dtype);
+            }
+            else if var sm = m : borrowed Sequential(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=2);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug, dtype);
+            } else if var sm = m : borrowed Module(eltType)? {
+                // Split the modName by the first period
+                // And add the second part to the prefix
+                const msplit = modName.split(".", maxsplit=1);
+                loadParameters(m, modelPath, prefix + msplit[1] + ".", indent+"\t", debug, dtype);
+            } else {
+                halt("Unknown module type: ", m);
             }
         }
     }
+
+    // Modify the loadPyTorchDump method to call loadParameters
+    proc loadPyTorchDump(modelPath: string, param debug = false, type dtype = real(32)) {
+        loadParameters(this, modelPath, prefix="", indent="", debug, dtype);
+    }
+
 
     proc attributes(): moduleAttributes {
         var ms = new map(string,moduleAttributes);
@@ -396,7 +772,7 @@ class Module {
         );
     }
 
-    proc signature: string do 
+    proc signature: string do
         return attributes().prettyPrint();
 }
 
@@ -408,7 +784,7 @@ class Parameter : Module(?) {
         this.data = data;
     }
 
-    override proc attributes(): moduleAttributes do 
+    override proc attributes(): moduleAttributes do
         return new moduleAttributes(
             "Parameter",
             moduleName,
@@ -418,23 +794,23 @@ class Parameter : Module(?) {
 class Sequential : Module(?) {
     var mds: list(shared Module(eltType));
 
-    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), param overrideName = false, moduleName: string = "") {
+    proc init(type eltType = real, ms: dict(string,shared Module(eltType)), moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        if overrideName then
-            this.moduleName = moduleName;
+
+        this.moduleName = moduleName;
         for (name,m) in ms {
             addModule(name,m.borrow());
             mds.pushBack(m);
         }
     }
 
-    proc init(type eltType = real, in ms) {
+    proc init(type eltType = real, in ms, moduleName: string = "sequential") {
         super.init(eltType);
         this.mds = new list(shared Module(eltType));
         init this;
-        this.moduleName = "sequential";
+        this.moduleName = moduleName;
         for param i in 0..<ms.size {
             var m : shared Module(eltType) = shared.adopt(owned.release(ms[i])!);
             addModule(i: string,m.borrow());
@@ -459,6 +835,19 @@ class Sequential : Module(?) {
 
     proc init(in ms: (owned Module(real)?)...?rank) do
         this.init(real, ms);
+
+    proc init(type eltType, moduleName: string = "sequential") {
+        super.init(eltType);
+        this.mds = new list(shared Module(eltType));
+        init this;
+
+        this.moduleName = moduleName;
+    }
+
+    proc addModule(name: string, m: shared Module(eltType)) {
+        mds.pushBack(m);
+        addModule(name,m.borrow());
+    }
 
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
@@ -516,7 +905,7 @@ class Linear : Module(?) {
     }
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) do
-        return Tensor.matvecmulFast(par["weight"],input) + par["bias"];
+        return Tensor.matvecmulFast(weight.data,input) + bias.data;
 
     override proc attributes(): moduleAttributes {
         return new moduleAttributes(
@@ -530,15 +919,20 @@ class Linear : Module(?) {
 class Conv2D : Module(?) {
     var kernelShape: 4*int;
     var stride: int;
+    var padding: int;
     var kernel: owned Parameter(eltType);
-    var bias: owned Parameter(eltType);
+    var bias: owned Parameter(eltType)?;
 
-    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1) {
+    proc init(type eltType = real,channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0, bias: bool = true) {
         super.init(eltType);
         this.kernelShape = (features,channels,kernel,kernel);
         this.stride = stride;
+        this.padding = padding;
         this.kernel = new Parameter(Tensor.arange(features,channels,kernel,kernel) : eltType);
-        this.bias = new Parameter(Tensor.arange(features) : eltType);
+        if bias then
+            this.bias = new Parameter(Tensor.arange(features) : eltType);
+        else
+            this.bias = nil;
         init this;
     }
 
@@ -547,7 +941,8 @@ class Conv2D : Module(?) {
                   ma.getInt("in_channels"),
                   ma.getInt("out_channels"),
                   ma.getInt("kernel_size"),
-                  ma.getInt("stride"));
+                  ma.getInt("stride"),
+                  ma.getInt("padding"));
     }
 
     // proc init(reader,ref deserializer: jsonDeserializer) {
@@ -567,17 +962,18 @@ class Conv2D : Module(?) {
         // var bias = Tensor.arange(features);
 
         addModule("weight",kernel);
-        addModule("bias",bias);
+        if bias != nil then
+            addModule("bias",bias!);
     }
 
-    proc init(channels: int, features: int, kernel: int, stride: int = 1) {
-        this.init(real,channels,features,kernel,stride);
+    proc init(channels: int, features: int, kernel: int, stride: int = 1, padding: int = 0) {
+        this.init(real,channels,features,kernel,stride,padding);
     }
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
         var weights = this.kernel.data;
-        var bias = this.bias.data;
-        return Tensor.convolve(input,weights,bias,stride);
+        var bias = if this.bias != nil then this.bias!.data else Tensor.zeros(this.kernelShape[0]):eltType;
+        return Tensor.convolve(input,weights,bias,stride,padding);
     }
 
     override proc attributes(): moduleAttributes {
@@ -588,30 +984,67 @@ class Conv2D : Module(?) {
             ("inChannels", channels),
             ("outChannels", features),
             ("kernelSize", kernel),
-            ("stride",stride));
+            ("stride",stride),
+            ("padding",padding));
     }
 }
 
 class MaxPool : Module(?) {
     var poolSize: int;
+    var stride: int;
+    var padding: int;
+    var dilation: int;
 
-    proc init(type eltType = real, poolSize: int) {
+    proc init(type eltType = real, poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) {
         super.init(eltType);
         this.poolSize = poolSize;
+        if stride == -1 then
+          this.stride = poolSize;
+        else
+          this.stride = stride;
+        this.padding = padding;
+        this.dilation = dilation;
     }
 
-    proc init(poolSize: int) do
-        this.init(real,poolSize);
+    proc init(poolSize: int, stride: int = -1, padding: int = 0, dilation: int = 1) do
+        this.init(real,poolSize, stride, padding, dilation);
 
     override proc forward(input: Tensor(eltType)): Tensor(eltType) {
-        return input.maxPool(poolSize);
+        return input.maxPool(poolSize, stride, padding, dilation);
     }
 
     override proc attributes(): moduleAttributes {
         return new moduleAttributes(
             "MaxPool",
             moduleName,
-            ("poolSize", poolSize));
+            ("poolSize", poolSize),
+            ("stride", stride),
+            ("padding", padding),
+            ("dilation", dilation));
+    }
+}
+
+class AdaptiveAvgPool2D : Module(?) {
+  // only handles square pooling
+  var outputSize: int;
+
+  proc init(type eltType = real, outputSize: int) {
+        super.init(eltType);
+        this.outputSize = outputSize;
+    }
+
+    proc init(outputSize: int) do
+        this.init(real,outputSize);
+
+    override proc forward(input: Tensor(eltType)): Tensor(eltType) {
+        return input.adaptiveAvgPool2d(outputSize);
+    }
+
+    override proc attributes(): moduleAttributes {
+      return new moduleAttributes(
+            "AdaptiveAvgPool2D",
+            moduleName,
+            ("outputSize", outputSize));
     }
 }
 
@@ -621,7 +1054,7 @@ class Flatten : Module(?) {
     
     override proc forward(input: Tensor(eltType)): Tensor(eltType) do
         return input.flatten();
-    
+
     override proc attributes(): moduleAttributes do
         return new moduleAttributes("Flatten",moduleName);
 }
@@ -638,9 +1071,11 @@ class ReLU : Module(?) {
 }
 
 class Softmax : Module(?) {
-    proc init(type eltType = real) do
+
+    proc init(type eltType = real) {
         super.init(eltType);
-    
+    }
+
     override proc forward(input: Tensor(eltType)): Tensor(eltType) do
         return input.softmax();
 
@@ -648,13 +1083,14 @@ class Softmax : Module(?) {
         return new moduleAttributes("SoftMax",moduleName);
 }
 
+// TODO: dropout is only valid for inference, since its a noop
 class Dropout : Module(?) {
     proc init(type eltType = real,freq: real = 0.5) do
         super.init(eltType);
-    
+
     override proc forward(input: Tensor(eltType)): Tensor(eltType) do
-        return input;
-    
+        return input; // dropout is not used for inference
+
     override proc attributes(): moduleAttributes {
         return new moduleAttributes(
             "Dropout",
@@ -799,4 +1235,5 @@ proc main() {
     var f = IO.open("myfile.txt", IO.ioMode.cw);
     var fw = f.writer();
     fw.writeln(c);
+}
 }

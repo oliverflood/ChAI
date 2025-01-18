@@ -1,0 +1,21 @@
+{
+  "layerType": "Dummy",
+  "attributes": {
+    "training": "true"
+  },
+  "subModules": {
+    "model": {
+      "layerType": "Linear",
+      "attributes": {
+        "training": "true",
+        "in_features": "100",
+        "out_features": "10"
+      },
+      "subModules": {},
+      "subModuleOrder": []
+    }
+  },
+  "subModuleOrder": [
+    "model"
+  ]
+}

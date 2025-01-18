@@ -71,7 +71,7 @@ record dynamicTensor : serializable {
         return this.slice((...args));
 
     proc tensorize(param rank: int) : staticTensor(rank,eltType) {
-        if rank != runtimeRank then 
+        if rank != runtimeRank then
             halt("Cannot cast this dynamicTensor of rank " + runtimeRank: string + " to dynamicTensor of rank " + rank : string + ".");
         return forceRank(rank);
     }
@@ -149,6 +149,7 @@ record dynamicTensor : serializable {
 }
 
 operator :(in t: dynamicTensor(?eltType), type toType): dynamicTensor(toType) {
+    if eltType == toType then return t;
     for param rank in 1..maxRank do
         if t.checkRank(rank) then
             return (t.tensorize(rank) : toType).eraseRank();
@@ -185,10 +186,15 @@ proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor
                     return (at - bt).eraseRank();
                 when "*" do
                     return (at * bt).eraseRank();
-                // when "/" do
-                //     te = (at / bt).meta;
+                when "/" do
+                    return (at / bt).eraseRank();
             }
         }
+        if a.checkRank(rank) then
+            for param rankB in 1..maxRank {
+                if b.checkRank(rankB) then
+                    halt("Rank mismatch in zipBinOp \"" +opName+ "\".  a has rank " + rank : string + " and b has rank " + rankB : string);
+            }
     }
     halt("Degenerate initialization of dynamicTensor.");
 
@@ -216,6 +222,9 @@ operator -(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(
 operator *(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("*",a,b);
 
+operator /(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
+    return zipBinOp("/",a,b);
+
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
@@ -232,6 +241,15 @@ proc dynamicTensor.relu(): dynamicTensor(eltType) {
             return this.tensorize(rank).relu().eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.relu.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.gelu(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.tensorize(rank).gelu().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.gelu.");
     return new dynamicTensor(eltType);
 }
 
@@ -262,14 +280,26 @@ proc dynamicTensor.softmax(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.maxPool(poolSize: int): dynamicTensor(eltType) {
+proc dynamicTensor.maxPool(poolSize: int) do return this.maxPool(poolSize,stride=poolSize, padding=0, dilation=1);
+proc dynamicTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: int): dynamicTensor(eltType) {
     for param rank in 3..3 {
         if this.checkRank(rank) then
-            return this.tensorize(rank).maxPool(poolSize).eraseRank();
+            return this.tensorize(rank).maxPool(poolSize, stride, padding, dilation).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.maxPool.");
     return new dynamicTensor(eltType);
 }
+
+// adaptiveAvgPool2d
+proc dynamicTensor.adaptiveAvgPool2d(outputSize: int): dynamicTensor(eltType) {
+    for param rank in 3..3 {
+        if this.checkRank(rank) then
+            return this.tensorize(rank).adaptiveAvgPool2d(outputSize).eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.adaptiveAvgPool2d.");
+    return new dynamicTensor(eltType);
+}
+
 
 proc dynamicTensor.reshape(args...): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
@@ -320,6 +350,10 @@ proc type dynamicTensor.matvecmulFast(m: dynamicTensor(?eltType),v: dynamicTenso
     return staticTensor.matvecmulFast(m.forceRank(2),v.forceRank(1)).eraseRank();
 }
 
+proc dynamicTensor.topk(k: int): dynamicTensor(int) {
+    return staticTensor.topk(this.tensorize(1),k).eraseRank();
+}
+
 proc dynamicTensor.argmax(): int {
     var t = this.tensorize(1);
     const a = t.array;
@@ -327,11 +361,11 @@ proc dynamicTensor.argmax(): int {
 }
 
 // Right now, the supported shapes are (3,4) -> 3
-proc type dynamicTensor.convolve(features: dynamicTensor(?eltType), kernel: dynamicTensor(eltType), stride: int): dynamicTensor(eltType) do
-    return staticTensor.convolve(features.forceRank(3),kernel.forceRank(4),stride).eraseRank();
+proc type dynamicTensor.convolve(features: dynamicTensor(?eltType), kernel: dynamicTensor(eltType), stride: int, padding: int): dynamicTensor(eltType) do
+    return staticTensor.convolve(features.forceRank(3),kernel.forceRank(4),stride, padding).eraseRank();
 
-proc type dynamicTensor.convolve(features: dynamicTensor(?eltType), kernel: dynamicTensor(eltType), bias: dynamicTensor(eltType), stride: int): dynamicTensor(eltType) do
-    return staticTensor.convolve(features.forceRank(3),kernel.forceRank(4),bias.forceRank(1),stride).eraseRank();
+proc type dynamicTensor.convolve(features: dynamicTensor(?eltType), kernel: dynamicTensor(eltType), bias: dynamicTensor(eltType), stride: int, padding: int): dynamicTensor(eltType) do
+    return staticTensor.convolve(features.forceRank(3),kernel.forceRank(4),bias.forceRank(1),stride,padding).eraseRank();
 
 
 proc type dynamicTensor.arange(args...) do
@@ -342,6 +376,46 @@ proc type dynamicTensor.ones(args...) do
 
 proc type dynamicTensor.zeros(args...) do
     return staticTensor.zeros((...args)).eraseRank();
+
+proc type dynamicTensor.valueLike(t: dynamicTensor(?eltType), value: eltType): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.valueLike(t.tensorize(rank),value).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.valueLike.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.broadcast(shape: int...): dynamicTensor(eltType) {
+    for param rank in 3..3 {
+        if this.checkRank(rank) {
+            return this.tensorize(rank).broadcast((...shape)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.broadcast.");
+    return new dynamicTensor(eltType);
+}
+
+proc type dynamicTensor.sqrt(t: dynamicTensor(real)): dynamicTensor(real) {
+    for param rank in 1..maxRank {
+        if t.checkRank(rank) {
+            return staticTensor.sqrt(t.tensorize(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in sqrt.");
+    return new dynamicTensor(real);
+}
+
+proc dynamicTensor.degenerateFlatten(): [] eltType {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) {
+            return this.tensorize(rank).array.degenerateFlatten();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.degenerateFlatten.");
+    return new dynamicTensor(eltType);
+}
 
 proc main() {
 
@@ -373,7 +447,7 @@ proc main() {
 
     var img = dynamicTensor.arange(1,9,9);
     var ker = dynamicTensor.arange(1,1,3,3);
-    var fet = dynamicTensor.convolve(img,ker,1);
+    var fet = dynamicTensor.convolve(img,ker,1,0);
 
     writeln(fet);
     fet.save("data/my_features.chdata");
@@ -454,12 +528,22 @@ proc type dynamicTensor.multiReader(path: string) {
     return fr;
 }
 
-proc type dynamicTensor.load(path: string,param precision = 64): dynamicTensor(real) {
-    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),precision);
+proc type dynamicTensor.load(path: string,type dtype = real(32), param debug = false): dynamicTensor(dtype) 
+        where isRealType(dtype) {
+    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),dtype = dtype, debug = debug);
+}
+
+proc type dynamicTensor.load(path: string,param precision: int,param debug = false): dynamicTensor(real(precision)) {
+    compilerWarning("Don't use me. Use type specifying version (dtype = real(precision)) instead.");
+    return dynamicTensor.readInPlace(dynamicTensor.multiReader(path),dtype = real(precision),debug = debug);
 }
 
 
-proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),param precision = 64): dynamicTensor(real) {
+proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),type dtype = real(32), param debug = false): dynamicTensor(dtype) 
+        where isRealType(dtype) {
+    compilerAssert(isRealType(dtype));
+    param precision = numBits(dtype);
+    compilerAssert(real(precision) == dtype);
     fr.mark();
     const r = fr.read(int);
     // writeln("rank: ",r);
@@ -471,18 +555,15 @@ proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),param precision = 64): 
                     shape(i) = fr.read(int);
                 const dom = util.domainFromShape((...shape));
                 var A: [dom] real(precision);
-                // for i in dom do 
-                //     a.data[i] = fr.read(real);
                 fr.read(A);
-                const AReal: [dom] real = A : real(64);
-                var a: ndarray(rank,real) = new ndarray(AReal);
+                var a: ndarray(rank,dtype) = new ndarray(A);
                 fr.commit();
                 return new dynamicTensor(a);
             } catch e : IO.UnexpectedEofError {
                 IO.stderr.writeln(e);
-                IO.stderr.writeln("Error reading from ", fr.getFile().path, " . Going to try read with 32 bit precision instead of ", precision);
+                IO.stderr.writeln("Error reading from ", fr.getFile().path, " . Going to try read with 64 bit precision instead of ", precision);
                 fr.revert();
-                return dynamicTensor.readInPlace(fr,precision=32);
+                return dynamicTensor.readInPlace(fr,dtype = real(64),debug = true) : dtype;
             }
         }
     }
