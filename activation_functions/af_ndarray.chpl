@@ -147,20 +147,6 @@ inline proc hardshrink(l: real(64)=0.5) {
     return rl;
 }
 
-inline proc tanhshrink() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = x - Math.tanh(x);
-    }
-
-    return rl;
-}
-
 inline proc softsign() {
     const ref thisData = data;
     const dom = this.domain;

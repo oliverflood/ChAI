@@ -336,6 +336,15 @@ record log_sigmoidOp : serializable {
         return input.array.log_sigmoid();
 }
 
+record tanhshrinkOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.tanhshrink();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

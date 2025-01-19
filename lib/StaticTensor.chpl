@@ -212,6 +212,11 @@ proc staticTensor.log_sigmoid() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.tanhshrink() {
+    var ctx = new tanhshrinkOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {
