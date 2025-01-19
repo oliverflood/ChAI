@@ -297,20 +297,6 @@ inline proc tanh() {
     return rl;
 }
 
-inline proc sigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = 1 / (1 + Math.exp(-x));
-    }
-
-    return rl;
-}
-
 inline proc hard_sigmoid() {
     const ref thisData = data;
     const dom = this.domain;

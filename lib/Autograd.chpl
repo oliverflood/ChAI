@@ -291,6 +291,15 @@ record mishOp : serializable {
         return input.array.mish();
 }
 
+record sigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.sigmoid();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 
