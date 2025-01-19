@@ -327,6 +327,15 @@ record seluOp : serializable {
         return input.array.selu();
 }
 
+record log_sigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.log_sigmoid();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

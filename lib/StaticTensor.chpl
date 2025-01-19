@@ -207,6 +207,11 @@ proc staticTensor.selu() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.log_sigmoid() {
+    var ctx = new log_sigmoidOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {

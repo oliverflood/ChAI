@@ -659,14 +659,24 @@ record ndarray : serializable {
         const dom = this.domain;
         var rl = new ndarray(dom, eltype);
         ref rld = rl.data;
-
-        const alpha: real(64) = 1.6732632423543772848170429916717;
-        const scale: real(64) = 1.0507009873554804934193349852946;
+        // const alpha: real(64) = 1.6732632423543772848170429916717;
+        // const scale: real(64) = 1.0507009873554804934193349852946;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)))
+            rld[i] = 1.0507009873554804934193349852946 * (max(0, x) + min(0, 1.6732632423543772848170429916717 * (Math.exp(x) - 1)))
         }
+        return rl;
+    }
 
+    inline proc log_sigmoid() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = log(1 / (1 + Math.exp(-x)));
+        }
         return rl;
     }
 

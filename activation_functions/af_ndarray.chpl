@@ -133,20 +133,6 @@ inline proc rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0) {
     return rl;
 }
 
-inline proc log_sigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = log(1 / (1 + Math.exp(-x)));
-    }
-
-    return rl;
-}
-
 inline proc hardshrink(l: real(64)=0.5) {
     const ref thisData = data;
     const dom = this.domain;
