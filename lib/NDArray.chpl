@@ -619,16 +619,28 @@ record ndarray : serializable {
     }
 
     inline proc sigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = 1 / (1 + Math.exp(-x));
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = 1 / (1 + Math.exp(-x));
+        }
+        return rl;
     }
-    return rl;
-}
+
+    inline proc tanh() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = Math.tanh(x);
+        }
+        return rl;
+    }
 
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;

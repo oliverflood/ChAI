@@ -150,8 +150,6 @@ inline proc leaky_relu(negative_slope: real(64)=Math.exp(-2)) {
     return rl;
 }
 
-// prelu goes here
-
 inline proc rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0) {
     const ref thisData = data;
     const dom = this.domain;
@@ -170,9 +168,6 @@ inline proc rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0) {
 
     return rl;
 }
-
-// glu goes here
-// gelu goes here
 
 inline proc log_sigmoid() {
     const ref thisData = data;
@@ -251,9 +246,6 @@ inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
     return rl;
 }
 
-// softmax goes here
-// softmin goes here
-
 inline proc softshrink(lambda: real(64)=0.5): throws { // lambda must be non-negative
     if lambda < 0 {
         throw new Error("argument to softshrink function must be non-negative");
@@ -276,22 +268,6 @@ inline proc softshrink(lambda: real(64)=0.5): throws { // lambda must be non-neg
         else {
             rld[i] = 0;
         }
-    }
-
-    return rl;
-}
-
-// gumbel_softmax goes here
-
-inline proc tanh() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = Math.tanh(x);
     }
 
     return rl;

@@ -192,6 +192,11 @@ proc staticTensor.sigmoid() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.tanh() {
+    var ctx = new tanhOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {

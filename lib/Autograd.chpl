@@ -300,6 +300,15 @@ record sigmoidOp : serializable {
         return input.array.sigmoid();
 }
 
+record tanhOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.tanh();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

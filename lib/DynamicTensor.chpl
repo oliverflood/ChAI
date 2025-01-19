@@ -275,6 +275,15 @@ proc dynamicTensor.sigmoid(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.tanh(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).tanh().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.tanh.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.gelu(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
