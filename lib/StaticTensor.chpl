@@ -197,6 +197,11 @@ proc staticTensor.tanh() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.relu6() {
+    var ctx = new relu6Op(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {

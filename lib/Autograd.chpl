@@ -309,6 +309,15 @@ record tanhOp : serializable {
         return input.array.tanh();
 }
 
+record relu6Op : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.relu6();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

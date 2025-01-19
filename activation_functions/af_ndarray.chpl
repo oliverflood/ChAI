@@ -72,20 +72,6 @@ inline proc hardswish() {
     return rl;
 }
 
-inline proc relu6() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = min(max(0, x), 6);
-    }
-
-    return rl;
-}
-
 inline proc elu(alpha: real(64)=1) {
     const ref thisData = data;
     const dom = this.domain;
@@ -183,7 +169,7 @@ inline proc log_sigmoid() {
     return rl;
 }
 
-inline proc hardshrink(lambda: real(64)=0.5) {
+inline proc hardshrink(l: real(64)=0.5) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -191,7 +177,7 @@ inline proc hardshrink(lambda: real(64)=0.5) {
 
     forall i in dom.every() {
         const x = thisData[i];
-        rld[i] = x if (x > lambda) || (x < lambda) else 0;
+        rld[i] = x if (x > l) || (x < l) else 0;
     }
 
     return rl;
@@ -246,8 +232,8 @@ inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
     return rl;
 }
 
-inline proc softshrink(lambda: real(64)=0.5): throws { // lambda must be non-negative
-    if lambda < 0 {
+inline proc softshrink(l: real(64)=0.5): throws { // l must be non-negative
+    if l < 0 {
         throw new Error("argument to softshrink function must be non-negative");
     }
     const ref thisData = data;
@@ -257,12 +243,12 @@ inline proc softshrink(lambda: real(64)=0.5): throws { // lambda must be non-neg
 
     forall i in dom.every() {
         const x = thisData[i];
-        if x > lambda {
-            rld[i] = x - lambda;
+        if x > l {
+            rld[i] = x - l;
         }
 
-        else if x < lambda {
-            rld[i] = x + lambda;
+        else if x < l {
+            rld[i] = x + l;
         }
 
         else {

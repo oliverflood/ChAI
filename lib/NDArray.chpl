@@ -642,6 +642,18 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc relu6() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = min(max(0, x), 6);
+        }
+        return rl;
+    }
+
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;
         const mySize = myDom.size;
