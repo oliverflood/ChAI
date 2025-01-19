@@ -582,6 +582,18 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc gelu() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom,eltType);
+        ref rlD = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rlD[i] = x * (0.5 * (1.0 + Math.erf(x * Math.reciprSqrt2)));
+        }
+        return rl;
+    }
+
     inline proc silu() {
         const ref thisData = data;
         const dom = this.domain;
@@ -594,14 +606,14 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc gelu() {
+    inline proc mish() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom,eltType);
-        ref rlD = rl.data;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rlD[i] = x * (0.5 * (1.0 + Math.erf(x * Math.reciprSqrt2)));
+            rld[i] = x * Math.tanh(Math.log(1 + Math.exp(x)));
         }
         return rl;
     }

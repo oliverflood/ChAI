@@ -182,6 +182,11 @@ proc staticTensor.silu() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.mish() {
+    var ctx = new mishOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {

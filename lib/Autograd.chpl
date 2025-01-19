@@ -282,6 +282,15 @@ record siluOp : serializable {
         return input.array.silu();
 }
 
+record mishOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.mish();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

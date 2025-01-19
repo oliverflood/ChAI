@@ -1,63 +1,13 @@
 /*
-implement activation functions for all of the following:
-* NDArray
-* Autograd
-* static
-* dynamic
-
 TODO: ****************
-* if I am able to use 'continue' in forall / coforall loops, then replace some else if / else statements with 'continue'
-* might have to use Random if not already included
-* check if lambda is a keyword
-* strictly positive real data type? (softshrink)
 * prelu
 * glu
-* gelu
 * softmin
 * softmax
 * gumbel_softmax
 * log_softmax
 * ALL NORMS
 **********************
-
-Activation Functions this file includes:
-* threshold     parameters: threshold: real64, value: real64
-* hardtanh      parameters: min_val: real64=-1, max_val: real64=1
-* hardswish
-* relu6
-* elu           parameters: alpha: real64=1
-* selu
-* celu          parameters: alpha: real64=1
-* leaky_relu    parameters: negative_slope: real(64)=exp(-2)
-* TODO: prelu
-* rrelu         parameters: lower: real64=0.125 [aka 1/8], upper: real64=1.0/3.0
-* TODO: glu
-* log_sigmoid
-* hardshrink    parameters: lambda: real64=0.5
-* tanhshrink
-* softsign
-* softplus      parameters: beta: real64=1.0, threshold: real64=20.0
-* TODO: softmin
-* TODO: softmax
-* softshrink    parameters: lambda: real64=0.5
-* TODO: gumbel_softmax
-* TODO: log_softmax
-* tanh
-* sigmoid
-* hard_sigmoid
-* silu
-* mish
-*/
-
-use NDArray;
-use Autograd;
-use StaticTensor;
-use DynamicTensor;
-
-/*
-===================================================================
-NDArray Activation Functions
-===================================================================
 */
 inline proc threshold(threshold: real(64), value: real(64)) {
     const ref thisData = data;
@@ -380,64 +330,6 @@ inline proc hard_sigmoid() {
         else {
             rld[i] = x/6.0 + 0.5;
         }
-    }
-
-    return rl;
-}
-
-inline proc silu() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = x / (1 + Math.exp(-x));
-    }
-
-    return rl;
-}
-
-inline proc silu() {
-        const ref thisData = data;
-        const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
-        ref rld = rl.data;
-        forall i in dom.every() {
-            const x = thisData[i];
-            rld[i] = x / (1 + Math.exp(-x));
-        }
-        return rl;
-    }
-
-    record reluOp : serializable {
-    var input: shared BaseTensorResource(?);
-
-    proc children do return (input,);
-
-    proc forward() do
-        return input.array.relu();
-}
-
-record siluOp : serializable {
-    var input: shared BaseTensorResource(?);
-
-    proc children do return (input,);
-
-    proc forward() do
-        return input.array.silu();
-}
-
-inline proc mish() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = x * Math.tanh(Math.log(1 + Math.exp(x))); // standard softplus, without beta and threshold parameters
     }
 
     return rl;

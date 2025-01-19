@@ -257,6 +257,15 @@ proc dynamicTensor.silu(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.mish(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).mish().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.mish.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.gelu(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
