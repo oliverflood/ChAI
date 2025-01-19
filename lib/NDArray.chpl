@@ -704,6 +704,23 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        var a: [dom] real(64);
+        fillRandom(a);
+        forall i in dom.every() {
+            const x = thisData[i];
+            // var a: [0..0] real(64); // singular random value
+            // fillRandom(a);
+            a = 0.125 + (1.0 / 3.0 - 0.125) * a; // scale it so that it is between 1/8, 1/3
+            rld[i] = max(0, x) + min(0, a * x);
+        }
+        return rl;
+    }
+
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;
         const mySize = myDom.size;

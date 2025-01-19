@@ -354,6 +354,15 @@ record softsignOp : serializable {
         return input.array.softsign();
 }
 
+record rreluOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.rrelu();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 
