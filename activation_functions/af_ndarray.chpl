@@ -17,7 +17,7 @@ inline proc threshold(threshold: real(64), value: real(64)) {
 
     forall i in dom.every() {
         const x = thisData[i];
-        rld[i] = if x <= threshold then value else x;
+        rld[i] = x if x > threshold else value;
     }
 
     return rl;
@@ -80,29 +80,7 @@ inline proc elu(alpha: real(64)=1) {
 
     forall i in dom.every() {
         const x = thisData[i];
-        if x > 0 {
-            rld[i] = x;
-        }
-
-        else {
-            rld[i] = alpha * (Math.exp(x) - 1);
-        }
-    }
-
-    return rl;
-}
-
-inline proc selu() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    const alpha: real(64) = 1.6732632423543772848170429916717;
-    const scale: real(64) = 1.0507009873554804934193349852946;
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)))
+        rld[i] = x if x > 0 else alpha * (Math.exp(x) - 1);
     }
 
     return rl;

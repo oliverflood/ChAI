@@ -654,6 +654,22 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc selu() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+
+        const alpha: real(64) = 1.6732632423543772848170429916717;
+        const scale: real(64) = 1.0507009873554804934193349852946;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)))
+        }
+
+        return rl;
+    }
+
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;
         const mySize = myDom.size;

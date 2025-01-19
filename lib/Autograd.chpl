@@ -318,6 +318,15 @@ record relu6Op : serializable {
         return input.array.relu6();
 }
 
+record seluOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.selu();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

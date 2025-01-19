@@ -202,6 +202,11 @@ proc staticTensor.relu6() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.selu() {
+    var ctx = new seluOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {
