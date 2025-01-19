@@ -668,7 +668,7 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc log_sigmoid() {
+    inline proc logsigmoid() {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltype);
@@ -713,13 +713,38 @@ record ndarray : serializable {
         fillRandom(a);
         forall i in dom.every() {
             const x = thisData[i];
-            // var a: [0..0] real(64); // singular random value
-            // fillRandom(a);
-            a = 0.125 + (1.0 / 3.0 - 0.125) * a; // scale it so that it is between 1/8, 1/3
+            a[i] = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
             rld[i] = max(0, x) + min(0, a * x);
         }
         return rl;
     }
+
+    inline proc hardswish() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = if x >= -3 && x <= 3 then x * (x + 3) / 6 else max(0, x);
+        }
+        return rl;
+    }
+
+    inline proc hardsigmoid() {
+    const ref thisData = data;
+    const dom = this.domain;
+    var rl = new ndarray(dom, eltype);
+    ref rld = rl.data;
+    forall i in dom.every() {
+        const x = thisData[i];
+        // 0 if x <= -3
+        // 1 if x >= 3
+        // x/6 + 0.5 otherwise
+        rld[i] = max(0, min(1, x/6.0 + 0.5));
+    }
+    return rl;
+}
 
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;

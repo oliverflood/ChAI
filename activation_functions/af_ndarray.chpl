@@ -1,6 +1,7 @@
 /*
+This file contains all activation functions which have not yet been put onto NDArray.chpl --> DynamicTensor.chpl
+
 TODO: ****************
-* handle act. func. with parameters the same way?
 * rrelu
 * threshold
 * hardtanh
@@ -11,7 +12,7 @@ TODO: ****************
 * hardshrink
 * softplus
 
-
+Implement the Following:
 * prelu
 * glu
 * softmin
@@ -141,25 +142,6 @@ inline proc softshrink(l: real(64)=0.5): throws { // l must be non-negative
             rld[i] = x + l;
         else
             rld[i] = 0;
-    }
-
-    return rl;
-}
-
-inline proc hard_sigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        if x <= -3 then
-            rld[i] = 0;
-        else if x >= 3 then
-            rld[i] = 1;
-        else
-            rld[i] = x/6.0 + 0.5;
     }
 
     return rl;

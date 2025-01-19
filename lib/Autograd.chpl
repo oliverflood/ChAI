@@ -327,13 +327,13 @@ record seluOp : serializable {
         return input.array.selu();
 }
 
-record log_sigmoidOp : serializable {
+record logsigmoidOp : serializable {
     var input: shared BaseTensorResource(?);
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.log_sigmoid();
+        return input.array.logsigmoid();
 }
 
 record tanhshrinkOp : serializable {
@@ -356,11 +356,36 @@ record softsignOp : serializable {
 
 record rreluOp : serializable {
     var input: shared BaseTensorResource(?);
+    var lower: real(64) = 0.125;
+    var upper: real(64) = 1.0 / 3.0;
+
+    proc init(low: real(64), up: real(64)) {
+        lower = low;
+        upper = up;
+    }
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.rrelu();
+        return input.array.rrelu(lower, upper);
+}
+
+record hardswishOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.hardswish();
+}
+
+record hardsigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.hardsigmoid();
 }
 
 record expOp : serializable {

@@ -207,8 +207,8 @@ proc staticTensor.selu() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.log_sigmoid() {
-    var ctx = new log_sigmoidOp(meta);
+proc staticTensor.logsigmoid() {
+    var ctx = new logsigmoidOp(meta);
     return tensorFromCtx(rank,eltType,ctx);
 }
 
@@ -222,8 +222,18 @@ proc staticTensor.softsign() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.rrelu() {
-    var ctx = new rreluOp(meta);
+proc staticTensor.rrelu(lower: real(64), upper: real(64)) {
+    var ctx = new rreluOp(meta, lower, upper);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.hardswish() {
+    var ctx = new hardswishOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.hardsigmoid() {
+    var ctx = new hardsigmoidOp(meta);
     return tensorFromCtx(rank,eltType,ctx);
 }
 

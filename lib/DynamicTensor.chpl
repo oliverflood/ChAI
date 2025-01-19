@@ -302,12 +302,12 @@ proc dynamicTensor.selu(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.log_sigmoid(): dynamicTensor(eltType) {
+proc dynamicTensor.logsigmoid(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).log_sigmoid().eraseRank();
+            return this.forceRank(rank).logsigmoid().eraseRank();
     }
-    halt("Could not determine rank in dynamicTensor.log_sigmoid.");
+    halt("Could not determine rank in dynamicTensor.logsigmoid.");
     return new dynamicTensor(eltType);
 }
 
@@ -329,12 +329,30 @@ proc dynamicTensor.softsign(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.rrelu(): dynamicTensor(eltType) {
+proc dynamicTensor.rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).rrelu().eraseRank();
+            return this.forceRank(rank).rrelu(lower, upper).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.rrelu.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.hardswish(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).hardswish().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.hardswish.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.hardsigmoid(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).hardsigmoid().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.hardsigmoid.");
     return new dynamicTensor(eltType);
 }
 
