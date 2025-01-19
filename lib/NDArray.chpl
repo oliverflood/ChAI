@@ -744,6 +744,20 @@ record ndarray : serializable {
         rld[i] = max(0, min(1, x/6.0 + 0.5));
     }
     return rl;
+
+    inline proc hardshrink(l: real(64)=0.5) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = if -l < x && x < l then 0 else x;
+            // branchless version could be faster on GPU's:
+            // rld[i] = x * max(0, (Math.abs(x)-l) / Math.abs(x)) + l * max(x-l, x+l) / Math.abs(max(x-l, x+l)) * min(1, 1 - (l - Math.abs(x)) / Math.abs(l - Math.abs(x)))
+        }
+        return rl;
+    }
 }
 
     proc degenerateFlatten(): [] eltType {

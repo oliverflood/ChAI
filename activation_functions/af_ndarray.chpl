@@ -97,20 +97,6 @@ inline proc leaky_relu(negative_slope: real(64)=Math.exp(-2)) {
     return rl;
 }
 
-inline proc hardshrink(l: real(64)=0.5) {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = if (x > l) || (x < l) then x else 0;
-    }
-
-    return rl;
-}
-
 inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
     const ref thisData = data;
     const dom = this.domain;

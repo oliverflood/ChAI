@@ -237,6 +237,11 @@ proc staticTensor.hardsigmoid() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.hardshrink() {
+    var ctx = new hardshrinkOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {
