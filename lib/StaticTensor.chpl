@@ -217,6 +217,11 @@ proc staticTensor.tanhshrink() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.softsign() {
+    var ctx = new softsignOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
 proc staticTensor.gelu() {
     var t = new staticTensor(rank,eltType);
     on this.device {

@@ -345,6 +345,15 @@ record tanhshrinkOp : serializable {
         return input.array.tanhshrink();
 }
 
+record softsignOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softsign();
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

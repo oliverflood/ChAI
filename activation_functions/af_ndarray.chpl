@@ -147,20 +147,6 @@ inline proc hardshrink(l: real(64)=0.5) {
     return rl;
 }
 
-inline proc softsign() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = x / (1 + abs(x));
-    }
-
-    return rl;
-}
-
 inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
     const ref thisData = data;
     const dom = this.domain;
