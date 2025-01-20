@@ -1,8 +1,7 @@
-
-
 use NDArray;
 use Remote;
 use Autograd;
+import Random;
 import Utilities as util;
 use Utilities.Standard;
 
@@ -881,4 +880,26 @@ proc ref staticTensor.read(fr: IO.fileReader(?)) throws {
         ref ar = this.array;
         ar = devArr;
     }
+}
+
+
+// Randomly zeroes some elements of the tensor with probability p.
+//
+// Netizens say that this is useful for regularization
+proc staticTensor.dropout(p: real(64) = 0.5): staticTensor(rank, eltType)
+    when isSubtype(eltType, real)
+{
+    var dropoutSelection = [this.domain] real;
+    Random.fillRandom(dropoutSelection);
+
+    var dropped: [this.domain] eltType;
+    forall i in this.domain {
+        dropped[i] =
+            if dropoutSelection[i] <= p then
+                0
+            else
+                dropped[i];
+    }
+    
+    return new staticTensor(dropped);
 }
