@@ -31,8 +31,6 @@ inline proc threshold(threshold: real(64), value: real(64)) {
 
     forall i in dom.every() {
         const x = thisData[i];
-        // rld[i] = if x > threshold then x else value;
-        // possibly faster for GPU's:
         const float_max: real(64) = 1.7976931348623157E308; // maximum value a float_64 can take
         const xgeqt: real(64) = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
         rld[i] = x * xgeqt + v * (1 - xgeqt);
