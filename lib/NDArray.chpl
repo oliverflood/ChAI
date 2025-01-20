@@ -569,32 +569,6 @@ record ndarray : serializable {
         return mxi;
     }
 
-    // TODO: Make more efficient after benchmarking
-    proc softmax() where isSubtype(eltType, real) {
-        return new ndarray(Math.exp(data) / (+ reduce Math.exp(data)));
-    } 
-
-    // TODO: Make more efficient after benchmarking
-    proc softmin() where isSubtype(eltType, real) {
-        return new ndarray(Math.exp(-data) / (+ reduce Math.exp(-data)));
-    }
-
-    // Randomly zeroes some elements of the tensor.
-    proc dropout(p: real(64) = 0.5): ndarray(rank, eltType)
-        where isSubtype(eltType, real)
-    {
-        const sample =
-            Random.sample([0.0, 1.0], data.size)
-                .reshape(data.domain);
-
-        var res = new ndarray(rank, eltType);
-        forall c, i in zip(sample, data.domain) {
-            res.data[i] = c*data[i];
-        }
-
-        return res;
-    }
-
     inline proc relu() {
         const ref thisData = data;
         const dom = this.domain;
