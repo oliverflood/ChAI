@@ -172,6 +172,21 @@ proc staticTensor.reshape(newShape: int ...?newRank) {
     return tensorFromCtx(newRank,eltType,ctx);
 }
 
+proc staticTensor.svd(full_matrices: bool = true)
+        : (staticTensor, staticTensor, staticTensor)
+  {
+    var ctx = new svdOp(this.resource, full_matrices);
+
+    const tripleND = ctx.forward();
+    const (u_nd, s_nd, vt_nd) = tripleND;
+
+    var u_st  = new staticTensor(u_nd);
+    var s_st  = new staticTensor(s_nd);
+    var vt_st = new staticTensor(vt_nd);
+
+    return (u_st, s_st, vt_st);
+  }
+
 proc staticTensor.relu() {
     var ctx = new reluOp(meta);
     return tensorFromCtx(rank,eltType,ctx);

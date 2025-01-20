@@ -255,6 +255,19 @@ class TensorResource : BaseTensorResource(?), serializable {
 
 // Operations
 
+record svdOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var full_matrices: bool;
+
+    proc children do return (input,);
+
+    proc forward() {
+      return input.array.svd(full_matrices);
+        // returns (ndarray, ndarray, ndarray)
+    }
+
+    proc spec : GradOpSpec do return new dict(("operation","SVD"));
+  }
 
 
 record baseValue : serializable {

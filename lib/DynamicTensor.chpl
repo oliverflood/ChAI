@@ -235,6 +235,34 @@ proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.svd(full_matrices: bool = true)
+       : (dynamicTensor(eltType), dynamicTensor(eltType), dynamicTensor(eltType))
+  {
+    // We only handle rank=2 for SVD
+    for param rank in 1..maxRank {
+      if this.checkRank(rank) {
+        if rank != 2 {
+          halt("SVD currently only implemented for rank-2 dynamicTensors; got rank=", rank);
+        }
+
+        // Convert dynamicTensor -> staticTensor of rank=2
+        const st = this.tensorize(rank);  
+        
+        // Call the staticTensor version of svd
+        const (u_st, s_st, vt_st) = st.svd(full_matrices);
+
+        // Convert each staticTensor back to dynamicTensor
+        var u_dt  = new dynamicTensor(u_st);
+        var s_dt  = new dynamicTensor(s_st);
+        var vt_dt = new dynamicTensor(vt_st);
+
+        return (u_dt, s_dt, vt_dt);
+      }
+    }
+
+    halt("Could not determine rank in dynamicTensor.svd.");
+  }
+
 proc dynamicTensor.relu(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
