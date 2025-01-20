@@ -1,58 +1,26 @@
-// use NDArray;
 use IO;
 use Random;
 use Math;
 
-proc temp(num: real(64)=10.0) {
-    return num;
-}
-
-proc greeting(name: string="World") {
-    writeln("Hello ", name);
-}
-
 proc main() {
     writeln("in testing function");
-    // greeting();
-    // greeting("Jose");
-    // writeln(temp());
-    // writeln(temp(-20.0));
 
-    // var tvar: real(64) = 1.0/3;
-    // writeln(tvar);
-
-    // var bad_count: int = 0;
-    // var low: real(64) = 1.0;
-    // var high: real(64) = 0.0;
-    // for i in 1..1000 {
-    //     var a: [0..0] real(64); // singular random value
-    //     fillRandom(a);
-    //     a = 0.125 + (1.0/3.0 - 0.125) * a;
-    //     if (a[0] < 0.125) || (a[0] > 1.0 / 3.0) {
-    //         bad_count += 1;
-    //     }
-
-    //     if a[0] < low {
-    //         low = a[0];
-    //     }
-
-    //     if a[0] > high {
-    //         high = a[0];
-    //     }
-
-    // }
-    // writeln("bad_count: ", bad_count, " lowest: ", low, " highest: ", high);
-
-    // writeln(Math.exp(1));
-    // writeln(max(0, 3, 7));
-
-    var num: int = -1;
-    var x: int = 0;
-    // num = 0 if x == 0 else 1;
-    num = if x == 0 then 0 else 1;
-    writeln("num: ", num, "\tx: ", x);
-
-    x = 1;
-    num = if x == 0 then 0 else 1;
-    writeln("num: ", num, "\tx: ", x);
+    var D: domain(2) = {2..7, 1..4};
+    // writeln("specific dimension: ", D.dim(0));
+    // writeln("low0: ", D.dim(0).low);
+    // writeln("high0: ", D.dim(0).high);
+    // writeln("size0: ", D.dim(0).size);
+    // writeln("\n");
+    // writeln("low1: ", D.dim(1).low);
+    // writeln("high1: ", D.dim(1).high);
+    // writeln("size1: ", D.dim(1).size);
+    var d0 = D.dim(0);
+    var d1 = D.dim(1);
+    writeln("low0: ", d0.low);
+    writeln("high0: ", d0.high);
+    writeln("size0: ", d0.size);
+    writeln("\n");
+    writeln("low1: ", d1.low);
+    writeln("high1: ", d1.high);
+    writeln("size1: ", d1.size);
 }

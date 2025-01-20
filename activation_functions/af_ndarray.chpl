@@ -2,6 +2,7 @@
 This file contains all activation functions which have not yet been put onto NDArray.chpl --> DynamicTensor.chpl
 
 TODO: ****************
+Activation Functions with a Parameter?
 * rrelu
 * threshold
 * hardtanh
@@ -30,7 +31,11 @@ inline proc threshold(threshold: real(64), value: real(64)) {
 
     forall i in dom.every() {
         const x = thisData[i];
-        rld[i] = if x > threshold then x else value;
+        // rld[i] = if x > threshold then x else value;
+        // possibly faster for GPU's:
+        const float_max: real(64) = 1.7976931348623157E308; // maximum value a float_64 can take
+        const xgeqt: real(64) = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
+        rld[i] = x * xgeqt + v * (1 - xgeqt);
     }
 
     return rl;
@@ -112,9 +117,7 @@ inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
 }
 
 inline proc softshrink(l: real(64)=0.5): throws { // l must be non-negative
-    if l < 0 {
-        throw new Error("argument to softshrink function must be non-negative");
-    }
+    if l < 0 do throw new Error("argument to softshrink function must be non-negative");
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -132,3 +135,8 @@ inline proc softshrink(l: real(64)=0.5): throws { // l must be non-negative
 
     return rl;
 }
+
+
+// fix:
+// hardswish
+// hardshrink
