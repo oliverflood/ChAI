@@ -897,7 +897,7 @@ proc staticTensor.dropout(p: real(64) = 0.5): staticTensor(rank, eltType)
             if dropoutSelection[i] <= p then
                 0
             else
-                dropped[i];
+                this[i];
     }
     
     return new staticTensor(dropped);
