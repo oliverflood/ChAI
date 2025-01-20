@@ -95,7 +95,7 @@ operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,t
     return new staticTensor(b);
 }
 
-proc tensorFromCtx(param rank: int, type eltType, ctx): staticTensor(rank,eltType) {
+proc tensorFromCtx(param rank: int, type eltType, ctx: ?ctxType): staticTensor(rank,eltType) {
     var newMeta = new owned TensorResource(eltType,rank,ctx);
     newMeta.forward();
     return new staticTensor(newMeta);
