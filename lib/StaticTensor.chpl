@@ -250,6 +250,11 @@ proc staticTensor.hardshrink() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
+    var ctx = new thresholdOp(meta, thershold, value);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);

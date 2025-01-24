@@ -397,6 +397,22 @@ record hardshrinkOp : serializable {
         return input.array.hardshrink();
 }
 
+record thresholdOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var threshold: eltType; // PyTorch has no defaults for threshold
+    var value: eltType;
+
+    proc init(t: eltType, v: eltType) {
+        threshold = t;
+        value = v;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.threshold(threshold, value);
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

@@ -2,9 +2,6 @@
 This file contains all activation functions which have not yet been put onto NDArray.chpl --> DynamicTensor.chpl
 
 TODO: ****************
-Activation Functions with a Parameter?
-* rrelu
-* threshold
 * hardtanh
 * elu
 * celu
@@ -23,23 +20,8 @@ Implement the Following:
 * ALL NORMS
 **********************
 */
-inline proc threshold(threshold: real(64), value: real(64)) {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
 
-    forall i in dom.every() {
-        const x = thisData[i];
-        const float_max: real(64) = 1.7976931348623157E308; // maximum value a float_64 can take
-        const xgeqt: real(64) = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
-        rld[i] = x * xgeqt + v * (1 - xgeqt);
-    }
-
-    return rl;
-}
-
-inline proc hardtanh(min_val: real(64)=-1.0, max_val: real(64)=1.0) {
+inline proc hardtanh(min_val: eltType=-1.0, max_val: eltType=1.0) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -58,7 +40,7 @@ inline proc hardtanh(min_val: real(64)=-1.0, max_val: real(64)=1.0) {
     return rl;
 }
 
-inline proc elu(alpha: real(64)=1) {
+inline proc elu(alpha: eltType=1) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -72,7 +54,7 @@ inline proc elu(alpha: real(64)=1) {
     return rl;
 }
 
-inline proc celu(alpha: real(64)=1) {
+inline proc celu(alpha: eltType=1) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -86,7 +68,7 @@ inline proc celu(alpha: real(64)=1) {
     return rl;
 }
 
-inline proc leaky_relu(negative_slope: real(64)=Math.exp(-2)) {
+inline proc leaky_relu(negative_slope: eltType=Math.exp(-2)) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -100,7 +82,7 @@ inline proc leaky_relu(negative_slope: real(64)=Math.exp(-2)) {
     return rl;
 }
 
-inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
+inline proc softplus(beta: eltType=1.0, threshold: eltType=20.0) {
     const ref thisData = data;
     const dom = this.domain;
     var rl = new ndarray(dom, eltype);
@@ -114,7 +96,7 @@ inline proc softplus(beta: real(64)=1.0, threshold: real(64)=20.0) {
     return rl;
 }
 
-inline proc softshrink(l: real(64)=0.5): throws { // l must be non-negative
+inline proc softshrink(l: eltType=0.5): throws { // l must be non-negative
     if l < 0 do throw new Error("argument to softshrink function must be non-negative");
     const ref thisData = data;
     const dom = this.domain;

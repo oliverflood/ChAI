@@ -248,6 +248,15 @@ proc dynamicTensor.relu(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.gelu(): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).gelu().eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.gelu.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.silu(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
@@ -365,12 +374,12 @@ proc dynamicTensor.hardshrink(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.gelu(): dynamicTensor(eltType) {
+proc dynamicTensor.threshold(threshold: eltType, value: eltType): dynamicTensor(eltType) { // PyTorch has no defaults for threshold
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).gelu().eraseRank();
+            return this.forceRank(rank).threshold(threshold, value).eraseRank();
     }
-    halt("Could not determine rank in dynamicTensor.gelu.");
+    halt("Could not determine rank in dynamicTensor.threshold.");
     return new dynamicTensor(eltType);
 }
 

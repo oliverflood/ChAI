@@ -758,6 +758,20 @@ record ndarray : serializable {
         }
         return rl;
     }
+
+    inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
+    const ref thisData = data;
+    const dom = this.domain;
+    var rl = new ndarray(dom, eltype);
+    ref rld = rl.data;
+    forall i in dom.every() {
+        const x = thisData[i];
+        const float_max: eltType = 1.7976931348623157E308; // maximum value a float_64 can take
+        const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
+        rld[i] = x * xgeqt + value * (1 - xgeqt);
+    }
+    return rl;
+}
 }
 
     proc degenerateFlatten(): [] eltType {
