@@ -329,7 +329,7 @@ proc dynamicTensor.softsign(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0): dynamicTensor(eltType) {
+proc dynamicTensor.rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
             return this.forceRank(rank).rrelu(lower, upper).eraseRank();

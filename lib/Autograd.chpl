@@ -356,10 +356,10 @@ record softsignOp : serializable {
 
 record rreluOp : serializable {
     var input: shared BaseTensorResource(?);
-    var lower: real(64) = 0.125;
-    var upper: real(64) = 1.0 / 3.0;
+    var lower: eltType = 0.125;
+    var upper: eltType = 1.0 / 3.0;
 
-    proc init(low: real(64), up: real(64)) {
+    proc init(low: eltType, up: eltType) {
         lower = low;
         upper = up;
     }

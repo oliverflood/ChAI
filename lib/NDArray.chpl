@@ -597,7 +597,7 @@ record ndarray : serializable {
     inline proc silu() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -609,7 +609,7 @@ record ndarray : serializable {
     inline proc mish() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -621,7 +621,7 @@ record ndarray : serializable {
     inline proc sigmoid() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -633,7 +633,7 @@ record ndarray : serializable {
     inline proc tanh() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -645,7 +645,7 @@ record ndarray : serializable {
     inline proc relu6() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -657,13 +657,13 @@ record ndarray : serializable {
     inline proc selu() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
-        // const alpha: real(64) = 1.6732632423543772848170429916717;
-        // const scale: real(64) = 1.0507009873554804934193349852946;
+        const alpha: eltType = 1.6732632423543772848170429916717;
+        const scale: eltType = 1.0507009873554804934193349852946;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = 1.0507009873554804934193349852946 * (max(0, x) + min(0, 1.6732632423543772848170429916717 * (Math.exp(x) - 1)))
+            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)));
         }
         return rl;
     }
@@ -671,7 +671,7 @@ record ndarray : serializable {
     inline proc logsigmoid() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -683,7 +683,7 @@ record ndarray : serializable {
     inline proc tanhshrink() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -695,7 +695,7 @@ record ndarray : serializable {
     inline proc softsign() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
@@ -704,12 +704,12 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc rrelu(lower: real(64)=0.125, upper: real(64)=1.0/3.0) {
+    inline proc rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0) {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
-        var a: [dom] real(64);
+        var a: [dom] eltType;
         fillRandom(a);
         forall i in dom.every() {
             const x = thisData[i];
@@ -722,11 +722,14 @@ record ndarray : serializable {
     inline proc hardswish() {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = if x >= -3 && x <= 3 then x * (x + 3) / 6 else max(0, x);
+            const float_max: eltType = 1.7976931348623157E308;
+            const xgeq3: eltType = Math.ceil(1.0 / float_max); // x >= 3: 1 if true, 0 otherwise
+            const xleqn3: eltType = Math.ceil(1.0 / float_max); // x <= -3: 1 if true, 0 otherwise
+            rld[i] = x * xgeq3 + x * (x + 3) / 6.0 * (1 - xgeq3) * xleqn3;
         }
         return rl;
     }
@@ -734,27 +737,24 @@ record ndarray : serializable {
     inline proc hardsigmoid() {
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
     forall i in dom.every() {
         const x = thisData[i];
-        // 0 if x <= -3
-        // 1 if x >= 3
-        // x/6 + 0.5 otherwise
         rld[i] = max(0, min(1, x/6.0 + 0.5));
     }
     return rl;
 
-    inline proc hardshrink(l: real(64)=0.5) {
+    inline proc hardshrink(l: eltType=0.5) {
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = if -l < x && x < l then 0 else x;
-            // branchless version could be faster on GPU's:
-            // rld[i] = x * max(0, (Math.abs(x)-l) / Math.abs(x)) + l * max(x-l, x+l) / Math.abs(max(x-l, x+l)) * min(1, 1 - (l - Math.abs(x)) / Math.abs(l - Math.abs(x)))
+            const float_max = 1.7976931348623157E308;
+            const xmap0 = ceil(1.0 / float_max * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
+            rld[i] = x * xmap0;
         }
         return rl;
     }

@@ -177,6 +177,14 @@ proc staticTensor.relu() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+proc staticTensor.gelu() {
+    var t = new staticTensor(rank,eltType);
+    on this.device {
+        t.array = this.array.gelu();
+    }
+    return t;
+}
+
 proc staticTensor.silu() {
     var ctx = new siluOp(meta);
     return tensorFromCtx(rank,eltType,ctx);
@@ -222,7 +230,7 @@ proc staticTensor.softsign() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.rrelu(lower: real(64), upper: real(64)) {
+proc staticTensor.rrelu(lower: eltType, upper: eltType) {
     var ctx = new rreluOp(meta, lower, upper);
     return tensorFromCtx(rank,eltType,ctx);
 }
@@ -240,14 +248,6 @@ proc staticTensor.hardsigmoid() {
 proc staticTensor.hardshrink() {
     var ctx = new hardshrinkOp(meta);
     return tensorFromCtx(rank,eltType,ctx);
-}
-
-proc staticTensor.gelu() {
-    var t = new staticTensor(rank,eltType);
-    on this.device {
-        t.array = this.array.gelu();
-    }
-    return t;
 }
 
 proc staticTensor.permute(axes: int...rank) {
