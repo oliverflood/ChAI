@@ -759,6 +759,21 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc hardtanh(min_val: eltType=-1.0, max_val: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = 1.7976931348623157E308;
+            const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
+            const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
+            rld[i] = Math.max(x, min_val) * (1 - xlminval) + min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
+        }
+        return rl;
+    }
+
     inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
     const ref thisData = data;
     const dom = this.domain;

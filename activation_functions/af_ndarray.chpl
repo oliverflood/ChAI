@@ -2,7 +2,6 @@
 This file contains all activation functions which have not yet been put onto NDArray.chpl --> DynamicTensor.chpl
 
 TODO: ****************
-* hardtanh
 * elu
 * celu
 * leaky_relu
@@ -21,29 +20,10 @@ Implement the Following:
 **********************
 */
 
-inline proc hardtanh(min_val: eltType=-1.0, max_val: eltType=1.0) {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        if x > max_val then
-            rld[i] = max_val;
-        else if x < min_val then
-            rld[i] = min_val;
-        else 
-            rld[i] = x;
-    }
-
-    return rl;
-}
-
 inline proc elu(alpha: eltType=1) {
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
 
     forall i in dom.every() {
@@ -57,7 +37,7 @@ inline proc elu(alpha: eltType=1) {
 inline proc celu(alpha: eltType=1) {
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
 
     forall i in dom.every() {
@@ -71,7 +51,7 @@ inline proc celu(alpha: eltType=1) {
 inline proc leaky_relu(negative_slope: eltType=Math.exp(-2)) {
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
 
     forall i in dom.every() {
@@ -85,7 +65,7 @@ inline proc leaky_relu(negative_slope: eltType=Math.exp(-2)) {
 inline proc softplus(beta: eltType=1.0, threshold: eltType=20.0) {
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
 
     forall i in dom.every() {
@@ -100,7 +80,7 @@ inline proc softshrink(l: eltType=0.5): throws { // l must be non-negative
     if l < 0 do throw new Error("argument to softshrink function must be non-negative");
     const ref thisData = data;
     const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
+    var rl = new ndarray(dom, eltType);
     ref rld = rl.data;
 
     forall i in dom.every() {
@@ -115,8 +95,3 @@ inline proc softshrink(l: eltType=0.5): throws { // l must be non-negative
 
     return rl;
 }
-
-
-// fix:
-// hardswish
-// hardshrink

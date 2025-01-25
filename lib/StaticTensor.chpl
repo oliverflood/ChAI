@@ -230,7 +230,7 @@ proc staticTensor.softsign() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.rrelu(lower: eltType, upper: eltType) {
+proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0) {
     var ctx = new rreluOp(meta, lower, upper);
     return tensorFromCtx(rank,eltType,ctx);
 }
@@ -252,6 +252,11 @@ proc staticTensor.hardshrink() {
 
 proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
     var ctx = new thresholdOp(meta, thershold, value);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.hardtanh(min_val: eltType = -1.0, max_val: eltType = 1.0) {
+    var ctx = new hardtanhOp(meta, min_val, max_val);
     return tensorFromCtx(rank, eltType, ctx);
 }
 
