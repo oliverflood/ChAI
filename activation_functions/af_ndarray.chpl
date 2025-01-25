@@ -2,7 +2,6 @@
 This file contains all activation functions which have not yet been put onto NDArray.chpl --> DynamicTensor.chpl
 
 TODO: ****************
-* elu
 * celu
 * leaky_relu
 * softshrink
@@ -19,20 +18,7 @@ Implement the Following:
 * ALL NORMS
 **********************
 */
-
-inline proc elu(alpha: eltType=1) {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltType);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = if x > 0 then x else alpha * (Math.exp(x) - 1);
-    }
-
-    return rl;
-}
+// const float_max: eltType = 1.7976931348623157E308;
 
 inline proc celu(alpha: eltType=1) {
     const ref thisData = data;

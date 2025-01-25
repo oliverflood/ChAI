@@ -429,6 +429,20 @@ record hardtanhOp : serializable {
         return input.array.threshold(min_val, max_val);
 }
 
+record eluOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var alpha: eltType = 1.0.;
+
+    proc init(a: eltType) {
+        alpha = a;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.elu(alpha);
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

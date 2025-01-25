@@ -774,6 +774,20 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc elu(alpha: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = 1.7976931348623157E308;
+            const xgz: eltType = Math.ceil(x / float_max); // x greater than zero: 1 if true, 0 otherwise
+            rld[i] = x * xgz + alpha * (Math.exp(x) - 1) * (1 - xgz);
+        }
+        return rl;
+    }
+
     inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
     const ref thisData = data;
     const dom = this.domain;

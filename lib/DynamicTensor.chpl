@@ -392,6 +392,15 @@ proc dynamicTensor.hardtanh(min_val: eltType = -1.0, max_val: eltType = 1.0): dy
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.elu(alpha: eltType = 1.0): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).elu(alpha).eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.elu.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.max(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then

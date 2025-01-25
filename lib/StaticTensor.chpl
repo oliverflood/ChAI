@@ -260,6 +260,11 @@ proc staticTensor.hardtanh(min_val: eltType = -1.0, max_val: eltType = 1.0) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
+proc staticTensor.elu(alpha: eltType = 1.0) {
+    var ctx = new eluOp(meta, alpha);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);
