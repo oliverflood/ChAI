@@ -789,18 +789,32 @@ record ndarray : serializable {
     }
 
     inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltype);
-    ref rld = rl.data;
-    forall i in dom.every() {
-        const x = thisData[i];
-        const float_max: eltType = 1.7976931348623157E308; // maximum value a float_64 can take
-        const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
-        rld[i] = x * xgeqt + value * (1 - xgeqt);
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltype);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = 1.7976931348623157E308; // maximum value a float_64 can take
+            const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
+            rld[i] = x * xgeqt + value * (1 - xgeqt);
+        }
+        return rl;
     }
-    return rl;
-}
+
+    inline proc softplus(beta: eltType=1.0, threshold: eltType=20.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = 1.7976931348623157E308;
+            const xgbt: eltType = Math.ceil((x - threshold / beta) / float_max); // x greater than beta * threshold: 1 if true, 0 otherwise
+            rld[i] = x * xgbt + 1.0 / beta * Math.log(1 + Math.exp(beta * x)) * (1 - xgbt);
+        }
+        return rl;
+    }
 }
 
     proc degenerateFlatten(): [] eltType {

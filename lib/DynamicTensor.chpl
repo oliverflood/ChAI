@@ -401,6 +401,15 @@ proc dynamicTensor.elu(alpha: eltType = 1.0): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+proc dynamicTensor.softplus(beta: eltType = 1.0, threshold: eltType = 20.0): dynamicTensor(eltType) {
+    for param rank in 1..maxRank {
+        if this.checkRank(rank) then
+            return this.forceRank(rank).softplus(beta, threshold).eraseRank();
+    }
+    halt("Could not determine rank in dynamicTensor.softplus.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.max(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then

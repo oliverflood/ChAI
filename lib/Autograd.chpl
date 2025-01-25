@@ -415,7 +415,7 @@ record thresholdOp : serializable {
 
 record hardtanhOp : serializable {
     var input: shared BaseTensorResource(?);
-    var min_val: eltType = -1.0.;
+    var min_val: eltType = -1.0;
     var max_val: eltType = 1.0;
 
     proc init(min_v: eltType, max_v: eltType) {
@@ -431,7 +431,7 @@ record hardtanhOp : serializable {
 
 record eluOp : serializable {
     var input: shared BaseTensorResource(?);
-    var alpha: eltType = 1.0.;
+    var alpha: eltType = 1.0;
 
     proc init(a: eltType) {
         alpha = a;
@@ -441,6 +441,22 @@ record eluOp : serializable {
 
     proc forward() do
         return input.array.elu(alpha);
+}
+
+record softplusOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var beta: eltType = 1.0;
+    var threshold: eltType = 20.0;
+
+    proc init(b: eltType, t: eltType) {
+        beta = b;
+        threshold = t;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softplus(beta, threshold);
 }
 
 record expOp : serializable {
