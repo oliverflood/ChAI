@@ -19,20 +19,6 @@ Implement the Following:
 */
 // const float_max: eltType = 1.7976931348623157E308;
 
-inline proc celu(alpha: eltType=1) {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltType);
-    ref rld = rl.data;
-
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = max(0, x) + min(0, alpha * Math.exp(x / alpha) - 1);
-    }
-
-    return rl;
-}
-
 inline proc leaky_relu(negative_slope: eltType=Math.exp(-2)) {
     const ref thisData = data;
     const dom = this.domain;

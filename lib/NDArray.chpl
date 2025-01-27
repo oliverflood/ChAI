@@ -815,6 +815,18 @@ record ndarray : serializable {
         }
         return rl;
     }
+
+    inline proc celu(alpha: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = max(0.0, x) + min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+        }
+        return rl;
+    }
 }
 
     proc degenerateFlatten(): [] eltType {

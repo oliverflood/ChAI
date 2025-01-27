@@ -270,6 +270,11 @@ proc staticTensor.softplus(beta: eltType = 1.0, threshold: eltType = 20.0) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
+proc staticTensor.celu(alpha: eltType = 1.0) {
+    var ctx = new celuOp(meta, alpha);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);

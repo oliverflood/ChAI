@@ -459,6 +459,20 @@ record softplusOp : serializable {
         return input.array.softplus(beta, threshold);
 }
 
+record celuOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var alpha: eltType = 1.0;
+
+    proc init(a: eltType) {
+        alpha = a;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.celu(alpha);
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 
