@@ -827,6 +827,18 @@ record ndarray : serializable {
         }
         return rl;
     }
+
+    inline proc leakyrelu(negative_slope: eltType=Math.exp(-2)) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = max(0, x) + negative_slope * min(0, x);
+        }
+        return rl;
+    }
 }
 
     proc degenerateFlatten(): [] eltType {

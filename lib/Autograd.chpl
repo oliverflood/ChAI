@@ -473,6 +473,20 @@ record celuOp : serializable {
         return input.array.celu(alpha);
 }
 
+record leakyreluOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var negative_slope: eltType = Math.Exp(-2.0);
+
+    proc init(ns: eltType) {
+        negative_slope = ns;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.leakyrelu(alpha);
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 
