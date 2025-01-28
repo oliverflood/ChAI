@@ -32,7 +32,7 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip --version
 
-          pip3 install --no-cache-dir python3-pip
+          # pip3 install --no-cache-dir python3-pip
           pip3 install --no-cache-dir numpy 
           pip3 install --no-cache-dir torch 
           pip3 install --no-cache-dir torchvision
