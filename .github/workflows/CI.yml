@@ -29,8 +29,8 @@ jobs:
           # python3 -m venv .venv
           # source .venv/bin/activate
           # which python
-          # python3 -m pip install --upgrade pip
-          # python3 -m pip --version
+          python3 -m pip install --upgrade pip
+          python3 -m pip --version
 
           pip3 install --no-cache-dir python3-pip
           pip3 install --no-cache-dir numpy 
