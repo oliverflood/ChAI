@@ -20,9 +20,11 @@ jobs:
     steps:
       - name: Install Python, pip, and Python libraries
         run: |
+          apt-get update
+          apt-get install software-properties-common
           add-apt-repository ppa:deadsnakes/ppa
-          apt update
-          apt install -y python3.13-full
+          apt-get update
+          apt-get install -y python3.13-full
           python3 --version
           python3 -m venv .venv
           source .venv/bin/activate
