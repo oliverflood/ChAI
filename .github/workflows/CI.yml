@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Install Python, pip, and Python libraries
         run: |
-          add-apt-repository ppa:qameta/allure
+          # add-apt-repository ppa:qameta/allure
           add-apt-repository ppa:deadsnakes/ppa
           apt-get install -y software-properties-common
           apt-get update -y
