@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, iain-changes ]
+  pull_request:
+    branches: [ main, iain-changes ]
+
+jobs:
+  chapel-run-function:
+    runs-on: ubuntu-latest
+    container:
+      image: chapel/chapel:latest
+      # env:
+      # ports:
+      #   - 80
+      # volumes:
+      #   - my_docker_volume:/volume_mount
+      # options: --cpus 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for dockerenv file
+        run: |
+          ls /.dockerenv && echo Found dockerenv
+          echo "No dockerenv"
+      - name: Compile example/vgg
+        run: |
+          cd examples/vgg && chpl test.chpl -M ../../src -M ../../lib -o vgg
+      - name: Run example/vgg frog
+        run: |
+          ./vgg imgs/frog.chdata
