@@ -23,9 +23,9 @@ jobs:
         run: |
           ls /.dockerenv && echo Found dockerenv
           echo "No dockerenv"
-      - name: Compile example/vgg
+      - name: Compile and run example/vgg with frog example
         run: |
-          cd examples/vgg && chpl test.chpl -M ../../src -M ../../lib -o vgg
-      - name: Run example/vgg frog
+          cd examples/vgg && chpl test.chpl -M ../../src -M ../../lib -o vgg && ./vgg imgs/frog.chdata
+      - name:
         run: |
-          ./vgg imgs/frog.chdata
+          echo "Pau!"
