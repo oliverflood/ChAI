@@ -31,4 +31,4 @@ jobs:
           context: ./docker  # Folder containing your Dockerfile
           file: ./docker/Dockerfile
           push: true
-          tags: ghcr.io/Iainmon/ChAI/chai-github-ci:latest
+          tags: ghcr.io/Iainmon/chai/chai-github-ci:latest

@@ -13,7 +13,7 @@ jobs:
       # If using Docker Hub:
       # image: my-docker-user/my-chapel-python:latest
       # Or if using GHCR:
-      image: ghcr.io/iainmon/ChAI/chai-github-ci:latest
+      image: ghcr.io/iainmon/chai/chai-github-ci:latest
     steps:
       - uses: actions/checkout@v4
 
