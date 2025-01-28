@@ -31,11 +31,11 @@ jobs:
           python3 --version || echo "Python not found!"
       - name: Compile example/vgg
         run: |
-          cd examples/vgg 
-            && chpl test.chpl -M ../../src -M ../../lib -o vgg 
-            && python3 dump_weights.py
-            && python3 process_img.py imgs/frog.jpg
-            && ./vgg imgs/frog.chdata
+          (cd examples/vgg 
+              && chpl test.chpl -M ../../src -M ../../lib -o vgg 
+              && python3 dump_weights.py
+              && python3 process_img.py imgs/frog.jpg
+              && ./vgg imgs/frog.chdata)
       - name: Run correspondence tests
         run: |
           (cd test/correspondence && python3 correspondence.py) || echo "Wups! Correspondence bug or more likely test failure!"
