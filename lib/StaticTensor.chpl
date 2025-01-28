@@ -280,6 +280,11 @@ proc staticTensor.leakyrelu(negative_slope: eltType = Math.Exp(-2.0)) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
+proc staticTensor.softshrink(l: eltType = 0.5) {
+    var ctx = new softshrinkOp(meta, l);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);

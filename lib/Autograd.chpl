@@ -487,6 +487,20 @@ record leakyreluOp : serializable {
         return input.array.leakyrelu(alpha);
 }
 
+record softshrinkOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var l: eltType = 0.5;
+
+    proc init(L: eltType) {
+        l = L;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softshrink(l);
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 

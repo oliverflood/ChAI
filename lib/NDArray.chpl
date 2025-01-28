@@ -839,6 +839,22 @@ record ndarray : serializable {
         }
         return rl;
     }
+
+    inline proc softshrink(l: eltType=0.5): throws { // l must be non-negative
+        if l < 0 do throw new Error("argument to softshrink function must be non-negative");
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = 1.7976931348623157E308;
+            const xgl = Math.ceil(1.0 / float_max * (x - l)); // x greater than lambda: 1 if true, otherwise
+            const xlnl = 1 - Math.ceil(1.0 / float_max * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
+            rld[i] = xgl * (x - l) + xlnl * (x + l);
+        }
+        return rl;
+    }
 }
 
     proc degenerateFlatten(): [] eltType {
