@@ -19,10 +19,11 @@ jobs:
       # options: --cpus 1
     steps:
       - uses: actions/checkout@v4
-      - name: Check for dockerenv file
+      - name: Check for dockerenv file and Python version
         run: |
           ls /.dockerenv && echo Found dockerenv
           echo "No dockerenv"
+          python --version || echo "Python not found!"
       - name: Compile example/vgg
         run: |
           cd examples/vgg && chpl test.chpl -M ../../src -M ../../lib -o vgg
