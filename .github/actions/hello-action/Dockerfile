@@ -11,8 +11,7 @@ COPY . .
 
 COPY ../../../ ./
 
-COPY chapel/chapel ./
-# ADD chai/chai
+ADD chapel/chapel /chapel
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
 # COPY entrypoint.sh /entrypoint.sh

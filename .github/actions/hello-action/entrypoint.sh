@@ -23,3 +23,4 @@ echo $(which python3 || echo "No python3")
 echo $(which chpl || echo "No chpl")
 
 
+echo $(cd / && ls)
