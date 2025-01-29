@@ -12,5 +12,5 @@ echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
 
 
-stdout=$(ls -la)
+stdout=$(ls)
 echo "ls=$stdout" >> $GITHUB_OUTPUT
