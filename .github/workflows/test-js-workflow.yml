@@ -7,25 +7,38 @@ on:
     branches: [ main, iain-changes ]
 
 jobs:
-  hello_world_job:
+  test_js_workflow:
+    name: Test JavaScript Workflow
     runs-on: ubuntu-latest
-    name: A job to say hello
     steps:
-
-    
       # To use this repository's private action,
       # you must check out the repository
       - name: Checkout
+        id: checkout
         uses: actions/checkout@v4
 
-
-      - name: Hello world action step
-        uses: ./ # Uses an action in the root directory
-        id: hello
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
         with:
-          who-to-greet: 'Mona the Octocat'
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        id: install
+        run: npm ci
+
+      - name: Test
+        id: npm-ci-test
+        run: npm run ci-test
+
+      # - name: Hello world action step
+      #   uses: ./ # Uses an action in the root directory
+      #   id: hello
+      #   with:
+      #     who-to-greet: 'Mona the Octocat'
 
 
-      # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+      # # Use the output from the `hello` step
+      # - name: Get the output time
+      #   run: echo "The time was ${{ steps.hello.outputs.time }}"
