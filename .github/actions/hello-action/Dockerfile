@@ -1,5 +1,5 @@
 # Container image that runs your code
-FROM alpine:3.10
+FROM ubuntu:latest
 
 
 RUN apt-get update && apt-get install -y curl
