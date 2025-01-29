@@ -13,8 +13,10 @@ echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
 
 stdout=$(ls)
+echo "$stdout"
 echo "ls=$stdout" >> $GITHUB_OUTPUT
 
 
 echo "Hello from entry."
+
 
