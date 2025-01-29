@@ -17,19 +17,19 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-        
-      - name: Hello world action step
-        uses: ./ # Uses an action in the root directory
-        id: hello
-        with:
-          who-to-greet: 'Mona the Octocat'
-
       - name: Setup Node.js
         id: setup-node
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           cache: npm
+
+        
+      - name: Hello world action step
+        uses: ./ # Uses an action in the root directory
+        id: hello
+        with:
+          who-to-greet: 'Mona the Octocat'
 
       - name: Install Dependencies
         id: install
