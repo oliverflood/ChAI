@@ -12,13 +12,25 @@ COPY --from=chapel /opt/chapel/bin/chpl /opt/chapel/bin/chpl
 
 ENV PATH="/opt/chapel/bin/chpl:${PATH}"
 
+RUN echo $(which python3)
+RUN echo $(which chpl)
+
 # ADD chapel/chapel /chapel
+
+RUN echo $(ls -la)
 
 WORKDIR /ChAI
 
+RUN echo $(ls -la)
+
 COPY . .
 
+RUN echo $(ls -la)
+
+COPY entrypoint.sh /entrypoint.sh
 COPY ../../../ ./
+
+RUN echo $(ls -la)
 
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
