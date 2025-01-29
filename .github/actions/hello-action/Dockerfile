@@ -8,9 +8,9 @@ RUN echo $(which chpl)
 
 FROM pytorch/pytorch:latest
 
-COPY --from=chapel /usr/local/chapel /usr/local/chapel
+COPY --from=chapel /opt/chapel/bin/chpl /opt/chapel/bin/chpl
 
-ENV PATH="/usr/local/chapel/bin:${PATH}"
+ENV PATH="/opt/chapel/bin/chpl:${PATH}"
 
 # ADD chapel/chapel /chapel
 
