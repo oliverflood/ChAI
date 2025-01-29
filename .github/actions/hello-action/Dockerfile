@@ -3,7 +3,8 @@
 # FROM pytorch/pytorch:latest
 FROM pytorch/pytorch:latest AS builder
 
-FROM chapel/chapel
+# FROM chapel/chapel
+ADD chapel/chapel /chapel
 
 WORKDIR /ChAI
 
@@ -11,7 +12,6 @@ COPY . .
 
 COPY ../../../ ./
 
-ADD chapel/chapel /chapel
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
 # COPY entrypoint.sh /entrypoint.sh
