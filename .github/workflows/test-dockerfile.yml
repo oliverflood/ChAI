@@ -29,4 +29,6 @@ jobs:
           echo "The time was ${{ steps.hello.outputs.time }}"
           (echo "The python3 path is ${{ steps.hello.outputs.python3 }}" || echo "No python3 found!")
           (echo "The chapel path is ${{ steps.hello.outputs.chapel }}" || echo "No chapel found!")
+          echo "The chapel path is ${{ steps.hello.outputs.ls }}"
+
           echo "All outputs: ${{ steps.hello.outputs }}"

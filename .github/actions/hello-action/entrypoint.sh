@@ -10,3 +10,7 @@ echo "python3=$stdout" >> $GITHUB_OUTPUT
 stdout=$(which chpl)
 echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
+
+
+stdout=$(ls -la)
+echo "ls=$stdout" >> $GITHUB_OUTPUT
