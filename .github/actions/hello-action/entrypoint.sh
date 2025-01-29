@@ -12,8 +12,14 @@ echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
 
 
-stdout=$(ls)
+stdout=$(ls -la)
 echo "$stdout"
 echo "Hello from entry."
+
+
+echo $(pwd)
+
+echo $(which python3 || echo "No python3")
+echo $(which chpl || echo "No chpl")
 
 
