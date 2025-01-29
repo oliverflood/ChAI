@@ -11,7 +11,7 @@ COPY . .
 
 COPY ../../../ ./
 
-COPY chai/chai ./
+COPY chapel/chapel ./
 # ADD chai/chai
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
