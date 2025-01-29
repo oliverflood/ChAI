@@ -4,6 +4,8 @@
 
 FROM chapel/chapel:latest as chapel
 
+RUN echo $(which chpl)
+
 FROM pytorch/pytorch:latest
 
 COPY --from=chapel /usr/local/chapel /usr/local/chapel
