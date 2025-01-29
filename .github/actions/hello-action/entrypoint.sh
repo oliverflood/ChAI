@@ -7,7 +7,6 @@ echo "time=$time" >> $GITHUB_OUTPUT
 stdout=$(which python3)
 echo "python3=$stdout" >> $GITHUB_OUTPUT
 
-
 stdout=$(which chpl)
 echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
