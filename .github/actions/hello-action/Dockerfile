@@ -1,9 +1,9 @@
 # Container image that runs your code
-FROM ubuntu:latest
+# FROM ubuntu:latest
+# FROM pytorch/pytorch:latest
+FROM pytorch/pytorch:latest AS builder
 
-
-RUN apt-get update && apt-get install -y curl
-
+FROM chapel/chapel
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
 COPY entrypoint.sh /entrypoint.sh
