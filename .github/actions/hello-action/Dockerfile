@@ -1,10 +1,16 @@
 # Container image that runs your code
 # FROM ubuntu:latest
 # FROM pytorch/pytorch:latest
-FROM pytorch/pytorch:latest AS builder
 
-# FROM chapel/chapel
-ADD chapel/chapel /chapel
+FROM chapel/chapel:latest as chapel
+
+FROM pytorch/pytorch:latest
+
+COPY --from=chapel /usr/local/chapel /usr/local/chapel
+
+ENV PATH="/usr/local/chapel/bin:${PATH}"
+
+# ADD chapel/chapel /chapel
 
 WORKDIR /ChAI
 
@@ -17,6 +23,8 @@ COPY ../../../ ./
 # COPY entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
+
+RUN echo $(which chpl || echo "bad chapel. ")
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/entrypoint.sh"]
