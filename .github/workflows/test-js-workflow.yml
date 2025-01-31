@@ -23,8 +23,7 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
-
-        
+  
       - name: Hello world action step
         uses: ./ # Uses an action in the root directory
         id: hello

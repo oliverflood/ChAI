@@ -2,7 +2,7 @@
 # FROM ubuntu:latest
 # FROM pytorch/pytorch:latest
 
-FROM chapel/chapel:latest 
+FROM chapel/chapel
 # as chapel
 
 RUN echo $(which chpl)
