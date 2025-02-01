@@ -8,6 +8,8 @@ FROM chapel/chapel
 # Install pytorch
 RUN pip3 install torch
 
+# PLEASE SEE {ChAI}/docker/chapel-pytorch-test/.!
+
 
 
 
