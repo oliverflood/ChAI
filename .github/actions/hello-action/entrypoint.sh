@@ -24,3 +24,5 @@ echo $(which chpl || echo "No chpl")
 
 
 echo $(cd / && ls)
+
+echo $(cd /test/correspondence && python3 correspondence.py)
