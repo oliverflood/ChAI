@@ -2,9 +2,7 @@ name: Test JavaScript Action (JS Action)
 
 on: 
   push:
-    branches: [ main, iain-changes ]
-  pull_request:
-    branches: [ main, iain-changes ]
+    branches: [ ]
 
 jobs:
   test_js_workflow:
