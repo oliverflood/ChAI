@@ -74,5 +74,6 @@ RUN chmod +x /entrypoint.sh
 
 RUN echo $(which chpl || echo "bad chapel. ")
 
+RUN /entrypoint.sh
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/entrypoint.sh"]
