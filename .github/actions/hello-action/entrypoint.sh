@@ -19,6 +19,11 @@ stdout=$(ls -la)
 echo "$stdout"
 
 echo "Running tests."
+
+echo "Trying to compile test from entrypoint.sh. " 
+chpl test/correspondence/construction/ones/ones.chpl -M lib
+
+echo "Now running correspondence test. "
 echo $(cd test/correspondence && python3 correspondence.py)
 
 echo "End test attempt. "

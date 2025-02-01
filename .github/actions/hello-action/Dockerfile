@@ -6,7 +6,7 @@ FROM chapel/chapel
 # as chapel
 
 # Install pytorch
-RUN pip3 install torch numpy torch torchvision
+RUN pip3 install torch numpy torch
 
 # PLEASE SEE {ChAI}/docker/chapel-pytorch-test/.!
 
