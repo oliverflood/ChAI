@@ -280,6 +280,32 @@ proc dynamicTensor.exp(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
+// NEW CODE for batch norm
+proc type dynamicTensor.batchnorm(
+    features: dynamicTensor(?eltType),
+    weight: dynamicTensor(eltType),
+    bias: dynamicTensor(eltType),
+    movingAvg: dynamicTensor(eltType),
+    movingVar: dynamicTensor(eltType),
+    num_features: int
+): dynamicTensor(eltType) {
+
+    for param rankF in 2..4 {
+        if features.checkRank(rankF) {
+            return staticTensor.batchNorm(
+                features.forceRank(rankF),
+                weight.forceRank(1),
+                bias.forceRank(1),
+                movingAvg.forceRank(1),
+                movingVar.forceRank(1),
+                num_features
+            ).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor.maxPool.");
+    return new dynamicTensor(eltType);
+}
+
 proc dynamicTensor.softmax(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then

@@ -779,3 +779,21 @@ record conv2DOp : serializable {
 
     proc spec : GradOpSpec do return new dict(("operation","Conv2D"),("stride",stride:string),("padding",padding:string));
 }
+
+record batchNormOp : serializable {
+    type eltType = real;
+    var features: shared BaseTensorResource(?); // what to put here?
+    var weight: shared BaseTensorResource(eltType, 1);
+    var bias: shared BaseTensorResource(eltType, 1);
+    var movingAvg: shared BaseTensorResource(eltType, 1);
+    var movingVar: shared BaseTensorResource(eltType, 1);
+    var n: int;
+
+    proc children do return (features, weight, bias, movingAvg, movingVar);
+
+    proc forward() {
+        return ndarray.batchNorm(features.array, weight.array, bias.array, movingAvg.array, movingVar.array, n);
+    }
+
+    proc spec : GradOpSpec do return new dict(("operation","BatchNorm"));
+}
