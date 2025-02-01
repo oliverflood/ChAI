@@ -5,18 +5,49 @@
 FROM chapel/chapel
 # as chapel
 
-RUN echo $(which chpl)
+# Install pytorch
+RUN pip3 install torch
 
-FROM pytorch/pytorch:latest
 
-COPY --from=chapel /opt/chapel/bin/chpl /opt/chapel/bin/chpl
 
-ENV PATH="/opt/chapel/bin/chpl:${PATH}"
+
+#
+#
+#
+#
+#
+#  See docker/chapel-pytorch-test and examine it closely!
+#
+#
+#
+#
+#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 RUN echo $(which python3)
 RUN echo $(which chpl)
-
-# ADD chapel/chapel /chapel
 
 RUN echo $(ls -la)
 
