@@ -12,9 +12,17 @@ echo "chapel=$stdout" >> $GITHUB_OUTPUT
 
 
 
+
+
+echo "Begin test attempt. "
 stdout=$(ls -la)
 echo "$stdout"
-echo "Hello from entry."
+
+echo "Running tests."
+echo $(cd test/correspondence && python3 correspondence.py)
+
+echo "End test attempt. "
+
 
 
 echo $(pwd)
@@ -25,4 +33,3 @@ echo $(which chpl || echo "No chpl")
 
 echo $(cd / && ls)
 
-echo $(cd /test/correspondence && python3 correspondence.py)
