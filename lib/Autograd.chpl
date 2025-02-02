@@ -475,7 +475,7 @@ record celuOp : serializable {
 
 record leakyreluOp : serializable {
     var input: shared BaseTensorResource(?);
-    var negative_slope: eltType = Math.exp(-2.0);
+    var negative_slope: eltType = exp(-2.0);
 
     proc init(ns: eltType) {
         negative_slope = ns;
