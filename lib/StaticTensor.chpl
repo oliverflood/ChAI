@@ -251,7 +251,7 @@ proc staticTensor.hardshrink() {
 }
 
 proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
-    var ctx = new thresholdOp(meta, thershold, value);
+    var ctx = new thresholdOp(meta, threshold, value);
     return tensorFromCtx(rank, eltType, ctx);
 }
 
@@ -275,12 +275,13 @@ proc staticTensor.celu(alpha: eltType = 1.0) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.leakyrelu(negative_slope: eltType = Math.Exp(-2.0)) {
+proc staticTensor.leakyrelu(negative_slope: eltType = Math.exp(-2.0)) {
     var ctx = new leakyreluOp(meta, negative_slope);
     return tensorFromCtx(rank, eltType, ctx);
 }
 
 proc staticTensor.softshrink(l: eltType = 0.5) {
+    if l < 0 then util.err("argument to softshrink function must be non-negative");
     var ctx = new softshrinkOp(meta, l);
     return tensorFromCtx(rank, eltType, ctx);
 }

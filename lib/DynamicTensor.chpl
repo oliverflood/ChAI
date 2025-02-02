@@ -429,6 +429,7 @@ proc dynamicTensor.leakyrelu(negative_slope: eltType = 1.0): dynamicTensor(eltTy
 }
 
 proc dynamicTensor.softshrink(l: eltType = 0.5): dynamicTensor(eltType) {
+    if l < 0 then util.err("argument to softshrink function must be non-negative");
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
             return this.forceRank(rank).softshrink(l).eraseRank();

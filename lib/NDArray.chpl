@@ -726,7 +726,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308;
+            const float_max: eltType = Types.max(eltType);
             const xgeq3: eltType = Math.ceil(1.0 / float_max); // x >= 3: 1 if true, 0 otherwise
             const xleqn3: eltType = Math.ceil(1.0 / float_max); // x <= -3: 1 if true, 0 otherwise
             rld[i] = x * xgeq3 + x * (x + 3) / 6.0 * (1 - xgeq3) * xleqn3;
@@ -752,7 +752,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max = 1.7976931348623157E308;
+            const float_max = Types.max(eltType);
             const xmap0 = ceil(1.0 / float_max * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
             rld[i] = x * xmap0;
         }
@@ -766,7 +766,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308;
+            const float_max: eltType = Types.max(eltType);
             const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
             const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
             rld[i] = Math.max(x, min_val) * (1 - xlminval) + min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
@@ -781,7 +781,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308;
+            const float_max: eltType = Types.max(eltType);
             const xgz: eltType = Math.ceil(x / float_max); // x greater than zero: 1 if true, 0 otherwise
             rld[i] = x * xgz + alpha * (Math.exp(x) - 1) * (1 - xgz);
         }
@@ -791,11 +791,11 @@ record ndarray : serializable {
     inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
         const ref thisData = data;
         const dom = this.domain;
-        var rl = new ndarray(dom, eltype);
+        var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308; // maximum value a float_64 can take
+            const float_max: eltType = Types.max(eltType); // maximum value a float_64 can take
             const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
             rld[i] = x * xgeqt + value * (1 - xgeqt);
         }
@@ -809,7 +809,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308;
+            const float_max: eltType = Types.max(eltType);
             const xgbt: eltType = Math.ceil((x - threshold / beta) / float_max); // x greater than beta * threshold: 1 if true, 0 otherwise
             rld[i] = x * xgbt + 1.0 / beta * Math.log(1 + Math.exp(beta * x)) * (1 - xgbt);
         }
@@ -840,15 +840,15 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc softshrink(l: eltType=0.5): throws { // l must be non-negative
-        if l < 0 do throw new Error("argument to softshrink function must be non-negative");
+    inline proc softshrink(l: eltType=0.5) {  // l must be non-negative
+        if l < 0 then util.err("argument to softshrink function must be non-negative");
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = 1.7976931348623157E308;
+            const float_max: eltType = Types.max(eltType);
             const xgl = Math.ceil(1.0 / float_max * (x - l)); // x greater than lambda: 1 if true, otherwise
             const xlnl = 1 - Math.ceil(1.0 / float_max * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
             rld[i] = xgl * (x - l) + xlnl * (x + l);
