@@ -76,8 +76,8 @@ RUN echo $(which chpl || echo "bad chapel. ")
 
 RUN /entrypoint.sh
 
-chpl test/correspondence/construction/ones/ones.chpl -M lib -o test/correspondence/construction/ones/ones
-chpl test/correspondence/construction/arange/arange.chpl -M lib -o test/correspondence/construction/arange/arange
+RUN chpl test/correspondence/construction/ones/ones.chpl -M lib -o test/correspondence/construction/ones/ones
+RUN chpl test/correspondence/construction/arange/arange.chpl -M lib -o test/correspondence/construction/arange/arange
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/entrypoint.sh"]
