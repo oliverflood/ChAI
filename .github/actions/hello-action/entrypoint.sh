@@ -21,7 +21,8 @@ echo "$stdout"
 echo "Running tests."
 
 echo "Trying to compile test from entrypoint.sh. " 
-chpl test/correspondence/construction/ones/ones.chpl -M lib
+chpl test/correspondence/construction/ones/ones.chpl -M lib -o test/correspondence/construction/ones/ones
+chpl test/correspondence/construction/arange/arange.chpl -M lib -o test/correspondence/construction/arange/arange
 
 echo "Now running correspondence test. "
 echo $(cd test/correspondence && python3 correspondence.py)
