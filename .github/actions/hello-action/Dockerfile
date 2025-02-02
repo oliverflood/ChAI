@@ -59,9 +59,13 @@ RUN echo $(ls -la)
 
 COPY . .
 
+RUN chpl test/correspondence/construction/ones/ones.chpl -M lib -o test/correspondence/construction/ones/ones
+RUN chpl test/correspondence/construction/arange/arange.chpl -M lib -o test/correspondence/construction/arange/arange
+
+
 RUN echo $(ls -la)
 
-COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh ./entrypoint.sh
 COPY ../../../ ./
 
 RUN echo $(ls -la)
@@ -70,14 +74,12 @@ RUN echo $(ls -la)
 # Copies your code file from your action repository to the filesystem path `/` of the container
 # COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 RUN echo $(which chpl || echo "bad chapel. ")
 
-RUN /entrypoint.sh
+RUN ./entrypoint.sh
 
-RUN chpl test/correspondence/construction/ones/ones.chpl -M lib -o test/correspondence/construction/ones/ones
-RUN chpl test/correspondence/construction/arange/arange.chpl -M lib -o test/correspondence/construction/arange/arange
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
 ENTRYPOINT ["/entrypoint.sh"]
