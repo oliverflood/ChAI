@@ -5,10 +5,14 @@
 FROM chapel/chapel
 # as chapel
 
+
+COPY . .
+
 RUN echo $(ls -la)
 RUN echo $(ls -la /)
+
 # Install pytorch
-RUN pip3 install torch numpy torch
+# RUN pip3 install torch numpy torch
 
 # PLEASE SEE {ChAI}/docker/chapel-pytorch-test/.!
 
