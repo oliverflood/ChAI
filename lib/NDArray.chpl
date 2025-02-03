@@ -1002,6 +1002,18 @@ operator *(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,el
     return c;
 }
 
+operator -(a: ndarray(?rank, ?eltType)): ndarray(rank, eltType) {
+    const dom = a.domain;
+    var negged = new ndarray(dom, eltType);
+    ref negData = negged.data;
+    const ref data = a.data;
+    forall i in dom.every() {
+        negData[i] = data[i];
+    }
+
+    return negged;
+}
+
 operator -(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,eltType) {
     const dom = a.domain;
     var c: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
@@ -1709,22 +1721,6 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
 }
 
 
-proc ndarray.negate(): ndarray(this.rank, this.eltType)
-    when isSubtype(this.eltType, real)
-{
-    const dom = this.domain;
-    const ref thisData = this.data;
-
-    var negated = new ndarray(this.eltType, dom);
-    ref negateData = negated.data;
-    forall i in dom.every() {
-        negateData[i] = -thisData[i];
-    }
-
-    return negated;
-}
-
-
 // TODO: Make this work over arbitrary dimensions
 proc ndarray.softmax(): ndarray(this.rank, this.eltType)
     when isSubtype(this.eltType, real)
@@ -1744,6 +1740,13 @@ proc ndarray.softmax(): ndarray(this.rank, this.eltType)
     }
 
     return softmaxxed;
+}
+
+
+proc ndarray.softmin(): ndarray(this.rank, this.eltType)
+    when isSubtype(this.eltType, real)
+{
+    return (-this).softmax();
 }
 
 
