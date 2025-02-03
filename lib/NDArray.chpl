@@ -1709,6 +1709,27 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
 }
 
 
+// TODO: Make this work over arbitrary dimensions
+proc ndarray.softmax(): ndarray(this.rank, this.eltType)
+    when isSubtype(this.eltType, real)
+{
+    const dom = this.domain;
+    const ref thisData = array.data;
+
+    var denom: this.eltType = 0.0;
+    forall i in dom.every() with (+ reduce denom) {
+        denom += Math.exp(thisData[i]);
+    }
+
+    var softmaxxed = new ndarray(dom, this.eltType);
+    forall i in dom.every() {
+        softmaxxed[i] = Math.exp(thisData[i]) / denom;
+    }
+
+    return softmaxxed;
+}
+
+
 proc main() {
     // More examples. 
     writeln("Hello!");
