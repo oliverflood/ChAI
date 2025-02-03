@@ -5,13 +5,13 @@
 FROM chapel/chapel
 # as chapel
 
-WORKDIR /ChAI
+# WORKDIR /ChAI
 
-COPY ../../. /ChAI/
+# COPY ../../. /ChAI/
 
-RUN echo $(ls -la)
-RUN echo $(ls -la /)
-RUN echo $(ls -la /ChAI)
+# RUN echo $(ls -la)
+# RUN echo $(ls -la /)
+# RUN echo $(ls -la /ChAI)
 
 # Install pytorch
 # RUN pip3 install torch numpy torch
