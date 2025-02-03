@@ -24,10 +24,11 @@ jobs:
           who-to-greet: 'Mona the Octocat'
 
       # Use the output from the `hello` step
+          # echo "The time was ${{ steps.hello.outputs.time }}"
+          # (echo "The python3 path is ${{ steps.hello.outputs.python3 }}" || echo "No python3 found!")
+          # (echo "The chapel path is ${{ steps.hello.outputs.chapel }}" || echo "No chapel found!")
+
       - name: Get the output time
         run: |
-          echo "The time was ${{ steps.hello.outputs.time }}"
-          (echo "The python3 path is ${{ steps.hello.outputs.python3 }}" || echo "No python3 found!")
-          (echo "The chapel path is ${{ steps.hello.outputs.chapel }}" || echo "No chapel found!")
 
           echo "All outputs: ${{ steps.hello.outputs }}"
