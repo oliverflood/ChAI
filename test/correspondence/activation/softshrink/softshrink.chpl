@@ -3,7 +3,7 @@ use Tensor;
 var a = Tensor.zeros(2,3).softshrink();
 writeln(a.degenerateFlatten());
 
-var b = (Tensor.zeros(2,3,4) - 1.0).softshrink();
+var b = (Tensor.zeros(2,3,4) - 60.0).softshrink();
 writeln(b.degenerateFlatten());
 
 var c = (Tensor.zeros(10) + 40.0).softshrink();
@@ -13,7 +13,7 @@ writeln(c.degenerateFlatten());
 a = Tensor.zeros(2,3).softshrink(alpha=10.0);
 writeln(a.degenerateFlatten());
 
-b = (Tensor.zeros(2,3,4) - 1.0).softshrink(alpha=10.0);
+b = (Tensor.zeros(2,3,4) - 60.0).softshrink(alpha=10.0);
 writeln(b.degenerateFlatten());
 
 c = (Tensor.zeros(10) + 40.0).softshrink(alpha=10.0);

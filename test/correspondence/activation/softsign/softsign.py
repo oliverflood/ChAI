@@ -6,7 +6,7 @@ def test(imports):
     a = torch.nn.Softsign()(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Softsign()(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Softsign()(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Softsign()(torch.zeros(10) + 40.0)

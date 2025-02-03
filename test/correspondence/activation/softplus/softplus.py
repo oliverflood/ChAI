@@ -6,7 +6,7 @@ def test(imports):
     a = torch.nn.Softplus()(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Softplus()(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Softplus()(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Softplus()(torch.zeros(10) + 40.0)
@@ -16,7 +16,7 @@ def test(imports):
     a = torch.nn.Softplus(beta=-0.001)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Softplus(beta=-0.001)(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Softplus(beta=-0.001)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Softplus(beta=-.001)(torch.zeros(10) + 40.0)
@@ -26,7 +26,7 @@ def test(imports):
     a = torch.nn.Softplus(beta=10.0)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Softplus(beta=10.0)(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Softplus(beta=10.0)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Softplus(beta=10.0)(torch.zeros(10) + 40.0)

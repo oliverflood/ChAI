@@ -6,7 +6,7 @@ def test(imports):
     a = torch.nn.Hardtanh()(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Hardtanh()(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Hardtanh()(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Hardtanh()(torch.zeros(10) + 40.0)
@@ -16,7 +16,7 @@ def test(imports):
     a = torch.nn.Hardtanh(min_val=-10.0)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Hardtanh(min_val=-10.0)(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Hardtanh(min_val=-10.0)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Hardtanh(min_val=-10.0)(torch.zeros(10) + 40.0)
@@ -26,7 +26,7 @@ def test(imports):
     a = torch.nn.Hardtanh(max_val=10.0)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Hardtanh(max_val=10.0)(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Hardtanh(max_val=10.0)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Hardtanh(max_val=10.0)(torch.zeros(10) + 40.0)
@@ -36,7 +36,7 @@ def test(imports):
     a = torch.nn.Hardtanh(min_val=-50.0, max_val=30.0)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Hardtanh(min_val=-50.0, max_val=30.0)(torch.zeros(2,3,4) - 1.0)
+    b = torch.nn.Hardtanh(min_val=-50.0, max_val=30.0)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
     c = torch.nn.Hardtanh(min_val=-50.0, max_val=30.0)(torch.zeros(10) + 40.0)
