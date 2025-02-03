@@ -1727,7 +1727,7 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
 
 // TODO: Make this work over arbitrary dimensions
 proc ndarray.softmax(): ndarray(this.rank, this.eltType)
-    when isSubtype(this.eltType, real)
+    where isSubtype(this.eltType, real)
 {
     const dom = this.domain;
     const ref thisData = this.data;
@@ -1748,7 +1748,7 @@ proc ndarray.softmax(): ndarray(this.rank, this.eltType)
 
 
 proc ndarray.softmin(): ndarray(this.rank, this.eltType)
-    when isSubtype(this.eltType, real)
+    where isSubtype(this.eltType, real)
 {
     return (-this).softmax();
 }
