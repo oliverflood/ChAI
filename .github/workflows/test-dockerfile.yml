@@ -30,5 +30,4 @@ jobs:
 
       - name: Get the output time
         run: |
-
           echo "All outputs: ${{ steps.hello.outputs }}"
