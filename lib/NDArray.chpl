@@ -1505,7 +1505,10 @@ proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer
             }
             writer.write("[");
         }
-        writer.writef("%{##.#}",x);
+        if eltType == int then
+            writer.writef("%{#}",x);
+        else
+            writer.writef("%{##.#}",x);
 
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
