@@ -6,7 +6,7 @@ FROM chapel/chapel
 # as chapel
 
 RUN echo $(ls -la)
-
+RUN echo $(ls -la /)
 # Install pytorch
 RUN pip3 install torch numpy torch
 
