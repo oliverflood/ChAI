@@ -355,11 +355,13 @@ record softsignOp : serializable {
 }
 
 record rreluOp : serializable {
+    type eltType = real(32);
     var input: shared BaseTensorResource(?);
     var lower: eltType = 0.125;
     var upper: eltType = 1.0 / 3.0;
 
-    proc init(low: eltType, up: eltType) {
+    proc init(low: ?eltType, up: eltType) {
+        this.eltType = eltType;
         lower = low;
         upper = up;
     }
@@ -398,11 +400,13 @@ record hardshrinkOp : serializable {
 }
 
 record thresholdOp : serializable {
+    type eltType = real(32);
     var input: shared BaseTensorResource(?);
     var threshold: eltType; // PyTorch has no defaults for threshold
     var value: eltType;
 
-    proc init(t: eltType, v: eltType) {
+    proc init(t: ?eltType, v: eltType) {
+        this.eltType = eltType;
         threshold = t;
         value = v;
     }
@@ -460,10 +464,12 @@ record softplusOp : serializable {
 }
 
 record celuOp : serializable {
+    type eltType = real(32);
     var input: shared BaseTensorResource(?);
     var alpha: eltType = 1.0;
 
-    proc init(a: eltType) {
+    proc init(a: ?eltType) {
+        this.eltType = eltType;
         alpha = a;
     }
 
@@ -474,6 +480,7 @@ record celuOp : serializable {
 }
 
 record leakyreluOp : serializable {
+    type eltType = real(32);
     var input: shared BaseTensorResource(?);
     var negative_slope: eltType = exp(-2.0);
 

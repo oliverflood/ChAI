@@ -1449,7 +1449,47 @@ inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): n
     return a;
 }
 
+proc type ndarray.loadImage(imagePath: string, type eltType = real(32)): ndarray(3,eltType) {
+    import Image;
+    import Path;
 
+    proc getImageType(imagePath: string): Image.imageType {
+        const (pfx,pathExt) = Path.splitExt(imagePath);
+        const ext = pathExt.toLower();
+        select ext {
+            when ".png" do 
+                return Image.imageType.png; 
+            when ".jpg" do 
+                return Image.imageType.jpg; 
+            when ".jpeg" do 
+                return Image.imageType.jpg; 
+            when ".bmp" do 
+                return Image.imageType.bmp; 
+        }
+        util.err("Unsupported image type: ",pathExt, (pfx,pathExt));
+        return Image.imageType.bmp;
+    }
+
+    inline proc getColorFromPixel(pixel: Image.pixelType, param offset: int) {
+        return (pixel >> Image.colorOffset(offset)) & Image.colorMask;
+    }
+
+    const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
+
+    const imgType = getImageType(imagePath);
+    const pixelData = Image.readImage(imagePath,format=imgType);
+    const (height,width) = pixelData.shape;
+
+    const imgDom = util.domainFromShape(3,height,width);
+    var img = new ndarray(imgDom,eltType);
+    ref imgData = img.data;
+
+    forall (pixel,(i,j)) in zip(pixelData,pixelData.domain) do
+        for param c in 0..<pixelFormat.size do
+            imgData[c,i,j] = getColorFromPixel(pixel,c): eltType; // getColorFromPixel(pixel,pixelFormat[c]);
+
+    return img;
+}
 
 // For printing. 
 proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer),ref serializer: IO.defaultSerializer) {
