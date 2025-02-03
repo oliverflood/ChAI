@@ -705,65 +705,6 @@ operator :(it: _iteratorRecord, type t: ndarray(?rank,?eltType)) do
 
 // End problemetic bunch.
 
-proc svd(A: [] real(64), full_matrices: bool = true) throws {
-    compilerWarning("Using NDArray.svd() which depends on LAPACK; not GPU-eligible.");
-
-    const m      = A.domain.dim(0).size,
-          n      = A.domain.dim(1).size,
-          min_mn = min(m, n);
-
-    var A_copy = A;  // so we do not mutate the caller's array
-
-    var S: [1..min_mn] real(64);
-
-    var domU, domVT: domain(2,int);
-    if full_matrices {
-        domU  = {1..m, 1..m};
-        domVT = {1..n, 1..n};
-    } 
-    else {
-        domU  = {1..m,       1..min_mn};
-        domVT = {1..min_mn,  1..n      };
-    }
-
-    const jobz = if full_matrices then 'A' else 'S';
-
-    var U:  [domU]  real(64);
-    var VT: [domVT] real(64);
-
-    const info = gesdd(lapack_memory_order.row_major, jobz, A_copy, S, U, VT);
-
-    if info == 0 {
-        return (U, S, VT);
-    } 
-    else if info > 0 {
-        halt("SVD did not converge.");
-    } 
-    else {
-        halt("Invalid argument at position ", -info);
-    }
-}
-
-proc ndarray.svd(full_matrices: bool = true) throws {
-    compilerWarning("Using NDArray.svd() which depends on LAPACK; not GPU-eligible.");
-
-    if this.rank != 2 {
-        halt("SVD is only defined for rank=2 NDArray; got rank=", this.rank);
-    }
-
-    // If eltType != real(64), convert to real(64)
-    const castArr = this.data: [this._domain] real(64);
-
-    const (U_arr, S_arr, VT_arr) = svd(castArr, full_matrices);
-
-    // Wrap each result as NDArray again
-    var U_nd  = new ndarray(U_arr);
-    var S_nd  = new ndarray(S_arr);
-    var VT_nd = new ndarray(VT_arr);
-
-    return (U_nd, S_nd, VT_nd);
-}
-
 
 proc zipArr(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType),f): ndarray(rank,eltType) {
     const dom = a.domain;
