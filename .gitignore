@@ -17,3 +17,5 @@ target/
 .cls-commands.json
 .venv
 __pycache__/
+!Dockerfile
+node_modules/
