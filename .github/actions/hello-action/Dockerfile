@@ -6,7 +6,7 @@ FROM chapel/chapel
 # as chapel
 
 
-COPY . .
+COPY ../../../ .
 
 RUN echo $(ls -la)
 RUN echo $(ls -la /)
