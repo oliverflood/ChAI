@@ -1709,21 +1709,38 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
 }
 
 
+proc ndarray.negate(): ndarray(this.rank, this.eltType)
+    when isSubtype(this.eltType, real)
+{
+    const dom = this.domain;
+    const ref thisData = this.data;
+
+    var negated = new ndarray(this.eltType, dom);
+    ref negateData = negated.data;
+    forall i in dom.every() {
+        negateData[i] = -thisData[i];
+    }
+
+    return negated;
+}
+
+
 // TODO: Make this work over arbitrary dimensions
 proc ndarray.softmax(): ndarray(this.rank, this.eltType)
     when isSubtype(this.eltType, real)
 {
     const dom = this.domain;
-    const ref thisData = array.data;
+    const ref thisData = this.data;
 
     var denom: this.eltType = 0.0;
     forall i in dom.every() with (+ reduce denom) {
         denom += Math.exp(thisData[i]);
     }
 
-    var softmaxxed = new ndarray(dom, this.eltType);
+    var softmaxxed = new ndarray(this.eltType, dom);
+    ref softmaxData = softmaxxed.data;
     forall i in dom.every() {
-        softmaxxed[i] = Math.exp(thisData[i]) / denom;
+        softmaxData[i] = Math.exp(thisData[i]) / denom;
     }
 
     return softmaxxed;
