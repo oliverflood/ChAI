@@ -12,8 +12,8 @@ def test(imports):
     c = torch.nn.Threshold()(torch.zeros(10) + 4.0)
     print(c)
     
-    # same values with threshold = -0.001
-    a = torch.nn.Threshold(threshold=-10.0, )(torch.zeros(2,3))
+    # same values with threshold = -10.0
+    a = torch.nn.Threshold(threshold=-10.0)(torch.zeros(2,3))
     print(a)
 
     b = torch.nn.Threshold(threshold=-10.0)(torch.zeros(2,3,4) - 1.0)
