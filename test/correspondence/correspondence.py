@@ -46,7 +46,7 @@ def compile_chapel(test_name,test_path,chai_path):
     assert test_name == test_path.name
     chapel_test_path = test_path / f'{test_name}.chpl'
     test_dir = chapel_test_path.parent
-    os.system(f'chpl {chapel_test_path} -M {chai_path / "lib"} -o {test_dir / test_name}')
+    os.system(f'chpl {chapel_test_path} -M {chai_path / 'lib'} -o {test_dir / test_name}')
 
 
 def run_chapel_test(test_name,test_path):
