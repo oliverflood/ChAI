@@ -106,6 +106,12 @@ operator +(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
+
+operator -(a: staticTensor(?rank, ?eltType)): staticTensor(rank, eltType) {
+    var ctx = new negOp(rank, eltType, a.meta);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 operator -(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new subOp(a.meta,b.meta);
     return tensorFromCtx(rank,eltType,ctx);

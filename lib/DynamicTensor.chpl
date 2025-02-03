@@ -219,6 +219,10 @@ proc type dynamicTensor.loadFromNumpy(path: string): dynamicTensor(real) {
 operator +(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("+",a,b);
 
+operator -(a: dynamicTensor(?eltType)): dynamicTensor(eltType) {
+    return dynamicTensor.valueLike(0) - a;
+}
+
 operator -(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("-",a,b);
 
