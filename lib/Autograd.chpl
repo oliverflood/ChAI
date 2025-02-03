@@ -269,13 +269,248 @@ record reluOp : serializable {
 
     proc children do return (input,);
 
-    proc forward() {
+    proc forward() do
         return input.array.relu();
-    }
-    inline proc _relu(x) do
-        return ((0.0 < x):input.eltType) * x;
+}
 
-    proc spec : GradOpSpec do return new dict(("operation","ReLU"));
+record siluOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.silu();
+}
+
+record mishOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.mish();
+}
+
+record sigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.sigmoid();
+}
+
+record tanhOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.tanh();
+}
+
+record relu6Op : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.relu6();
+}
+
+record seluOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.selu();
+}
+
+record logsigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.logsigmoid();
+}
+
+record tanhshrinkOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.tanhshrink();
+}
+
+record softsignOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softsign();
+}
+
+record rreluOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var lower: eltType = 0.125;
+    var upper: eltType = 1.0 / 3.0;
+
+    proc init(low: eltType, up: eltType) {
+        lower = low;
+        upper = up;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.rrelu(lower, upper);
+}
+
+record hardswishOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.hardswish();
+}
+
+record hardsigmoidOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.hardsigmoid();
+}
+
+record hardshrinkOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.hardshrink();
+}
+
+record thresholdOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var threshold: eltType; // PyTorch has no defaults for threshold
+    var value: eltType;
+
+    proc init(t: eltType, v: eltType) {
+        threshold = t;
+        value = v;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.threshold(threshold, value);
+}
+
+record hardtanhOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var min_val: eltType = -1.0;
+    var max_val: eltType = 1.0;
+
+    proc init(min_v: eltType, max_v: eltType) {
+        min_val = min_v;
+        max_val = max_v;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.threshold(min_val, max_val);
+}
+
+record eluOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var alpha: eltType = 1.0;
+
+    proc init(a: eltType) {
+        alpha = a;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.elu(alpha);
+}
+
+record softplusOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var beta: eltType = 1.0;
+    var threshold: eltType = 20.0;
+
+    proc init(b: eltType, t: eltType) {
+        beta = b;
+        threshold = t;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softplus(beta, threshold);
+}
+
+record celuOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var alpha: eltType = 1.0;
+
+    proc init(a: eltType) {
+        alpha = a;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.celu(alpha);
+}
+
+record leakyreluOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var negative_slope: eltType = exp(-2.0);
+
+    proc init(ns: eltType) {
+        negative_slope = ns;
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.leakyrelu(negative_slope);
+}
+
+record softshrinkOp : serializable {
+    var input: shared BaseTensorResource(?);
+    var l: eltType = 0.5;
+
+    proc init(L: eltType = 0.5) {
+        l = L;
+        if l < 0 then util.err("argument to softshrink function must be non-negative");
+    }
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.softshrink(l);
+}
+
+record squareOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.square();
+
+    proc spec : GradOpSpec do return new dict(("operation","Square"));
 }
 
 record expOp : serializable {
