@@ -765,6 +765,7 @@ proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),type dtype = real(32), 
 }
 
 
+/*
 // Randomly zeroes some elements of the tensor with probability p.
 // Netizens say that this is useful for regularization.
 proc dynamicTensor.dropout(p: real(64) = 0.5): dynamicTensor(eltType) {
@@ -775,3 +776,4 @@ proc dynamicTensor.dropout(p: real(64) = 0.5): dynamicTensor(eltType) {
 
     halt("Could not determine rank in dynamicTensor.dropout.");
 }
+*/
