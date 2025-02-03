@@ -1,0 +1,13 @@
+import torch
+
+def test(imports):
+    print = imports['print_fn']
+
+    a = torch.nn.Softsign()(torch.zeros(2,3))
+    print(a)
+
+    b = torch.nn.Softsign()(torch.zeros(2,3,4) - 1.0)
+    print(b)
+
+    c = torch.nn.Softsign()(torch.zeros(10) + 4.0)
+    print(c)
