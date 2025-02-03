@@ -116,5 +116,4 @@ for test in tests:
     else:
         print('[passed]', test_name)
 
-    # python_test_path = test['absolute_path'] / f'{test_name}.py'
-
+    python_test_path = test['absolute_path'] / f'{test_name}.py'
