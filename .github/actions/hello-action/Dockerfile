@@ -7,7 +7,7 @@ FROM chapel/chapel
 
 WORKDIR /ChAI
 
-COPY . /ChAI/
+COPY ../../. /ChAI/
 
 RUN echo $(ls -la)
 RUN echo $(ls -la /)
