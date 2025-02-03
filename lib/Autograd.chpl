@@ -502,6 +502,17 @@ record softshrinkOp : serializable {
         return input.array.softshrink(l);
 }
 
+record squareOp : serializable {
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward() do
+        return input.array.square();
+
+    proc spec : GradOpSpec do return new dict(("operation","Square"));
+}
+
 record expOp : serializable {
     var input: shared BaseTensorResource(?);
 
