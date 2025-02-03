@@ -977,6 +977,10 @@ proc zipArr(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType),f): ndarray(rank
     return c;
 }
 
+operator +(a: ndarray(?rank, ?eltType)): ndarray(rank, eltType) {
+    return a;
+}
+
 operator +(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,eltType) {
     const dom = a.domain;
 
