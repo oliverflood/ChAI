@@ -11,6 +11,7 @@ COPY ../../../ .
 
 RUN echo $(ls -la)
 RUN echo $(ls -la /)
+RUN echo $(ls -la /ChAI)
 
 # Install pytorch
 # RUN pip3 install torch numpy torch
