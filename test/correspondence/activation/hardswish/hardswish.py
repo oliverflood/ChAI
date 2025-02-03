@@ -9,5 +9,5 @@ def test(imports):
     b = torch.nn.Hardswish()(torch.zeros(2,3,4) - 1.0)
     print(b)
 
-    c = torch.nn.Hardswish()(torch.zeros(10) + 4.0)
+    c = torch.nn.Hardswish()(torch.zeros(10) + 40.0)
     print(c)

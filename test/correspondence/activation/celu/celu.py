@@ -9,7 +9,7 @@ def test(imports):
     b = torch.nn.CELU()(torch.zeros(2,3,4) - 1.0)
     print(b)
 
-    c = torch.nn.CELU()(torch.zeros(10) + 4.0)
+    c = torch.nn.CELU()(torch.zeros(10) + 40.0)
     print(c)
     
     # same values with alpha = -0.001
@@ -19,7 +19,7 @@ def test(imports):
     b = torch.nn.CELU(alpha=-0.001)(torch.zeros(2,3,4) - 1.0)
     print(b)
 
-    c = torch.nn.CELU(alpha=-.001)(torch.zeros(10) + 4.0)
+    c = torch.nn.CELU(alpha=-.001)(torch.zeros(10) + 40.0)
     print(c)
     
     # same values with alpha = 10.0
@@ -29,5 +29,5 @@ def test(imports):
     b = torch.nn.CELU(alpha=10.0)(torch.zeros(2,3,4) - 1.0)
     print(b)
 
-    c = torch.nn.CELU(alpha=10.0)(torch.zeros(10) + 4.0)
+    c = torch.nn.CELU(alpha=10.0)(torch.zeros(10) + 40.0)
     print(c)
