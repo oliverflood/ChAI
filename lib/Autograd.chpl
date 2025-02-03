@@ -1003,3 +1003,17 @@ record conv2DOp : serializable {
 
     proc spec : GradOpSpec do return new dict(("operation","Conv2D"),("stride",stride:string),("padding",padding:string));
 }
+
+
+record negOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(eltType, rank);
+
+    proc children do return (input, );
+
+    proc forward(): ndarray(rank, eltType) {
+        return new ndarray(eltType, input.array.domain, -1);
+    }
+}
