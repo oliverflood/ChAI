@@ -5,6 +5,7 @@
 FROM chapel/chapel
 # as chapel
 
+WORKDIR /ChAI
 
 COPY ../../../ .
 
