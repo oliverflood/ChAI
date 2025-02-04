@@ -1458,22 +1458,64 @@ inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): n
     return a;
 }
 
-proc randomSeed(): int {
-    import Random;
-    var stream = new Random.randomStream(int);
-    return stream.next();
+module ndarrayRandom {
+    private import Random;
+
+    var globalSeedSetFlag: bool = false;
+    var globalSeed: int = -1;
+
+    proc seed: int {
+        if globalSeedSetFlag {
+            var rs = new Random.randomStream(int,globalSeed);
+            globalSeed = rs.next();
+            return globalSeed;
+        } else {
+            var rs = new Random.randomStream(int);
+            return rs.next();
+        }
+    }
+
+    proc setGlobalSeed(newSeed: int) {
+        globalSeedSetFlag = true;
+        var rs = new Random.randomStream(int,newSeed);
+        globalSeed = rs.next();
+    }
+
+    proc getRandomStream(type eltType): Random.randomStream(eltType) {
+        if globalSeedSetFlag {
+            return new Random.randomStream(eltType,seed);
+        } else {
+            return new Random.randomStream(eltType);
+        }
+    }
 }
 
-proc type ndarray.random(type eltType = defaultEltType, shape: ?rank*int, seed: int): ndarray(rank,eltType) {
-    import Random;
+proc type ndarray.setGlobalRandomSeed(seed: int) do
+    ndarrayRandom.setGlobalSeed(seed);
+
+proc type ndarray.getNextSeed(): int do
+    return ndarrayRandom.seed;
+
+proc type ndarray.getRandomStream(type eltType): Random.randomStream(eltType) do
+    return ndarrayRandom.getRandomStream(eltType);
+
+proc type ndarray.randomArray(
+    shape: int...?rank,
+    type eltType = defaultEltType,
+    in rs: Random.randomStream(eltType) = ndarray.getRandomStream(eltType)): ndarray(rank,eltType) {
     const dom = util.domainFromShape((...shape));
-    var a = new ndarray(dom,eltType);
-    Random.fillRandom(a.data,seed);
-    return a;
+    return new ndarray(eltType,rs,dom);
 }
 
-proc type ndarray.random(shape: int...?rank, seed: int, type eltType = defaultEltType): ndarray(rank,eltType) do
-    return ndarray.random(eltType,shape,seed);
+proc type ndarray.random(shape: int...?rank,type eltType = defaultEltType): ndarray(rank,eltType) do
+    return ndarray.randomArray((...shape),eltType,ndarray.getRandomStream(eltType));
+
+proc type ndarray.random(shape: int...?rank): ndarray(rank,defaultEltType) do
+    return ndarray.random((...shape),eltType = defaultEltType);
+
+proc type ndarray.random(shape: ?rank*int,type eltType = defaultEltType,seed: int = ndarray.getNextSeed()): ndarray(rank,eltType) do
+    return ndarray.randomArray((...shape),eltType,new Random.randomStream(eltType,seed));
+
 
 proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): ndarray(3,eltType) {
     import Image;
