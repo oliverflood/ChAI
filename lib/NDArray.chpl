@@ -1,19 +1,22 @@
 import ChapelArray;
-import IO;
-use Remote;
 import Math;
+import Random;
+import IO;
+
+use Env;
+
+use Remote;
+use SimpleDomain;
 
 import Utilities as util;
 use Utilities.Standard;
 use Utilities.Types;
 
-use SimpleDomain;
-
 type domainType = _domain(?);
 
 record ndarray : serializable {
     param rank: int;
-    type eltType = real(32);
+    type eltType = defaultEltType;
     var _domain: domain(rank,int);
     var data: [_domain] eltType = noinit;
 
@@ -74,18 +77,18 @@ record ndarray : serializable {
         this.init(eltType,{(...ranges)});
     }
 
-    proc init(param rank: int, type eltType = real(32)) {
+    proc init(param rank: int, type eltType = defaultEltType) {
         const shape: rank * int;
         this.init(eltType,shape);
     }
 
-    proc init(type eltType = real(32), const shape: int ...?rank) do
+    proc init(type eltType = defaultEltType, const shape: int ...?rank) do
         this.init(eltType,shape);
 
     proc init(const dom: rect(?rank), type eltType) do
         this.init(eltType,dom);  // This could be optimized by refactoring whole init system. 
 
-    proc init(const dom: ?t,type eltType = real(32)) 
+    proc init(const dom: ?t,type eltType = defaultEltType) 
             where isDomainType(t) {
         this.init(eltType,dom);
     }
@@ -102,6 +105,12 @@ record ndarray : serializable {
         this.eltType = eltType;
         this._domain = A._domain;
         this.data = A.data;
+    }
+
+    proc init(type eltType, ref rs: Random.randomStream(eltType), const dom: ?t)
+        where isDomainType(t) {
+        this.init(eltType,dom);
+        rs.fill(data);
     }
 
     // proc init(it: _iteratorRecord) {
@@ -884,13 +893,13 @@ record ndarray : serializable {
 
 
 
-proc type ndarray.arange(type eltType = real(32),shape: ?rank*int): ndarray(rank,eltType) {
+proc type ndarray.arange(type eltType = defaultEltType,shape: ?rank*int): ndarray(rank,eltType) {
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType = foreach (i,_) in dom.everyZip() do i : eltType;
     return new ndarray(A);
 }
-proc type ndarray.arange(shape: int...?rank): ndarray(rank,real(32)) do
-    return ndarray.arange(eltType=real(32), shape);
+proc type ndarray.arange(shape: int...?rank): ndarray(rank,defaultEltType) do
+    return ndarray.arange(eltType=defaultEltType, shape);
 
 
 
@@ -1449,7 +1458,24 @@ inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): n
     return a;
 }
 
-proc type ndarray.loadImage(imagePath: string, type eltType = real(32)): ndarray(3,eltType) {
+proc randomSeed(): int {
+    import Random;
+    var stream = new Random.randomStream(int);
+    return stream.next();
+}
+
+proc type ndarray.random(type eltType = defaultEltType, shape: ?rank*int, seed: int): ndarray(rank,eltType) {
+    import Random;
+    const dom = util.domainFromShape((...shape));
+    var a = new ndarray(dom,eltType);
+    Random.fillRandom(a.data,seed);
+    return a;
+}
+
+proc type ndarray.random(shape: int...?rank, seed: int, type eltType = defaultEltType): ndarray(rank,eltType) do
+    return ndarray.random(eltType,shape,seed);
+
+proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): ndarray(3,eltType) {
     import Image;
     import Path;
 
