@@ -3,6 +3,8 @@ module Utilities {
     private use ChplConfig only CHPL_LOCALE_MODEL;
     config param loopGpuSupport = CHPL_LOCALE_MODEL == "gpu";
 
+    private import Image;
+
     proc targetGpu() param : bool {
         if loopGpuSupport && CHPL_LOCALE_MODEL == "gpu" {
             return true;
@@ -275,6 +277,23 @@ module Utilities {
     proc argsort(tup: int...?rank) {
         writeln("IAIN: just do it, it's not that hard. (tuple argsort)");
         return tup;
+    }
+
+    proc getImageType(imagePath: string): Image.imageType {
+        const (pfx,pathExt) = Path.splitExt(imagePath);
+        const ext = pathExt.toLower();
+        select ext {
+            when ".png" do 
+                return Image.imageType.png; 
+            when ".jpg" do 
+                return Image.imageType.jpg; 
+            when ".jpeg" do 
+                return Image.imageType.jpg; 
+            when ".bmp" do 
+                return Image.imageType.bmp; 
+        }
+        util.err("Unsupported image type: ",pathExt, (pfx,pathExt));
+        return Image.imageType.bmp;
     }
 
     module Standard {

@@ -1521,30 +1521,13 @@ proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): n
     import Image;
     import Path;
 
-    proc getImageType(imagePath: string): Image.imageType {
-        const (pfx,pathExt) = Path.splitExt(imagePath);
-        const ext = pathExt.toLower();
-        select ext {
-            when ".png" do 
-                return Image.imageType.png; 
-            when ".jpg" do 
-                return Image.imageType.jpg; 
-            when ".jpeg" do 
-                return Image.imageType.jpg; 
-            when ".bmp" do 
-                return Image.imageType.bmp; 
-        }
-        util.err("Unsupported image type: ",pathExt, (pfx,pathExt));
-        return Image.imageType.bmp;
-    }
-
     inline proc getColorFromPixel(pixel: Image.pixelType, param offset: int) {
         return (pixel >> Image.colorOffset(offset)) & Image.colorMask;
     }
 
     const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
 
-    const imgType = getImageType(imagePath);
+    const imgType = util.getImageType(imagePath);
     const pixelData = Image.readImage(imagePath,format=imgType);
     const (height,width) = pixelData.shape;
 
@@ -1557,6 +1540,18 @@ proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): n
             imgData[c,i,j] = getColorFromPixel(pixel,c): eltType; // getColorFromPixel(pixel,pixelFormat[c]);
 
     return img;
+}
+
+proc ndarray.saveImage(imagePath: string) where rank == 3 {
+    import Image;
+
+    const imgType = util.getImageType(imagePath);
+
+    proc getColorAsPixel(color: pixelType, offset: rgbColor) {
+        return (color & colorMask) << colorOffset(offset);
+    }
+
+    
 }
 
 // For printing. 
