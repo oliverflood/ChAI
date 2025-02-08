@@ -190,6 +190,107 @@ proc staticTensor.gelu() {
     return t;
 }
 
+proc staticTensor.silu() {
+    var ctx = new siluOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.mish() {
+    var ctx = new mishOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.sigmoid() {
+    var ctx = new sigmoidOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.tanh() {
+    var ctx = new tanhOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.relu6() {
+    var ctx = new relu6Op(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.selu() {
+    var ctx = new seluOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.logsigmoid() {
+    var ctx = new logsigmoidOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.tanhshrink() {
+    var ctx = new tanhshrinkOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.softsign() {
+    var ctx = new softsignOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0) {
+    var ctx = new rreluOp(meta, lower, upper);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.hardswish() {
+    var ctx = new hardswishOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.hardsigmoid() {
+    var ctx = new hardsigmoidOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.hardshrink() {
+    var ctx = new hardshrinkOp(meta);
+    return tensorFromCtx(rank,eltType,ctx);
+}
+
+proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
+    var ctx = new thresholdOp(meta, threshold, value);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.hardtanh(min_val: eltType = -1.0, max_val: eltType = 1.0) {
+    var ctx = new hardtanhOp(meta, min_val, max_val);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.elu(alpha: eltType = 1.0) {
+    var ctx = new eluOp(meta, alpha);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.softplus(beta: eltType = 1.0, threshold: eltType = 20.0) {
+    var ctx = new softplusOp(meta, beta, threshold);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.celu(alpha: eltType = 1.0) {
+    var ctx = new celuOp(meta, alpha);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.leakyrelu(negative_slope: eltType = exp(-2.0)) {
+    var ctx = new leakyreluOp(meta, negative_slope);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
+proc staticTensor.softshrink(l: eltType = 0.5) {
+    if l < 0 then util.err("argument to softshrink function must be non-negative");
+    var ctx = new softshrinkOp(meta, l);
+    return tensorFromCtx(rank, eltType, ctx);
+}
+
 proc staticTensor.permute(axes: int...rank) {
     var ctx = new permuteOp(rank,eltType,axes,meta);
     return tensorFromCtx(rank,eltType,ctx);

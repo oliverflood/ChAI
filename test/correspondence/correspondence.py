@@ -46,7 +46,8 @@ def compile_chapel(test_name,test_path,chai_path):
     assert test_name == test_path.name
     chapel_test_path = test_path / f'{test_name}.chpl'
     test_dir = chapel_test_path.parent
-    os.system(f'chpl {chapel_test_path} -M {chai_path / 'lib'} -o {test_dir / test_name}')
+    chai_lib_path = chai_path / 'lib'
+    os.system(f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}')
 
 
 def run_chapel_test(test_name,test_path):
@@ -116,5 +117,4 @@ for test in tests:
     else:
         print('[passed]', test_name)
 
-    # python_test_path = test['absolute_path'] / f'{test_name}.py'
-
+    python_test_path = test['absolute_path'] / f'{test_name}.py'

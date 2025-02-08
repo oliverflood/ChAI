@@ -606,6 +606,269 @@ record ndarray : serializable {
         return rl;
     }
 
+    inline proc silu() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = x / (1 + Math.exp(-x));
+        }
+        return rl;
+    }
+
+    inline proc mish() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = x * Math.tanh(Math.log(1 + Math.exp(x)));
+        }
+        return rl;
+    }
+
+    inline proc sigmoid() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = 1 / (1 + Math.exp(-x));
+        }
+        return rl;
+    }
+
+    inline proc tanh() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = Math.tanh(x);
+        }
+        return rl;
+    }
+
+    inline proc relu6() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = min(max(0, x), 6);
+        }
+        return rl;
+    }
+
+    inline proc selu() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        const alpha: eltType = 1.6732632423543772848170429916717;
+        const scale: eltType = 1.0507009873554804934193349852946;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)));
+        }
+        return rl;
+    }
+
+    inline proc logsigmoid() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = log(1 / (1 + Math.exp(-x)));
+        }
+        return rl;
+    }
+
+    inline proc tanhshrink() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = x - Math.tanh(x);
+        }
+        return rl;
+    }
+
+    inline proc softsign() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = x / (1 + Math.abs(x));
+        }
+        return rl;
+    }
+
+    inline proc rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        var a: [dom] eltType;
+        fillRandom(a);
+        forall i in dom.every() {
+            const x = thisData[i];
+            a[i] = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
+            rld[i] = max(0, x) + min(0, a * x);
+        }
+        return rl;
+    }
+
+    inline proc hardswish() {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType);
+            const xgeq3: eltType = Math.ceil(1.0 / float_max); // x >= 3: 1 if true, 0 otherwise
+            const xleqn3: eltType = Math.ceil(1.0 / float_max); // x <= -3: 1 if true, 0 otherwise
+            rld[i] = x * xgeq3 + x * (x + 3) / 6.0 * (1 - xgeq3) * xleqn3;
+        }
+        return rl;
+    }
+
+    inline proc hardsigmoid() {
+    const ref thisData = data;
+    const dom = this.domain;
+    var rl = new ndarray(dom, eltType);
+    ref rld = rl.data;
+    forall i in dom.every() {
+        const x = thisData[i];
+        rld[i] = max(0, min(1, x/6.0 + 0.5));
+    }
+    return rl;
+
+    inline proc hardshrink(l: eltType=0.5) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max = Types.max(eltType);
+            const xmap0 = ceil(1.0 / float_max * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
+            rld[i] = x * xmap0;
+        }
+        return rl;
+    }
+
+    inline proc hardtanh(min_val: eltType=-1.0, max_val: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType);
+            const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
+            const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
+            rld[i] = Math.max(x, min_val) * (1 - xlminval) + min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
+        }
+        return rl;
+    }
+
+    inline proc elu(alpha: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType);
+            const xgz: eltType = Math.ceil(x / float_max); // x greater than zero: 1 if true, 0 otherwise
+            rld[i] = x * xgz + alpha * (Math.exp(x) - 1) * (1 - xgz);
+        }
+        return rl;
+    }
+
+    inline proc threshold(threshold: eltType, value: eltType) { // PyTorch has no defaults for threshold
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType); // maximum value a float_64 can take
+            const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
+            rld[i] = x * xgeqt + value * (1 - xgeqt);
+        }
+        return rl;
+    }
+
+    inline proc softplus(beta: eltType=1.0, threshold: eltType=20.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType);
+            const xgbt: eltType = Math.ceil((x - threshold / beta) / float_max); // x greater than beta * threshold: 1 if true, 0 otherwise
+            rld[i] = x * xgbt + 1.0 / beta * Math.log(1 + Math.exp(beta * x)) * (1 - xgbt);
+        }
+        return rl;
+    }
+
+    inline proc celu(alpha: eltType=1.0) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = max(0.0, x) + min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+        }
+        return rl;
+    }
+
+    inline proc leakyrelu(negative_slope: eltType=Math.exp(-2)) {
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = max(0, x) + negative_slope * min(0, x);
+        }
+        return rl;
+    }
+
+    inline proc softshrink(l: eltType=0.5) {  // l must be non-negative
+        if l < 0 then util.err("argument to softshrink function must be non-negative");
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            const float_max: eltType = Types.max(eltType);
+            const xgl = Math.ceil(1.0 / float_max * (x - l)); // x greater than lambda: 1 if true, otherwise
+            const xlnl = 1 - Math.ceil(1.0 / float_max * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
+            rld[i] = xgl * (x - l) + xlnl * (x + l);
+        }
+        return rl;
+    }
+}
+
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;
         const mySize = myDom.size;
