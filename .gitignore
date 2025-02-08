@@ -17,10 +17,11 @@ target/
 .cls-commands.json
 .venv
 __pycache__/
-
-
 cat_breeds/data
 cat_breeds/cat-breeds
 cat_breeds/playground.py
 cat_breeds/mnistexample.py
 cat_breeds/models/*.pt
+!Dockerfile
+node_modules/
+
