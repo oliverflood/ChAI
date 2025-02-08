@@ -1435,6 +1435,38 @@ proc type ndarray.matvecmul(mat: ndarray(2,?eltType),vec: ndarray(1,eltType)): n
     return u;
 }
 
+proc type ndarray.batchNorm(
+    features: ndarray(?rank,?eltType),
+    weight: ndarray(1,eltType),
+    bias: ndarray(1, eltType),
+    movingAvg: ndarray(1, eltType),
+    movingVar: ndarray(1, eltType),
+    n: int // num_features
+): ndarray(rank,eltType) {
+    // writeln("IN ndarray.batchNorm");
+    if rank < 2 then halt("Rank must be greater than 2");
+    if rank > 4 then halt("Rank must be less than 4");
+    const fshape = features.shape;
+
+    ref f = features.data;
+    ref w = weight.data;
+    ref b = bias.data;
+    ref a = movingAvg.data;
+    ref v = ndarray.sqrt(movingVar).data;
+
+    var outDom = util.domainFromShape((...fshape));
+    var outFeatures = new ndarray(outDom,eltType);
+    ref dat = outFeatures.data;
+
+    forall idx in outDom.every() {
+        var c = idx[1];
+        dat[idx] = w[c]*((f[idx]-a[c])/v[c])+b[c];
+    }
+
+    return outFeatures;
+
+}
+
 
 inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): ndarray(rank,eltType) {
     const dom_ = {(...rngs)};

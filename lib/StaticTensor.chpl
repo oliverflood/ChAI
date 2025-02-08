@@ -377,6 +377,18 @@ proc staticTensor.softmax(): staticTensor(rank,eltType) {
     return e / ss;
 }
 
+proc type staticTensor.batchNorm(
+    features: staticTensor(?featureRank,?eltType),
+    weight: staticTensor(1,eltType),
+    bias: staticTensor(1,eltType),
+    movingAvg: staticTensor(1,eltType), 
+    movingVar: staticTensor(1,eltType),
+    numFeatures: int
+): staticTensor(featureRank, eltType) {
+
+    var ctx = new batchNormOp(eltType, features.meta, weight.meta, bias.meta, movingAvg.meta, movingVar.meta, numFeatures);
+    return tensorFromCtx(featureRank, eltType, ctx);
+}
 
 proc matvec(mat: staticTensor(2,?eltType),vec: staticTensor(1,eltType)): staticTensor(1,eltType) {
     const (n,) = vec.array.domain.shape;
