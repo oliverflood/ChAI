@@ -24,4 +24,4 @@ cat_breeds/mnistexample.py
 cat_breeds/models/*.pt
 !Dockerfile
 node_modules/
-
+cat_breeds/models/*
