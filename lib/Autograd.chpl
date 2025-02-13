@@ -357,13 +357,13 @@ record softsignOp : serializable {
 record rreluOp : serializable {
     type eltType = real(32);
     var input: shared BaseTensorResource(?);
-    var lower: eltType = 0.125;
-    var upper: eltType = 1.0 / 3.0;
+    var lower: eltType;
+    var upper: eltType;
 
-    proc init(low: ?eltType, up: eltType) {
+    proc init(type eltType=real, lower: eltType=0.125, upper: eltType=1.0/3.0) {
         this.eltType = eltType;
-        lower = low;
-        upper = up;
+        this.lower = lower;
+        this.upper = upper;
     }
 
     proc children do return (input,);
@@ -405,10 +405,10 @@ record thresholdOp : serializable {
     var threshold: eltType; // PyTorch has no defaults for threshold
     var value: eltType;
 
-    proc init(t: ?eltType, v: eltType) {
+    proc init(type eltType=real, threshold: eltType, value: eltType) {
         this.eltType = eltType;
-        threshold = t;
-        value = v;
+        this.threshold = threshold;
+        this.value = value;
     }
 
     proc children do return (input,);
@@ -418,13 +418,14 @@ record thresholdOp : serializable {
 }
 
 record hardtanhOp : serializable {
+    type eltType = real;
     var input: shared BaseTensorResource(?);
-    var min_val: eltType = -1.0;
-    var max_val: eltType = 1.0;
+    var min_val: eltType;
+    var max_val: eltType;
 
-    proc init(min_v: eltType, max_v: eltType) {
-        min_val = min_v;
-        max_val = max_v;
+    proc init(type eltType=real, min_val: eltType=-1.0, max_val: eltType=1.0) {
+        this.min_val = min_val;
+        this.max_val = max_val;
     }
 
     proc children do return (input,);
@@ -434,11 +435,12 @@ record hardtanhOp : serializable {
 }
 
 record eluOp : serializable {
+    type eltType = real;
     var input: shared BaseTensorResource(?);
-    var alpha: eltType = 1.0;
+    var alpha: eltType;
 
-    proc init(a: eltType) {
-        alpha = a;
+    proc init(type eltType=real, alpha: eltType=1.0) {
+        this.alpha = alpha;
     }
 
     proc children do return (input,);
@@ -448,13 +450,14 @@ record eluOp : serializable {
 }
 
 record softplusOp : serializable {
+    type eltType = real;
     var input: shared BaseTensorResource(?);
-    var beta: eltType = 1.0;
-    var threshold: eltType = 20.0;
+    var beta: eltType;
+    var threshold: eltType;
 
-    proc init(b: eltType, t: eltType) {
-        beta = b;
-        threshold = t;
+    proc init(type eltType=real, beta: eltType = 1.0, threshold: eltType = 20.0) {
+        this.beta = beta;
+        this.threshold = threshold;
     }
 
     proc children do return (input,);
@@ -466,11 +469,12 @@ record softplusOp : serializable {
 record celuOp : serializable {
     type eltType = real(32);
     var input: shared BaseTensorResource(?);
-    var alpha: eltType = 1.0;
+    var alpha: eltType;
 
-    proc init(a: ?eltType) {
+
+    proc init(type eltType=real, alpha: eltType=1.0) {
         this.eltType = eltType;
-        alpha = a;
+        this.alpha = alpha;
     }
 
     proc children do return (input,);
@@ -482,10 +486,11 @@ record celuOp : serializable {
 record leakyreluOp : serializable {
     type eltType = real(32);
     var input: shared BaseTensorResource(?);
-    var negative_slope: eltType = exp(-2.0);
+    var negativeSlope: eltType;
 
-    proc init(ns: eltType) {
-        negative_slope = ns;
+    proc init(type eltType=real(32), negativeSlope: eltType = exp(-2.0)) {
+        this.eltType = eltType;
+        this.negativeSlope = negativeSlope;
     }
 
     proc children do return (input,);
@@ -495,12 +500,13 @@ record leakyreluOp : serializable {
 }
 
 record softshrinkOp : serializable {
+    type eltType = real;
     var input: shared BaseTensorResource(?);
-    var l: eltType = 0.5;
+    var l: eltType;
 
-    proc init(L: eltType = 0.5) {
-        l = L;
+    proc init(type eltType=real, l: eltType=0.5) {
         if l < 0 then util.err("argument to softshrink function must be non-negative");
+        this.l = l;
     }
 
     proc children do return (input,);
@@ -1009,4 +1015,22 @@ record conv2DOp : serializable {
     }
 
     proc spec : GradOpSpec do return new dict(("operation","Conv2D"),("stride",stride:string),("padding",padding:string));
+}
+
+record batchNormOp : serializable {
+    type eltType = real;
+    var features: shared BaseTensorResource(?); // what to put here?
+    var weight: shared BaseTensorResource(eltType, 1);
+    var bias: shared BaseTensorResource(eltType, 1);
+    var movingAvg: shared BaseTensorResource(eltType, 1);
+    var movingVar: shared BaseTensorResource(eltType, 1);
+    var n: int;
+
+    proc children do return (features, weight, bias, movingAvg, movingVar);
+
+    proc forward() {
+        return ndarray.batchNorm(features.array, weight.array, bias.array, movingAvg.array, movingVar.array, n);
+    }
+
+    proc spec : GradOpSpec do return new dict(("operation","BatchNorm"));
 }
