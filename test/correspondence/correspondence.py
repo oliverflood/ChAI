@@ -55,9 +55,9 @@ def compile_chapel(test_name,test_path,chai_path):
     import subprocess
     results = subprocess.run(compile_cmd,capture_output=True,shell=True,text=True) #stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if results.returncode != 0:
-        print('Failed to compile', chapel_test_path)
-        print(results.stdout)
-        print(results.stderr)
+        # print('Failed to compile', chapel_test_path)
+        # print(results.stdout)
+        # print(results.stderr)
         raise Exception(f'Failed to compile {test_name}.')
 
 def run_chapel_test(test_name,test_path):
@@ -133,22 +133,38 @@ def parse_output(output_tokens):
         nums.append(Decimal(f))
     return nums
 
+uncompiled_tests = []
+failed_tests = []
+
 for test in tests:
     test_name = test['name']
     test_type = test['type']
     test_path = test['absolute_path']
 
-    acceptable_tests = [
-        'arange',
-        'ones'
-    ]
-    if test_name not in acceptable_tests:
-        continue
+    # acceptable_tests = [
+    #     'arange',
+    #     'ones',
+    #     'relu'
+    # ]
+    # if test_name not in acceptable_tests:
+    #     continue
+
+    # tests_to_skip = [
+    #     'rrelu',
+    #     'hardtanh'
+    # ]
+    # if test_name in tests_to_skip:
+    #     continue
 
     python_output = run_python_test(test_name,test_path)
 
     # print(f'Compiling {test_name}...')
-    compile_chapel(test_name,test_path,chai_dir)
+    try:
+        compile_chapel(test_name,test_path,chai_dir)
+    except Exception as e:
+        print('⛔', test['test_path'])
+        uncompiled_tests.append(test['name'])
+        continue
 
     # print(f'Running {test_name}...')
     chapel_output = run_chapel_test(test_name,test_path)
@@ -173,6 +189,14 @@ for test in tests:
             failed = True
 
     if failed:
+        print(failure_emoji, test['test_path'])
+        failed_tests.append(test['name'])
+    else:
+        print(success_emoji, test['test_path'])
+
+    continue
+
+    if failed:
         for i in range(output_size):
             pr = python_results[i]
             cr = chapel_results[i]
@@ -193,3 +217,6 @@ for test in tests:
     #     print_success(test)
 
     python_test_path = test['absolute_path'] / f'{test_name}.py'
+
+print('Uncompiled tests:', uncompiled_tests)
+print('Tests to fix:', failed_tests)
