@@ -19,10 +19,11 @@ COPY lib /lib
 COPY examples /examples
 COPY test /test
 
+# Run tests
+# RUN cd test/correspondence && python3 correspondence.py
 
 
-
-
+# Build instructions
 # docker build --no-cache -t chapel-deb .
 # docker build -t chapel-deb .
 # docker container run -it chapel-deb bash
