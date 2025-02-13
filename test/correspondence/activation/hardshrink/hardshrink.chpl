@@ -1,30 +1,30 @@
 use Tensor;
 
 var a = Tensor.zeros(2,3).hardshrink();
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 var b = (Tensor.zeros(2,3,4) - 60.0).hardshrink();
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 var c = (Tensor.zeros(10) + 40.0).hardshrink();
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with alpha = -0.001
 a = Tensor.zeros(2,3).hardshrink(alpha=-0.001);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).hardshrink(alpha=-0.001);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).hardshrink(alpha=-0.001);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with alpha = 10.0
 a = Tensor.zeros(2,3).hardshrink(alpha=10.0);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).hardshrink(alpha=10.0);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).hardshrink(alpha=10.0);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
