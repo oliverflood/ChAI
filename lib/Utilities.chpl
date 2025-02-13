@@ -280,6 +280,7 @@ module Utilities {
     }
 
     proc getImageType(imagePath: string): Image.imageType {
+        import Path;
         const (pfx,pathExt) = Path.splitExt(imagePath);
         const ext = pathExt.toLower();
         select ext {
@@ -292,7 +293,7 @@ module Utilities {
             when ".bmp" do 
                 return Image.imageType.bmp; 
         }
-        util.err("Unsupported image type: ",pathExt, (pfx,pathExt));
+        err("Unsupported image type: ",pathExt, (pfx,pathExt));
         return Image.imageType.bmp;
     }
 

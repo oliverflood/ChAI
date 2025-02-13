@@ -1,6 +1,8 @@
 use NDArray;
 use Remote;
 
+use Env;
+
 import IO;
 
 import Utilities as util;
@@ -360,7 +362,7 @@ record rreluOp : serializable {
     var lower: eltType;
     var upper: eltType;
 
-    proc init(type eltType=real, lower: eltType=0.125, upper: eltType=1.0/3.0) {
+    proc init(type eltType=real(32), lower: eltType=0.125, upper: eltType=1.0/3.0) {
         this.eltType = eltType;
         this.lower = lower;
         this.upper = upper;
@@ -496,7 +498,7 @@ record leakyreluOp : serializable {
     proc children do return (input,);
 
     proc forward() do
-        return input.array.leakyrelu(negative_slope);
+        return input.array.leakyrelu(negativeSlope);
 }
 
 record softshrinkOp : serializable {
