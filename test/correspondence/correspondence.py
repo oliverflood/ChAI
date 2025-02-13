@@ -47,8 +47,15 @@ def compile_chapel(test_name,test_path,chai_path):
     chapel_test_path = test_path / f'{test_name}.chpl'
     test_dir = chapel_test_path.parent
     chai_lib_path = chai_path / 'lib'
-    os.system(f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}')
-
+    compile_cmd = f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}'
+    # os.system()
+    import subprocess
+    results = subprocess.run(compile_cmd,capture_output=True,shell=True,text=True) #stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    if results.returncode != 0:
+        print('Failed to compile', chapel_test_path)
+        print(results.stdout)
+        print(results.stderr)
+        raise Exception(f'Failed to compile {test_name}.')
 
 def run_chapel_test(test_name,test_path):
     assert test_name == test_path.name
@@ -96,6 +103,20 @@ def run_python_test(test_name,test_path):
     py_test_module.test({'print_fn': printer.print})
     return str(printer)
 
+success_emoji = '✅'
+failure_emoji = '❌'
+
+def print_failure(test,python_output,chapel_output):
+    # print('-------- failed --------')
+    # print('Python output:')
+    # print(python_output)
+    # print('Chapel output:')
+    # print(chapel_output)
+    print(failure_emoji, test['test_path'])
+
+def print_success(test):
+    print(success_emoji, test['test_path'])
+
 for test in tests:
     test_name = test['name']
     test_type = test['type']
@@ -109,12 +130,8 @@ for test in tests:
     # print(f'Running {test_name}...')
     chapel_output = run_chapel_test(test_name,test_path)
     if chapel_output != python_output:
-        print('-------- failed --------')
-        print('Python output:')
-        print(python_output)
-        print('Chapel output:')
-        print(chapel_output)
+        print_failure(test,python_output,chapel_output)
     else:
-        print('[passed]', test_name)
+        print_success(test)
 
     python_test_path = test['absolute_path'] / f'{test_name}.py'

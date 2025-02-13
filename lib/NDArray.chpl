@@ -731,11 +731,11 @@ record ndarray : serializable {
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         var a: [dom] eltType;
-        fillRandom(a);
+        Random.fillRandom(a);
         forall i in dom.every() {
             const x = thisData[i];
-            a[i] = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
-            rld[i] = max(0, x) + min(0, a * x);
+            const ai = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
+            rld[i] = Math.max(0, x) + Math.min(0, ai * x);
         }
         return rl;
     }
