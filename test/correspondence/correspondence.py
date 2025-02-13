@@ -107,12 +107,13 @@ success_emoji = '✅'
 failure_emoji = '❌'
 
 def print_failure(test,python_output,chapel_output):
-    # print('-------- failed --------')
-    # print('Python output:')
-    # print(python_output)
-    # print('Chapel output:')
-    # print(chapel_output)
+    print('-------- failed --------')
+    print('Python output:')
+    print(python_output)
+    print('Chapel output:')
+    print(chapel_output)
     print(failure_emoji, test['test_path'])
+    raise Exception(f'Failed test {test["name"]}.')
 
 def print_success(test):
     print(success_emoji, test['test_path'])
