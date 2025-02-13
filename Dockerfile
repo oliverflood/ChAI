@@ -20,10 +20,12 @@ COPY examples /examples
 COPY test /test
 
 # Run tests
-# RUN cd test/correspondence && python3 correspondence.py
+RUN cd test/correspondence && python3 correspondence.py
 
 
 # Build instructions
+# force (last resort): docker system prune --all --force
+# docker builder prune --all
 # docker build --no-cache -t chapel-deb .
 # docker build -t chapel-deb .
 # docker container run -it chapel-deb bash
