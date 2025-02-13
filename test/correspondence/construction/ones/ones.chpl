@@ -1,10 +1,10 @@
 use Tensor;
 
 var a = Tensor.ones(2,3);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 var b = Tensor.ones(2,3,4);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 var c = Tensor.ones(10);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);

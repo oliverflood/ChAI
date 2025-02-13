@@ -9,7 +9,7 @@ use StaticTensor;
 import Utilities as util;
 use Utilities.Standard;
 
-config param maxRank = 6;
+use Env;
 
 import LoadNumpy;
 
@@ -18,7 +18,7 @@ param defaultDetachedMode = true;
 type Tensor = dynamicTensor(?);
 
 record dynamicTensor : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
 
     var meta: shared TensorEssence(eltType);
 
@@ -205,16 +205,16 @@ proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor
     return new dynamicTensor(eltType);
 }
 
-proc type dynamicTensor.loadFromNumpy(path: string): dynamicTensor(real) {
+proc type dynamicTensor.loadFromNumpy(path: string): dynamicTensor(defaultEltType) {
     var npa = LoadNumpy.loadNumpyArray(path);
     for param rank in 1..maxRank {
         if const x = npa : owned LoadNumpy.ArrClass(rank)? {
-            const t: staticTensor(rank,real) = new staticTensor(x!.data);
+            const t: staticTensor(rank,defaultEltType) = new staticTensor(x!.data);
             return t.eraseRank();
         }
     }
     halt("Could not find rank of loaded numpy array.");
-    return new dynamicTensor(real);
+    return new dynamicTensor(defaultEltType);
 }
 
 operator +(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
@@ -229,6 +229,85 @@ operator *(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(
 operator /(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): dynamicTensor(eltType) do
     return zipBinOp("/",a,b);
 
+operator +(a: dynamicTensor(?eltType),c: ?scalarType): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (a.forceRank(rank) + c).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor + " + scalarType:string + ".");
+}
+
+operator +(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (c + a.forceRank(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in " + scalarType:string + " + dynamicTensor.");
+}
+
+operator -(a: dynamicTensor(?eltType),c: ?scalarType): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (a.forceRank(rank) - c).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor - " + scalarType:string + ".");
+}
+
+operator -(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (c - a.forceRank(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in " + scalarType:string + " - dynamicTensor.");
+}
+
+operator *(a: dynamicTensor(?eltType),c: ?scalarType): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (a.forceRank(rank) * c).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor * " + scalarType:string + ".");
+}
+
+operator *(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (c * a.forceRank(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in " + scalarType:string + " * dynamicTensor.");
+}
+
+operator /(a: dynamicTensor(?eltType),c: ?scalarType): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (a.forceRank(rank) / c).eraseRank();
+        }
+    }
+    halt("Could not determine rank in dynamicTensor / " + scalarType:string + ".");
+}
+
+operator /(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType) 
+        where isNumericType(scalarType) {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) {
+            return (c / a.forceRank(rank)).eraseRank();
+        }
+    }
+    halt("Could not determine rank in " + scalarType:string + " / dynamicTensor.");
+}
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
@@ -617,14 +696,14 @@ proc dynamicTensor.broadcast(shape: int...): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc type dynamicTensor.sqrt(t: dynamicTensor(real)): dynamicTensor(real) {
+proc type dynamicTensor.sqrt(t: dynamicTensor(defaultEltType)): dynamicTensor(defaultEltType) {
     for param rank in 1..maxRank {
         if t.checkRank(rank) {
             return staticTensor.sqrt(t.forceRank(rank)).eraseRank();
         }
     }
     halt("Could not determine rank in sqrt.");
-    return new dynamicTensor(real);
+    return new dynamicTensor(defaultEltType);
 }
 
 proc dynamicTensor.degenerateFlatten(): [] eltType {

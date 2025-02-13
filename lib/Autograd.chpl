@@ -1,11 +1,13 @@
 use NDArray;
 use Remote;
 
+use Env;
+
 import IO;
 
 import Utilities as util;
 
-import Math.exp;
+import Math;
 
 use OrderedDict;
 
@@ -35,7 +37,7 @@ proc forceRank(te: shared TensorEssence(?eltType),param rank: int): shared BaseT
 type GradOpSpec = dict(string,string);
 
 class TensorEssence : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     proc runtimeRank: int {
         halt("Not implemented.");
         return -1;
@@ -68,7 +70,6 @@ class TensorEssence : serializable {
 
 class BaseTensorResource : TensorEssence, serializable{
     param rank: int;
-    // type eltType = real(64);
     var dataResource: shared Remote(ndarray(rank,eltType));
     var gradResource: shared Remote(ndarray(rank,eltType))?;
     // forwarding resource only to, access, device;
@@ -355,15 +356,16 @@ record softsignOp : serializable {
 }
 
 record rreluOp : serializable {
-    type eltType = real;
+    // type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var lower: eltType;
-    var upper: eltType;
+    var lower: input.eltType;
+    var upper: input.eltType;
 
-    proc init(type eltType=real, lower: eltType=0.125, upper: eltType=1.0/3.0) {
-        this.lower = lower;
-        this.upper = upper;
-    }
+    // proc init(type eltType=defaultEltType, lower: eltType=0.125, upper: eltType=1.0/3.0) {
+    //     this.eltType = eltType;
+    //     this.lower = lower;
+    //     this.upper = upper;
+    // }
 
     proc children do return (input,);
 
@@ -399,12 +401,13 @@ record hardshrinkOp : serializable {
 }
 
 record thresholdOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var threshold: eltType; // PyTorch has no defaults for threshold
     var value: eltType;
 
-    proc init(type eltType=real, threshold: eltType, value: eltType) {
+    proc init(type eltType=defaultEltType, threshold: eltType, value: eltType) {
+        this.eltType = eltType;
         this.threshold = threshold;
         this.value = value;
     }
@@ -416,12 +419,12 @@ record thresholdOp : serializable {
 }
 
 record hardtanhOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var min_val: eltType;
     var max_val: eltType;
 
-    proc init(type eltType=real, min_val: eltType=-1.0, max_val: eltType=1.0) {
+    proc init(type eltType=defaultEltType, min_val: eltType=-1.0, max_val: eltType=1.0) {
         this.min_val = min_val;
         this.max_val = max_val;
     }
@@ -433,11 +436,11 @@ record hardtanhOp : serializable {
 }
 
 record eluOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var alpha: eltType;
 
-    proc init(type eltType=real, alpha: eltType=1.0) {
+    proc init(type eltType=defaultEltType, alpha: eltType=1.0) {
         this.alpha = alpha;
     }
 
@@ -448,12 +451,12 @@ record eluOp : serializable {
 }
 
 record softplusOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var beta: eltType;
     var threshold: eltType;
 
-    proc init(type eltType=real, beta: eltType = 1.0, threshold: eltType = 20.0) {
+    proc init(type eltType=defaultEltType, beta: eltType = 1.0, threshold: eltType = 20.0) {
         this.beta = beta;
         this.threshold = threshold;
     }
@@ -465,11 +468,13 @@ record softplusOp : serializable {
 }
 
 record celuOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var alpha: eltType;
 
-    proc init(type eltType=real, alpha: eltType=1.0) {
+
+    proc init(type eltType=defaultEltType, alpha: eltType=1.0) {
+        this.eltType = eltType;
         this.alpha = alpha;
     }
 
@@ -480,26 +485,27 @@ record celuOp : serializable {
 }
 
 record leakyreluOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var negative_slope: eltType;
+    var negativeSlope: eltType;
 
-    proc init(type eltType=real, negative_slope: eltType = exp(-2.0)) {
-        this.negative_slope = negative_slope;
+    proc init(type eltType=defaultEltType, negativeSlope: eltType = Math.exp(-2.0)) {
+        this.eltType = eltType;
+        this.negativeSlope = negativeSlope;
     }
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.leakyrelu(negative_slope);
+        return input.array.leakyrelu(negativeSlope);
 }
 
 record softshrinkOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
     var l: eltType;
 
-    proc init(type eltType=real, l: eltType=0.5) {
+    proc init(type eltType=defaultEltType, l: eltType=0.5) {
         if l < 0 then util.err("argument to softshrink function must be non-negative");
         this.l = l;
     }
@@ -660,7 +666,7 @@ record reshapeOp : serializable {
 
 record permuteOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var permutation; // tuple of ints
     var input: shared BaseTensorResource(eltType,rank);
 
@@ -681,7 +687,7 @@ record permuteOp : serializable {
 
 record expandOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var expandedShape: rank*int; // tuple of ints
     var input: shared BaseTensorResource(eltType,rank);
 
@@ -714,7 +720,7 @@ record expandOp : serializable {
 
 record padOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var arg: rank * (2 * int);
     var value: eltType;
     var input: shared BaseTensorResource(eltType,rank);
@@ -742,7 +748,7 @@ record padOp : serializable {
 
 record shrinkOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var arg: rank * (2 * int);
     var input: shared BaseTensorResource(eltType,rank);
 
@@ -769,7 +775,7 @@ record shrinkOp : serializable {
 
 record sliceOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var dom: domain(rank,int);
     var input: shared BaseTensorResource(eltType,rank);
 
@@ -790,7 +796,7 @@ record sliceOp : serializable {
 
 record layerSliceOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     var base: shared BaseTensorResource(eltType,rank);
     var mask: shared BaseTensorResource(eltType,rank);
     var maskDomain: domain(rank,int);
@@ -818,7 +824,7 @@ record layerSliceOp : serializable {
 
 record sumOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     param sumRank: int;
     var axes: sumRank * int; // tuple of ints
     var input: shared BaseTensorResource(eltType,rank);
@@ -892,7 +898,7 @@ record sumOp : serializable {
 
 record maxOp : serializable {
     param rank: int;
-    type eltType = real;
+    type eltType = defaultEltType;
     param maxRank: int;
     var axes: maxRank * int;
     var input: shared BaseTensorResource(eltType,rank);
@@ -917,7 +923,7 @@ record maxOp : serializable {
 
 // https://www.adityaagrawal.net/blog/deep_learning/bprop_strided_conv
 record conv2DOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var features: shared BaseTensorResource(eltType,3);
     var kernel: shared BaseTensorResource(eltType,4);
     var stride: int;
@@ -949,18 +955,18 @@ record conv2DOp : serializable {
         const strideDil = stride - 1;
         const dialGrad = grad.dilate(strideDil);
 
-        const fet: ndarray(4,real) = features.array.reshape(channels,1,inHeight,inWidth)
+        const fet: ndarray(4,defaultEltType) = features.array.reshape(channels,1,inHeight,inWidth)
                                   .expand(channels,filters,inHeight,inWidth);
 
         // const kerGrad = ndarray.convolve(dialGrad,fet,stride=1);
-        var kerGrad: ndarray(4,real) = new ndarray(kernel.array.domain,eltType);
+        var kerGrad: ndarray(4,defaultEltType) = new ndarray(kernel.array.domain,eltType);
         for f in 0..<filters {
-            const gradSl: ndarray(2,real) = grad.slice(f,..,..);
+            const gradSl: ndarray(2,defaultEltType) = grad.slice(f,..,..);
             const fets = features.array;
             const gslice = gradSl.dilate(strideDil)
                                  .reshape(1,1,outHeight,outWidth)
                                  .expand(1,channels,outHeight,outWidth);
-            const filterGrad: ndarray(3,real) = ndarray.convolve(fets,gslice,stride=stride, 0);
+            const filterGrad: ndarray(3,defaultEltType) = ndarray.convolve(fets,gslice,stride=stride, 0);
 
             // foreach (c,h,w) in {0..<channels,0..<kerHeight,0..<kerWidth} with (ref kerGrad) {
             //     kerGrad.data[f,c,h,w] = filterGrad.data[c,h,w];
@@ -982,7 +988,7 @@ record conv2DOp : serializable {
 
         const kernelRot = kernel.array.kernelRot();
 
-        var fetGrad: ndarray(3,real) = new ndarray(features.array.domain,eltType); // ndarray.convolve(paddedDilGrad,rotKernel,stride=1);
+        var fetGrad: ndarray(3,defaultEltType) = new ndarray(features.array.domain,eltType); // ndarray.convolve(paddedDilGrad,rotKernel,stride=1);
         for f in 0..<filters {
 
             // This can really be optimized.
@@ -1013,7 +1019,7 @@ record conv2DOp : serializable {
 }
 
 record batchNormOp : serializable {
-    type eltType = real;
+    type eltType = defaultEltType;
     var features: shared BaseTensorResource(?); // what to put here?
     var weight: shared BaseTensorResource(eltType, 1);
     var bias: shared BaseTensorResource(eltType, 1);

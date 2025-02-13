@@ -6,18 +6,20 @@ use Autograd;
 import Utilities as util;
 use Utilities.Standard;
 
+use Env;
+
 type tensor = staticTensor(?);
 
 record staticTensor : serializable {
     param rank: int;
-    type eltType = real(64);
+    type eltType = defaultEltType;
     var resource: shared BaseTensorResource(eltType,rank);
     forwarding resource only to, array, grad, device ;//backward;
     proc meta do return this.resource;
 
     proc _dom do return resource.array.domain;
 
-    proc init(param rank: int, type eltType = real(64)) {
+    proc init(param rank: int, type eltType = defaultEltType) {
         this.rank = rank;
         this.eltType = eltType;
         this.resource = new shared TensorResource(eltType,rank,new baseValue());
@@ -40,7 +42,7 @@ record staticTensor : serializable {
         this.resource = new shared TensorResource(ar);
     }
 
-    proc init(dom: domain(?),type eltType = real) {
+    proc init(dom: domain(?),type eltType = defaultEltType) {
         const normal = util.normalizeDomain(dom);
         param rank = normal.rank;
         on Remote.defaultDevice var ar: shared Remote(ndarray(rank,eltType)) = new ndarray(normal,eltType);
@@ -487,22 +489,22 @@ proc staticTensor.adaptiveAvgPool2d(outputSize: int): staticTensor(3,eltType) wh
     return pool;
 }
 
-proc type staticTensor.arange(to: int,type eltType = real,shape: ?rank*int): staticTensor(rank,eltType) {
+proc type staticTensor.arange(to: int,type eltType = defaultEltType,shape: ?rank*int): staticTensor(rank,eltType) {
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType = foreach (_,x) in zip(dom,0..<to) do x:eltType;
     return new staticTensor(A);
 }
 
-proc type staticTensor.arange(shape: int...?rank): staticTensor(rank,real) {
+proc type staticTensor.arange(shape: int...?rank): staticTensor(rank,defaultEltType) {
     const _shape: rank * int = shape;
     const dom = util.domainFromShape((..._shape));
     const to = dom.size;
-    const A: [dom] real = foreach (_,x) in zip(dom,0..<to) do x:real;
+    const A: [dom] defaultEltType = foreach (_,x) in zip(dom,0..<to) do x:defaultEltType;
     return new staticTensor(A);
 }
 
 
-proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: eltType = (0:eltType)): staticTensor(rank,eltType) {
+proc type staticTensor.fromShape(type eltType = defaultEltType,shape: int...?rank,value: eltType = (0:eltType)): staticTensor(rank,eltType) {
     const v = value;
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType;
@@ -511,14 +513,14 @@ proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: e
     return t;
 }
 
-proc type staticTensor.zeros(shape: int...?rank): staticTensor(rank,real) do
-    return staticTensor.fromShape(real,(...shape),0.0);
+proc type staticTensor.zeros(shape: int...?rank): staticTensor(rank,defaultEltType) do
+    return staticTensor.fromShape(defaultEltType,(...shape),0.0);
 
 proc type staticTensor.zeros(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),0 : eltType);
 
-proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,real) do
-    return staticTensor.fromShape(real,(...shape),value=1.0);
+proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,defaultEltType) do
+    return staticTensor.fromShape(defaultEltType,(...shape),value=1.0);
 
 proc type staticTensor.ones(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),value=1 : eltType);

@@ -1,30 +1,30 @@
 leakuse Tensor;
 
 var a = Tensor.zeros(2,3).leakyrelu();
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 var b = (Tensor.zeros(2,3,4) - 60.0).leakyrelu();
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 var c = (Tensor.zeros(10) + 40.0).leakyrelu();
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with negative_slope = -0.001
 a = Tensor.zeros(2,3).leakyrelu(negative_slope=-0.001);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).leakyrelu(negative_slope=-0.001);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).leakyrelu(negative_slope=-0.001);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with negative_slope = 10.0
 a = Tensor.zeros(2,3).leakyrelu(negative_slope=10.0);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).leakyrelu(negative_slope=10.0);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).leakyrelu(negative_slope=10.0);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);

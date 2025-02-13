@@ -25,3 +25,5 @@ cat_breeds/models/*.pt
 !Dockerfile
 node_modules/
 cat_breeds/models/*
+# chapel-2.3.0-1.ubuntu22.amd64.deb
+# chapel-2.3.0-1.ubuntu22.arm64.deb

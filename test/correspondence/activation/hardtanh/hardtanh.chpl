@@ -1,40 +1,40 @@
 use Tensor;
 
 var a = Tensor.zeros(2,3).hardtanh();
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 var b = (Tensor.zeros(2,3,4) - 60.0).hardtanh();
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 var c = (Tensor.zeros(10) + 40.0).hardtanh();
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with min_val = -0.001
 a = Tensor.zeros(2,3).hardtanh(min_val=-0.001);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).hardtanh(min_val=-0.001);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).hardtanh(min_val=-0.001);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with max_val = 10.0
 a = Tensor.zeros(2,3).hardtanh(max_val=10.0);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).hardtanh(max_val=10.0);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).hardtanh(max_val=10.0);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);
 
 // same values with min_val = -50.0, max_val = 30.0
 a = Tensor.zeros(2,3).hardtanh(min_val = -50.0, max_val=30.0);
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
 b = (Tensor.zeros(2,3,4) - 60.0).hardtanh(min_val=-50.0, max_val=30.0);
-writeln(b.degenerateFlatten());
+Testing.numericPrint(b);
 
 c = (Tensor.zeros(10) + 40.0).hardtanh(min_val=-50.0, max_val=30.0);
-writeln(c.degenerateFlatten());
+Testing.numericPrint(c);

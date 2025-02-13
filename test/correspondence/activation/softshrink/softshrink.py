@@ -13,11 +13,11 @@ def test(imports):
     print(c)
     
     # same values with alpha = 10.0
-    a = torch.nn.Softshrink(l=10.0)(torch.zeros(2,3))
+    a = torch.nn.Softshrink(lambd=10.0)(torch.zeros(2,3))
     print(a)
 
-    b = torch.nn.Softshrink(l=10.0)(torch.zeros(2,3,4) - 60.0)
+    b = torch.nn.Softshrink(lambd=10.0)(torch.zeros(2,3,4) - 60.0)
     print(b)
 
-    c = torch.nn.Softshrink(l=10.0)(torch.zeros(10) + 40.0)
+    c = torch.nn.Softshrink(lambd=10.0)(torch.zeros(10) + 40.0)
     print(c)
