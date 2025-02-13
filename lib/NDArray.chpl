@@ -756,15 +756,16 @@ record ndarray : serializable {
     }
 
     inline proc hardsigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltType);
-    ref rld = rl.data;
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = max(0, min(1, x/6.0 + 0.5));
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = max(0, min(1, x/6.0 + 0.5));
+        }
+        return rl;
     }
-    return rl;
 
     inline proc hardshrink(l: eltType=0.5) {
         const ref thisData = data;
@@ -876,7 +877,6 @@ record ndarray : serializable {
         }
         return rl;
     }
-}
 
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;

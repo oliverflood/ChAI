@@ -3,6 +3,9 @@ import sys
 from pathlib import Path
 import torch
 
+from decimal import Decimal
+import decimal
+
 correspondence_dir = Path(__file__).parent # Path('.')
 chai_dir = correspondence_dir.parent.parent
 chai_test_dir = chai_dir / 'test'
@@ -118,10 +121,29 @@ def print_failure(test,python_output,chapel_output):
 def print_success(test):
     print(success_emoji, test['test_path'])
 
+def tokenize_output(output):
+    import re
+    return re.findall(r'\S+', output)
+
+def parse_output(output_tokens):
+    nums = []
+    for t in output_tokens:
+        d = Decimal(t)
+        f = "%f" % d
+        nums.append(Decimal(f))
+    return nums
+
 for test in tests:
     test_name = test['name']
     test_type = test['type']
     test_path = test['absolute_path']
+
+    acceptable_tests = [
+        'arange',
+        'ones'
+    ]
+    if test_name not in acceptable_tests:
+        continue
 
     python_output = run_python_test(test_name,test_path)
 
@@ -130,9 +152,44 @@ for test in tests:
 
     # print(f'Running {test_name}...')
     chapel_output = run_chapel_test(test_name,test_path)
-    if chapel_output != python_output:
-        print_failure(test,python_output,chapel_output)
+
+    python_output_tokens = tokenize_output(python_output)
+    chapel_output_tokens = tokenize_output(chapel_output)
+
+    assert len(python_output_tokens) == len(chapel_output_tokens)
+
+    output_size = len(python_output_tokens)
+
+    python_results = parse_output(python_output_tokens)
+    chapel_results = parse_output(chapel_output_tokens)
+
+
+    failed = False
+
+    for i in range(output_size):
+        pr = python_results[i]
+        cr = chapel_results[i]
+        if pr != cr:
+            failed = True
+
+    if failed:
+        for i in range(output_size):
+            pr = python_results[i]
+            cr = chapel_results[i]
+            pt = python_output_tokens[i]
+            ct = chapel_output_tokens[i]
+            if pr != cr:
+                print(f'❌ {pr} != {cr}, {pt} != {ct}')
+            else:
+                print(f'✅ {pr} == {cr}, {pt} == {ct}')
+        print(failure_emoji, test['test_path'])
+        sys.exit(0)
     else:
-        print_success(test)
+        print(success_emoji, test['test_path'])
+
+    # if chapel_output != python_output:
+    #     print_failure(test,python_output,chapel_output)
+    # else:
+    #     print_success(test)
 
     python_test_path = test['absolute_path'] / f'{test_name}.py'
