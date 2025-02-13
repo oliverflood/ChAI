@@ -98,12 +98,12 @@ class Printer(object):
 def run_python_test(test_name,test_path):
     assert test_name == test_path.name
     python_test_path = test_path / f'{test_name}.py'
+    printer = Printer()
 
     sys.path.append(str(test_path))
     py_test_module = __import__(test_name)
-
-    printer = Printer()
     py_test_module.test({'print_fn': printer.print})
+        
     return str(printer)
 
 success_emoji = '✅'
@@ -133,7 +133,9 @@ def parse_output(output_tokens):
         nums.append(Decimal(f))
     return nums
 
-uncompiled_tests = []
+
+failed_python_tests = []
+failed_compilation_tests = []
 failed_tests = []
 
 for test in tests:
@@ -156,14 +158,18 @@ for test in tests:
     # if test_name in tests_to_skip:
     #     continue
 
-    python_output = run_python_test(test_name,test_path)
-
+    try:
+        python_output = run_python_test(test_name,test_path)
+    except Exception as e:
+        print('🐍', test['test_path'])
+        failed_python_tests.append(test['name'])
+        continue
     # print(f'Compiling {test_name}...')
     try:
         compile_chapel(test_name,test_path,chai_dir)
     except Exception as e:
         print('⛔', test['test_path'])
-        uncompiled_tests.append(test['name'])
+        failed_compilation_tests.append(test['name'])
         continue
 
     # print(f'Running {test_name}...')
@@ -218,5 +224,6 @@ for test in tests:
 
     python_test_path = test['absolute_path'] / f'{test_name}.py'
 
-print('Uncompiled tests:', uncompiled_tests)
+print('Failed Chapel compilations tests:', failed_compilation_tests)
+print('Failed Python tests:', failed_python_tests)
 print('Tests to fix:', failed_tests)
