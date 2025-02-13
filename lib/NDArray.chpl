@@ -1574,17 +1574,19 @@ proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): n
     return img;
 }
 
-// proc ndarray.saveImage(imagePath: string) where rank == 3 {
-//     import Image;
+proc ndarray.saveImage(imagePath: string) where rank == 3 {
 
-//     const imgType = util.getImageType(imagePath);
+    compilerWarning("I have not implemented ndarray.saveImage");
+    // import Image;
 
-//     proc getColorAsPixel(color: pixelType, offset: rgbColor) {
-//         return (color & colorMask) << colorOffset(offset);
-//     }
+    // const imgType = util.getImageType(imagePath);
+
+    // proc getColorAsPixel(color: pixelType, offset: rgbColor) {
+    //     return (color & colorMask) << Image.colorOffset(offset);
+    // }
 
     
-// }
+}
 
 // For printing. 
 proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer),ref serializer: IO.defaultSerializer) {
