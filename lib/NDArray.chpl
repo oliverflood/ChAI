@@ -1038,6 +1038,7 @@ operator /(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,el
 inline proc type ndarray.valueLike(a: ndarray(?rank,?eltType),value: eltType): ndarray(rank,eltType) do
     return new ndarray(eltType=eltType,dom=a.domain,fill=value);
 
+// a * c
 inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: eltType): ndarray(rank,eltType) {
     const dom = a.domain;
     var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
@@ -1060,6 +1061,7 @@ inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType
     return u;
 }
 
+// c * a
 inline proc type ndarray.scalarMapOp(param op: string, c: ?eltType, a: ndarray(?rank,eltType)): ndarray(rank,eltType) {
     const dom = a.domain;
     var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
@@ -1082,11 +1084,12 @@ inline proc type ndarray.scalarMapOp(param op: string, c: ?eltType, a: ndarray(?
     return u;
 }
 
-// First
+// Left A with right C
 inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
         where isNumericType(scalarType) && scalarType != eltType do
     return ndarray.scalarMapOp(op,a,c : eltType);
-// Second
+
+// Left C with right A
 inline proc type ndarray.scalarMapOp(param op: string, c: ?scalarType, a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
         where isNumericType(scalarType) && scalarType != eltType do
     return ndarray.scalarMapOp(op,c : eltType,a);
