@@ -51,7 +51,7 @@ def compile_chapel(test_name,test_path,chai_path):
     test_dir = chapel_test_path.parent
     chai_lib_path = chai_path / 'lib'
     compile_cmd = f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}'
-    # os.system()
+    # os.system(compile_cmd)
     import subprocess
     results = subprocess.run(compile_cmd,capture_output=True,shell=True,text=True) #stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if results.returncode != 0:
