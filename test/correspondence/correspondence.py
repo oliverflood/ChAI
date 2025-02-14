@@ -25,6 +25,8 @@ parser.add_argument('--chai-py-path', type=Path, default=chai_py_path, help='Pat
 
 parser.add_argument('--test-only', type=Path, nargs='*', help='Run a specific test(s).')
 
+parser.add_argument('--print-compiler-errors', action='store_true', help='Print compiler errors.')
+
 args = parser.parse_args()
 
 # Update directories if provided as arguments
@@ -108,9 +110,10 @@ def compile_chapel(test_name,test_path,chai_path):
     import subprocess
     results = subprocess.run(compile_cmd,capture_output=True,shell=True,text=True) #stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if results.returncode != 0:
-        # print('Failed to compile', chapel_test_path)
-        # print(results.stdout)
-        # print(results.stderr)
+        if args.print_compiler_errors:
+            print('Failed to compile', chapel_test_path)
+            print(results.stdout)
+            print(results.stderr)
         raise Exception(f'Failed to compile {test_name}.')
 
 def run_chapel_test(test_name,test_path):
