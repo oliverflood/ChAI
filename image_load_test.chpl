@@ -6,12 +6,7 @@ var a = ndarray.loadImage(imagePath);
 
 writeln(a.shape);
 
-writeln(a);
+a.saveImage("new_sun.png");
 
-
-// var b: ndarray(3,int) = ndarray.loadImage(imagePath,eltType = real(32)):int;
-// writeln(b.shape);
-
-// writeln(b);
-
-// a.saveImage("new_sun.png");
+var b = a * (0.2 * ndarray.random((...a.shape)));
+b.saveImage("new_sun2.png");

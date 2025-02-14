@@ -1035,6 +1035,73 @@ operator /(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,el
     return c;
 }
 
+inline proc type ndarray.valueLike(a: ndarray(?rank,?eltType),value: eltType): ndarray(rank,eltType) do
+    return new ndarray(eltType=eltType,dom=a.domain,fill=value);
+
+inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: eltType): ndarray(rank,eltType) {
+    const dom = a.domain;
+    var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
+    ref uData = u.data;
+    const ref aData = a.data;
+    forall i in dom.every() {
+        select op {
+            when "+" do 
+                uData[i] = aData[i] + c;
+            when "-" do 
+                uData[i] = aData[i] - c;
+            when "*" do 
+                uData[i] = aData[i] * c;
+            when "/" do 
+                uData[i] = aData[i] / c;
+            otherwise do 
+                compilerError("Unknown operator ", op);
+        }
+    }
+    return u;
+}
+
+inline proc type ndarray.scalarMapOp(param op: string, c: ?eltType, a: ndarray(?rank,eltType)): ndarray(rank,eltType) {
+    const dom = a.domain;
+    var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
+    ref uData = u.data;
+    const ref aData = a.data;
+    forall i in dom.every() {
+        select op {
+            when "+" do 
+                uData[i] = c + aData[i];
+            when "-" do 
+                uData[i] = c - aData[i];
+            when "*" do 
+                uData[i] = c * aData[i];
+            when "/" do 
+                uData[i] = c / aData[i];
+            otherwise do 
+                compilerError("Unknown operator ", op);
+        }
+    }
+    return u;
+}
+
+// First
+inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return scalarMapOp(op,a,c : eltType);
+// Second
+inline proc type ndarray.scalarMapOp(param op: string, c: ?scalarType, a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return scalarMapOp(op,c : eltType,a);
+
+
+operator +(a: ndarray(?rank,?eltType),b: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return scalarMapOp("+",a,b);
+
+operator +(b: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return scalarMapOp("+",a,b);
+
+
+
 // operator +(a: remote(ndarray(?rank,?eltType)),b: remote(ndarray(rank,eltType))): remote(ndarray(rank,eltType)) {
 //     const device = a.device;
 //     var c = new remote(ndarray(rank,eltType),device);
@@ -1591,10 +1658,23 @@ proc ndarray.saveImage(imagePath: string) where rank == 3 {
     // compilerWarning("I have not implemented ndarray.saveImage");
     import Image;
 
+    param chanBits = Image.bitsPerColor; 
+    param chanGran = 2 ** chanBits; // Channel granularity for each channel
+    const cgInEltType: eltType = chanGran : eltType;
+
     const imgType = util.getImageType(imagePath);
 
     inline proc getColorAsPixel(color: Image.pixelType, param offset: int) {
         return (color & Image.colorMask) << Image.colorOffset(offset);
+    }
+
+    inline proc getChannelValue(channel: eltType, param offset: int): Image.pixelType {
+        if isRealType(eltType) {
+            const pixel = (channel * cgInEltType) : Image.pixelType;
+            return getColorAsPixel(pixel,offset);
+        } else {
+            compilerError("Only real types are supported for now.");
+        }
     }
 
     const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
@@ -1607,7 +1687,7 @@ proc ndarray.saveImage(imagePath: string) where rank == 3 {
     forall (i,j) in pixelDom {
         var pixel: Image.pixelType;
         for param c in 0..<pixelFormat.size do
-            pixel |= getColorAsPixel(imgData[c,i,j],c);
+            pixel |= getChannelValue(imgData[c,i,j],c);
         pixelData[i,j] = pixel;
     }
 
