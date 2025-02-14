@@ -1679,7 +1679,7 @@ proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): n
     return img;
 }
 
-proc ndarray.saveImage(imagePath: string) where rank == 3 {
+proc ref ndarray.saveImage(imagePath: string) where rank == 3 {
 
     // compilerWarning("I have not implemented ndarray.saveImage");
     import Image;
