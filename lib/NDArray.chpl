@@ -1084,22 +1084,45 @@ inline proc type ndarray.scalarMapOp(param op: string, c: ?eltType, a: ndarray(?
 
 // First
 inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
-        where isNumericType(scalarType) do
-    return scalarMapOp(op,a,c : eltType);
+        where isNumericType(scalarType) && scalarType != eltType do
+    return ndarray.scalarMapOp(op,a,c : eltType);
 // Second
 inline proc type ndarray.scalarMapOp(param op: string, c: ?scalarType, a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) && scalarType != eltType do
+    return ndarray.scalarMapOp(op,c : eltType,a);
+
+
+operator +(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
         where isNumericType(scalarType) do
-    return scalarMapOp(op,c : eltType,a);
+    return ndarray.scalarMapOp("+",a,c);
 
-
-operator +(a: ndarray(?rank,?eltType),b: ?scalarType): ndarray(rank,eltType)
+operator +(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
         where isNumericType(scalarType) do
-    return scalarMapOp("+",a,b);
+    return ndarray.scalarMapOp("+",c,a);
 
-operator +(b: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+operator -(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
         where isNumericType(scalarType) do
-    return scalarMapOp("+",a,b);
+    return ndarray.scalarMapOp("-",a,c);
 
+operator -(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("-",c,a);
+
+operator *(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return scalarMapOp("*",a,c);
+
+operator *(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("*",c,a);
+
+operator /(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("/",a,c);
+
+operator /(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("/",c,a);
 
 
 // operator +(a: remote(ndarray(?rank,?eltType)),b: remote(ndarray(rank,eltType))): remote(ndarray(rank,eltType)) {
