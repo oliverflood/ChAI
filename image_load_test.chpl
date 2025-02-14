@@ -16,8 +16,8 @@ for i in 0..<10 {
     b.saveImage("new_sun" + i:string + ".png");
 }
 
-// var randomSun = 0.001 * ndarray.random((...a.shape));
+var randomSun = 0.001 * ndarray.random((...a.shape));
 
 
-// var b = a + randomSun;
-// b.saveImage("new_sun2.png");
+var b = a + randomSun;
+b.saveImage("new_sun_hello.png");
