@@ -1120,7 +1120,7 @@ operator -(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
 
 operator *(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
         where isNumericType(scalarType) do
-    return scalarMapOp("*",a,c);
+    return ndarray.scalarMapOp("*",a,c);
 
 operator *(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
         where isNumericType(scalarType) do
