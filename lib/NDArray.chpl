@@ -470,10 +470,17 @@ record ndarray : serializable {
         return me;
     }
 
+    proc min(): ndarray(1,eltType) {
+        var me = new ndarray({0..<1},eltType);
+        const myData = this.data;
+        me.data[0] = Math.min reduce myData;
+        return me;
+    }
+
     proc max(): ndarray(1,eltType) {
         var me = new ndarray({0..<1},eltType);
         const myData = this.data;
-        me.data[0] = max reduce myData;
+        me.data[0] = Math.max reduce myData;
         return me;
     }
 
@@ -670,7 +677,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = min(max(0, x), 6);
+            rld[i] = Math.min(Math.max(0, x), 6);
         }
         return rl;
     }
@@ -684,7 +691,7 @@ record ndarray : serializable {
         const scale: eltType = 1.0507009873554804934193349852946;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)));
+            rld[i] = scale * (Math.max(0, x) + Math.min(0, alpha * (Math.exp(x) - 1)));
         }
         return rl;
     }
@@ -762,7 +769,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = max(0, min(1, x/6.0 + 0.5));
+            rld[i] = Math.max(0, Math.min(1, x/6.0 + 0.5));
         }
         return rl;
     }
@@ -791,7 +798,7 @@ record ndarray : serializable {
             const float_max: eltType = Types.max(eltType);
             const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
             const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
-            rld[i] = Math.max(x, min_val) * (1 - xlminval) + min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
+            rld[i] = Math.max(x, min_val) * (1 - xlminval) + Math.min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
         }
         return rl;
     }
@@ -845,7 +852,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = max(0.0, x) + min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * Math.exp(x / alpha) - 1.0);
         }
         return rl;
     }
@@ -857,7 +864,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = max(0, x) + negative_slope * min(0, x);
+            rld[i] = Math.max(0, x) + negative_slope * Math.min(0, x);
         }
         return rl;
     }
