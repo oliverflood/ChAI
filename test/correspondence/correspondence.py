@@ -62,15 +62,6 @@ def should_run_test(test_dir):
     return test_dir in test_dirs_to_run
 
 
-
-correspondence_test_types = {}
-for x in correspondence_dir.iterdir():
-    if x.is_dir():
-        correspondence_test_types[x.name] = x
-
-
-tests = []
-
 def test_dir_source_paths(name,test_dir):
     chapel_test_file_path = test_dir / f'{name}.chpl'
     python_test_file_path = test_dir / f'{name}.py'
@@ -82,6 +73,13 @@ def is_test_dir(name,test_dir):
             and chapel_test_file_path.is_file() 
             and python_test_file_path.is_file())
 
+
+correspondence_test_types = {}
+for x in correspondence_dir.iterdir():
+    if x.is_dir():
+        correspondence_test_types[x.name] = x
+
+tests = []
 
 for test_type, test_type_dir in correspondence_test_types.items():
     test_dirs = {x.name : x for x in test_type_dir.iterdir() if x.is_dir()}
@@ -97,7 +95,7 @@ for test_type, test_type_dir in correspondence_test_types.items():
                 'absolute_path': test_dir
             }
             tests.append(test_info)
-            print('🌱\t', test_info['relative_path'])
+            print('🌱', test_info['relative_path'])
 
 
 def compile_chapel(test_name,test_path,chai_path):
