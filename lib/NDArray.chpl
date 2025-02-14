@@ -1551,10 +1551,22 @@ proc type ndarray.random(shape: ?rank*int,type eltType = defaultEltType,seed: in
 
 proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): ndarray(3,eltType) {
     import Image;
-    import Path;
+
+    param chanBits = Image.bitsPerColor; 
+    param chanGran = 2 ** chanBits; // Channel granularity for each channel
+    const cgInEltType: eltType = chanGran : eltType;
 
     inline proc getColorFromPixel(pixel: Image.pixelType, param offset: int) {
         return (pixel >> Image.colorOffset(offset)) & Image.colorMask;
+    }
+
+    inline proc getChannelValue(pixel: Image.pixelType, param offset: int): eltType {
+        if isRealType(eltType) {
+            const color: eltType = getColorFromPixel(pixel,offset);
+            return color / cgInEltType;
+        } else {
+            compilerError("Only real types are supported for now.");
+        }
     }
 
     const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
@@ -1569,24 +1581,38 @@ proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): n
 
     forall (pixel,(i,j)) in zip(pixelData,pixelData.domain) do
         for param c in 0..<pixelFormat.size do
-            imgData[c,i,j] = getColorFromPixel(pixel,c): eltType; // getColorFromPixel(pixel,pixelFormat[c]);
+            imgData[c,i,j] = getChannelValue(pixel,c); // getColorFromPixel(pixel,pixelFormat[c]);
 
     return img;
 }
 
-// proc ndarray.saveImage(imagePath: string) where rank == 3 {
+proc ndarray.saveImage(imagePath: string) where rank == 3 {
 
-//     // compilerWarning("I have not implemented ndarray.saveImage");
-//     import Image;
+    // compilerWarning("I have not implemented ndarray.saveImage");
+    import Image;
 
-//     const imgType = util.getImageType(imagePath);
+    const imgType = util.getImageType(imagePath);
 
-//     proc getColorAsPixel(color: pixelType, offset: rgbColor) {
-//         return (color & colorMask) << Image.colorOffset(offset);
-//     }
+    inline proc getColorAsPixel(color: Image.pixelType, param offset: int) {
+        return (color & Image.colorMask) << Image.colorOffset(offset);
+    }
 
-    
-// }
+    const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
+
+    const (_,height,width) = this.shape;
+    const pixelDom = util.domainFromShape(height,width);
+    var pixelData: [pixelDom] Image.pixelType;
+    ref imgData = this.data;
+
+    forall (i,j) in pixelDom {
+        var pixel: Image.pixelType;
+        for param c in 0..<pixelFormat.size do
+            pixel |= getColorAsPixel(imgData[c,i,j],c);
+        pixelData[i,j] = pixel;
+    }
+
+    Image.writeImage(imagePath,format=imgType,pixels=pixelData);
+}
 
 // For printing. 
 proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer),ref serializer: IO.defaultSerializer) {
