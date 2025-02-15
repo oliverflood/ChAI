@@ -1,18 +1,16 @@
 FROM ubuntu:22.04
 
 
-RUN apt update
-
-RUN apt upgrade -y
+RUN apt update && apt upgrade -y > /dev/null
 
 
 COPY deb /
 
-RUN apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb || apt install -y ./chapel-2.3.0-1.ubuntu22.amd64.deb
+RUN (apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb > /dev/null) || (apt install -y ./chapel-2.3.0-1.ubuntu22.amd64.deb > /dev/null)
 
-RUN apt install -y python3-pip
+RUN apt install -y python3-pip > /dev/null
 
-RUN pip3 install numpy torch torchvision
+RUN pip3 install numpy torch torchvision > /dev/null
 
 
 COPY lib /lib
