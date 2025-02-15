@@ -2,9 +2,9 @@ name: Test Docker Image Action (Hello Action)
 
 on: 
   push:
-    branches: [ main ]
+    branches: [ main, image-loading ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, image-loading ]
 
 
 jobs:
