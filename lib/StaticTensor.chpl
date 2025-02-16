@@ -129,7 +129,7 @@ inline proc type staticTensor.scalarMapOp(param op: string, a: staticTensor(?ran
     var t = new staticTensor(rank,eltType);
     t.to(a.device);
     on t.device do
-        t.array = ndarray.scalarMapOp(op,a,c);
+        t.array = ndarray.scalarMapOp(op,a.array,c);
     return t;
 }
 
@@ -137,41 +137,48 @@ inline proc type staticTensor.scalarMapOp(param op: string, c: ?eltType, a: stat
     var t = new staticTensor(rank,eltType);
     t.to(a.device);
     on t.device do
-        t.array = ndarray.scalarMapOp(op,c,a);
+        t.array = ndarray.scalarMapOp(op,c,a.array);
     return t;
 }
 
 operator +(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("+",c,a);
+    return staticTensor.scalarMapOp("+",c : eltType,a);
 
 operator +(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("+",a,c);
+    return staticTensor.scalarMapOp("+",a,c : eltType);
 
 operator -(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("-",c,a);
+    return staticTensor.scalarMapOp("-",c : eltType,a);
 
 operator -(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("-",a,c)
+    return staticTensor.scalarMapOp("-",a,c : eltType);
 
 operator *(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("*",c,a);
+    return staticTensor.scalarMapOp("*",c : eltType,a);
 
 operator *(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("*",a,c);
+    return staticTensor.scalarMapOp("*",a,c : eltType);
 
 operator /(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("/",c,a);
+    return staticTensor.scalarMapOp("/",c : eltType,a);
 
 operator /(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
         where isNumericType(scalarType) do
-    return staticTensor.scalarMapOp("/",a,c);
+    return staticTensor.scalarMapOp("/",a,c : eltType);
+
+operator ==(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)): bool {
+    var flag: bool;
+    on a.device do 
+        flag = a.array == b.array;
+    return flag;
+}
 
 
 proc staticTensor.reshape(dom: domain(?)) {
@@ -563,13 +570,11 @@ proc staticTensor.degenerateFlatten(): [] eltType {
     return t;
 }
 
+config const n = 100;
+config const diag = false;
+config const size = 3;
 
 proc main() {
-    config const n = 100;
-    config const diag = false;
-    config const size = 3;
-
-
 
     if diag {
         use GpuDiagnostics;
