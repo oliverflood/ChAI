@@ -83,14 +83,17 @@ record dynamicTensor : serializable {
         return forceRankMeta(rank);
     }
 
-    proc forceRank(param rank: int): staticTensor(rank,eltType) {
+    inline proc forceRankMeta(param rank: int): shared BaseTensorResource(eltType,rank) {
+        compilerWarning("forceRankMeta is deprecated? maybe not.");
+        return meta : shared BaseTensorResource(eltType,rank);
+    }
+
+    inline proc forceRank(param rank: int): staticTensor(rank,eltType) {
         if rank != runtimeRank then
             halt("Cannot cast this dynamicTensor of rank " + runtimeRank: string + " to dynamicTensor of rank " + rank : string + ".");
         return new staticTensor(meta : shared BaseTensorResource(eltType,rank));
+        // return new staticTensor(this.forceRankMeta(rank));
     }
-
-    proc forceRankMeta(param rank: int): shared BaseTensorResource(eltType,rank) do
-        return meta : shared BaseTensorResource(eltType,rank);
 
     proc hardCheckRank(param rank: int): bool {
         if var myMeta = meta : shared BaseTensorResource(eltType,rank)? then return true;
@@ -307,6 +310,15 @@ operator /(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType)
         }
     }
     halt("Could not determine rank in " + scalarType:string + " / dynamicTensor.");
+}
+
+operator ==(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): bool {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) && b.checkRank(rank) {
+            return a.forceRank(rank) == b.forceRank(rank);
+        }
+    }
+    halt("Could not determine rank in dynamicTensor == dynamicTensor.");
 }
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
