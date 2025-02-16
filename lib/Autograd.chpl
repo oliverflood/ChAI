@@ -356,16 +356,16 @@ record softsignOp : serializable {
 }
 
 record rreluOp : serializable {
-    // type eltType = defaultEltType;
+    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var lower: input.eltType;
-    var upper: input.eltType;
+    var lower: eltType;
+    var upper: eltType;
 
-    // proc init(type eltType=defaultEltType, lower: eltType=0.125, upper: eltType=1.0/3.0) {
-    //     this.eltType = eltType;
-    //     this.lower = lower;
-    //     this.upper = upper;
-    // }
+    proc init(lower: ?eltType=0.125, upper: eltType=1.0/3.0) {
+        this.eltType = eltType;
+        this.lower = lower;
+        this.upper = upper;
+    }
 
     proc children do return (input,);
 
