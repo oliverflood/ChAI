@@ -312,6 +312,15 @@ operator /(c: ?scalarType,a: dynamicTensor(?eltType)): dynamicTensor(eltType)
     halt("Could not determine rank in " + scalarType:string + " / dynamicTensor.");
 }
 
+operator ==(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): bool {
+    for param rank in 1..maxRank {
+        if a.checkRank(rank) && b.checkRank(rank) {
+            return a.forceRank(rank) == b.forceRank(rank);
+        }
+    }
+    halt("Could not determine rank in dynamicTensor == dynamicTensor.");
+}
+
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
