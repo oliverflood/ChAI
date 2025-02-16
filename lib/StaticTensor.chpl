@@ -280,8 +280,8 @@ proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.hardtanh(min_val: eltType = -1.0, max_val: eltType = 1.0) {
-    var ctx = new hardtanhOp(meta, min_val, max_val);
+proc staticTensor.hardtanh(minVal: eltType = -1.0, maxVal: eltType = 1.0) {
+    var ctx = new hardtanhOp(meta, minVal, maxVal);
     return tensorFromCtx(rank, eltType, ctx);
 }
 

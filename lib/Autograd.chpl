@@ -412,20 +412,14 @@ record thresholdOp : serializable {
 }
 
 record hardtanhOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var min_val: eltType;
-    var max_val: eltType;
-
-    proc init(type eltType=defaultEltType, min_val: eltType=-1.0, max_val: eltType=1.0) {
-        this.min_val = min_val;
-        this.max_val = max_val;
-    }
+    var minVal: input.eltType;
+    var maxVal: input.eltType;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.threshold(min_val, max_val);
+        return input.array.threshold(minVal, maxVal);
 }
 
 record eluOp : serializable {
