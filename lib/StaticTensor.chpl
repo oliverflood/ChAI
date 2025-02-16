@@ -300,8 +300,8 @@ proc staticTensor.celu(alpha: eltType = 1.0) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.leakyrelu(negative_slope: eltType = exp(-2.0)) {
-    var ctx = new leakyreluOp(meta, negative_slope);
+proc staticTensor.leakyrelu(negativeSlope: eltType = exp(-2.0)) {
+    var ctx = new leakyreluOp(meta, negativeSlope);
     return tensorFromCtx(rank, eltType, ctx);
 }
 

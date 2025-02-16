@@ -519,10 +519,10 @@ proc dynamicTensor.celu(alpha: eltType = 1.0): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.leakyrelu(negative_slope: eltType = 1.0): dynamicTensor(eltType) {
+proc dynamicTensor.leakyrelu(negativeSlope: eltType = 1.0): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).leakyrelu(negative_slope).eraseRank();
+            return this.forceRank(rank).leakyrelu(negativeSlope).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.leakyrelu.");
     return new dynamicTensor(eltType);
@@ -563,7 +563,7 @@ proc type dynamicTensor.batchnorm(
     bias: dynamicTensor(eltType),
     movingAvg: dynamicTensor(eltType),
     movingVar: dynamicTensor(eltType),
-    num_features: int
+    numFeatures: int
 ): dynamicTensor(eltType) {
 
     for param rankF in 2..4 {
@@ -574,7 +574,7 @@ proc type dynamicTensor.batchnorm(
                 bias.forceRank(1),
                 movingAvg.forceRank(1),
                 movingVar.forceRank(1),
-                num_features
+                numFeatures
             ).eraseRank();
         }
     }
