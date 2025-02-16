@@ -356,16 +356,9 @@ record softsignOp : serializable {
 }
 
 record rreluOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var lower: eltType;
-    var upper: eltType;
-
-    proc init(lower: ?eltType=0.125, upper: eltType=1.0/3.0) {
-        this.eltType = eltType;
-        this.lower = lower;
-        this.upper = upper;
-    }
+    var lower: input.eltType;
+    var upper: input.eltType;
 
     proc children do return (input,);
 
@@ -451,15 +444,9 @@ record eluOp : serializable {
 }
 
 record softplusOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var beta: eltType;
-    var threshold: eltType;
-
-    proc init(type eltType=defaultEltType, beta: eltType = 1.0, threshold: eltType = 20.0) {
-        this.beta = beta;
-        this.threshold = threshold;
-    }
+    var beta: input.eltType;
+    var threshold: input.eltType;
 
     proc children do return (input,);
 
@@ -468,15 +455,8 @@ record softplusOp : serializable {
 }
 
 record celuOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var alpha: eltType;
-
-
-    proc init(type eltType=defaultEltType, alpha: eltType=1.0) {
-        this.eltType = eltType;
-        this.alpha = alpha;
-    }
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
