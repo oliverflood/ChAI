@@ -1,8 +1,5 @@
 name: 'Numerical Correspondence Test'
 description: 'Run correspondence test'
-outputs:
-  failed-compilations: # id of output
-    description: 'The names of the tests that failed to compile with Chapel'
 runs:
   using: 'docker'
   image: '../../../Dockerfile'
