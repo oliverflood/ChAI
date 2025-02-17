@@ -10,7 +10,9 @@ RUN (apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb > /dev/null) || (apt ins
 
 RUN apt install -y python3-pip > /dev/null
 
-RUN pip3 install numpy torch torchvision > /dev/null
+RUN pip3 install numpy > /dev/null
+
+RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu > /dev/null
 
 
 COPY lib /lib
