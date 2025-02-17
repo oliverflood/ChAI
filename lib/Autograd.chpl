@@ -1066,3 +1066,31 @@ record dropoutOp : serializable {
         return input.array;
     }
 }
+
+
+record softmaxOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
+}
+
+
+record softminOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
+}
