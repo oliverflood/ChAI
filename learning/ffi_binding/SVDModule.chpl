@@ -1,8 +1,16 @@
-module SVD {
-  use LAPACK;
+config param p = false;
+
+module SVDModule {
 
   // High-level SVD function similar to PyTorch's torch.linalg.svd
   proc svd(A: [] real(64), full_matrices: bool = true) {
+    when p {
+      use LAPACK;
+    } 
+    else {
+      return (0,0,0);
+    }
+
     const m = A.domain.dim(0).size,
           n = A.domain.dim(1).size,
           min_mn = min(m, n);
