@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 
 
-RUN apt update && apt upgrade -y > /dev/null
+RUN apt update > /dev/null && apt upgrade -y > /dev/null && apt install -y apt-utils
 
 
 COPY deb /
