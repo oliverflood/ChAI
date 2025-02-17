@@ -1,14 +1,18 @@
 FROM ubuntu:22.04
 
 
-RUN apt update > /dev/null && apt upgrade -y > /dev/null && apt install -y apt-utils
+# RUN apt update > /dev/null && apt install -y apt-utils && apt upgrade -y > /dev/null
 
 
 COPY deb /
 
-RUN (apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb > /dev/null) || (apt install -y ./chapel-2.3.0-1.ubuntu22.amd64.deb > /dev/null)
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt update > /dev/null && \
+    apt upgrade -y > /dev/null && \
+    apt install -y python3-pip > /dev/null && \
+    (apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb > /dev/null) || (apt install -y ./chapel-2.3.0-1.ubuntu22.amd64.deb > /dev/null)
 
-RUN apt install -y python3-pip > /dev/null
+
 
 RUN pip3 install numpy > /dev/null
 
