@@ -1,5 +1,5 @@
-name: 'Main Docker'
-description: 'Run main dockerfile'
+name: 'Numerical Correspondence Test'
+description: 'Run correspondence test'
 runs:
   using: 'docker'
   image: '../../../Dockerfile'

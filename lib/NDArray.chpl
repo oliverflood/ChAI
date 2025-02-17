@@ -756,9 +756,9 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType);
-            const xgeq3: eltType = Math.ceil(1.0 / float_max); // x >= 3: 1 if true, 0 otherwise
-            const xleqn3: eltType = Math.ceil(1.0 / float_max); // x <= -3: 1 if true, 0 otherwise
+            const floatMax: eltType = Types.max(eltType);
+            const xgeq3: eltType = Math.ceil(1.0 / floatMax); // x >= 3: 1 if true, 0 otherwise
+            const xleqn3: eltType = Math.ceil(1.0 / floatMax); // x <= -3: 1 if true, 0 otherwise
             rld[i] = x * xgeq3 + x * (x + 3) / 6.0 * (1 - xgeq3) * xleqn3;
         }
         return rl;
@@ -783,24 +783,24 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max = Types.max(eltType);
-            const xmap0 = ceil(1.0 / float_max * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
+            const floatMax = Types.max(eltType);
+            const xmap0 = ceil(1.0 / floatMax * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
             rld[i] = x * xmap0;
         }
         return rl;
     }
 
-    inline proc hardtanh(min_val: eltType=-1.0, max_val: eltType=1.0) {
+    inline proc hardtanh(minVal: eltType=-1.0, maxVal: eltType=1.0) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType);
-            const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
-            const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
-            rld[i] = Math.max(x, min_val) * (1 - xlminval) + Math.min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
+            const floatMax: eltType = Types.max(eltType);
+            const xgmaxval: eltType = Math.ceil(1.0 / floatMax * (x - maxVal)); // x greater than maxVal: 1 if true, 0 otherwise
+            const xlminval: eltType = Math.ceil(1.0 / floatMax * (x - minVal)); // x less than minVal: 1 if true, o otherwise
+            rld[i] = Math.max(x, minVal) * (1 - xlminval) + Math.min(x, maxVal) * xgmaxval + x * xlminval * (1 - xgmaxval);
         }
         return rl;
     }
@@ -812,8 +812,8 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType);
-            const xgz: eltType = Math.ceil(x / float_max); // x greater than zero: 1 if true, 0 otherwise
+            const floatMax: eltType = Types.max(eltType);
+            const xgz: eltType = Math.ceil(x / floatMax); // x greater than zero: 1 if true, 0 otherwise
             rld[i] = x * xgz + alpha * (Math.exp(x) - 1) * (1 - xgz);
         }
         return rl;
@@ -826,8 +826,8 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType); // maximum value a float_64 can take
-            const xgeqt: eltType = Math.ceil((x - threshold) / float_max); // 1 if x >= threshold, 0 otherwise
+            const floatMax: eltType = Types.max(eltType); // maximum value a float_64 can take
+            const xgeqt: eltType = Math.ceil((x - threshold) / floatMax); // 1 if x >= threshold, 0 otherwise
             rld[i] = x * xgeqt + value * (1 - xgeqt);
         }
         return rl;
@@ -840,8 +840,8 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType);
-            const xgbt: eltType = Math.ceil((x - threshold / beta) / float_max); // x greater than beta * threshold: 1 if true, 0 otherwise
+            const floatMax: eltType = Types.max(eltType);
+            const xgbt: eltType = Math.ceil((x - threshold / beta) / floatMax); // x greater than beta * threshold: 1 if true, 0 otherwise
             rld[i] = x * xgbt + 1.0 / beta * Math.log(1 + Math.exp(beta * x)) * (1 - xgbt);
         }
         return rl;
@@ -859,14 +859,14 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc leakyrelu(negative_slope: eltType=Math.exp(-2)) {
+    inline proc leakyrelu(negativeSlope: eltType=Math.exp(-2)) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = Math.max(0, x) + negative_slope * Math.min(0, x);
+            rld[i] = Math.max(0, x) + negativeSlope * Math.min(0, x);
         }
         return rl;
     }
@@ -879,9 +879,9 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            const float_max: eltType = Types.max(eltType);
-            const xgl = Math.ceil(1.0 / float_max * (x - l)); // x greater than lambda: 1 if true, otherwise
-            const xlnl = 1 - Math.ceil(1.0 / float_max * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
+            const floatMax: eltType = Types.max(eltType);
+            const xgl = Math.ceil(1.0 / floatMax * (x - l)); // x greater than lambda: 1 if true, otherwise
+            const xlnl = 1 - Math.ceil(1.0 / floatMax * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
             rld[i] = xgl * (x - l) + xlnl * (x + l);
         }
         return rl;

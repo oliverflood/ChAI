@@ -6,6 +6,7 @@ import torch
 from decimal import Decimal
 import decimal
 
+import asyncio
 
 import argparse
 
@@ -27,6 +28,9 @@ parser.add_argument('--test-only', type=Path, nargs='*', help='Run a specific te
 
 parser.add_argument('--print-compiler-errors', action='store_true', help='Print compiler errors.')
 
+parser.add_argument('--max-concurrent-compilations', type=int, default=5, help='Maximum concurrent chpl compilations at once.')
+
+
 args = parser.parse_args()
 
 # Update directories if provided as arguments
@@ -35,6 +39,8 @@ chai_dir = args.chai_dir
 chai_test_dir = args.chai_test_dir
 chai_lib_dir = args.chai_lib_dir
 chai_py_path = args.chai_py_path
+
+max_concurrent_compilations = args.max_concurrent_compilations
 
 
 # Add chai lib to path
@@ -100,7 +106,7 @@ for test_type, test_type_dir in correspondence_test_types.items():
             print('🌱', test_info['relative_path'])
 
 
-def compile_chapel(test_name,test_path,chai_path):
+def compile_chapel_old(test_name,test_path,chai_path):
     assert test_name == test_path.name
     chapel_test_path = test_path / f'{test_name}.chpl'
     test_dir = chapel_test_path.parent
@@ -190,6 +196,65 @@ def parse_output(output_tokens):
     return nums
 
 
+async def precompile_chapel_async(test_name,test_path,chai_path):
+    chapel_test_path = test_path / f'{test_name}.chpl'
+    test_dir = chapel_test_path.parent
+    chai_lib_path = chai_path / 'lib'
+    compile_cmd = f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}'
+    # os.system(compile_cmd)
+    process = await asyncio.create_subprocess_shell(compile_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await process.communicate()
+    return (process.returncode,stdout.decode().strip(),stderr.decode().strip())
+
+
+def precompile_chapel_tests(tests):
+
+    async def gather_with_concurrency(n, *coros):
+        semaphore = asyncio.Semaphore(n)
+        async def sem_coro(coro):
+            async with semaphore:
+                return await coro
+        return await asyncio.gather(*(sem_coro(c) for c in coros))
+
+    async def spawn_async_compilations(tests):
+        tasks = [precompile_chapel_async(
+                    test_name=test['name'],
+                    test_path=test['absolute_path'],
+                    chai_path=chai_dir
+                    ) for test in tests]
+        return await gather_with_concurrency(max_concurrent_compilations,*tasks)
+
+    results = asyncio.run(spawn_async_compilations(tests))
+
+    precompilation_results = {}
+
+    for test,result in zip(tests,results):
+        test_name = test['name']
+        precompilation_results[test_name] = {'test': test, 'result': result}
+    
+    return precompilation_results
+
+def compile_chapel(test_name,test_path,chai_path,precompilation_results):
+    assert test_name == test_path.name
+
+    chapel_test_path = test_path / f'{test_name}.chpl'
+    test_dir = chapel_test_path.parent
+    chai_lib_path = chai_path / 'lib'
+    compile_cmd = f'chpl {chapel_test_path} -M {chai_lib_path} -o {test_dir / test_name}'
+
+    result = precompilation_results[test_name]['result']
+    returncode = result[0]
+    stdout = result[1]
+    stderr = result[2]
+    if returncode != 0:
+        if args.print_compiler_errors:
+            print('Failed to compile', chapel_test_path)
+            print(stdout)
+            print(stderr)
+        raise Exception(f'Failed to compile {test_name}.')
+
+precompilation_results = precompile_chapel_tests(tests)
+
 failed_python_tests = []
 failed_compilation_tests = []
 failed_tests = []
@@ -222,7 +287,7 @@ for test in tests:
         continue
     # print(f'Compiling {test_name}...')
     try:
-        compile_chapel(test_name,test_path,chai_dir)
+        compile_chapel(test_name,test_path,chai_dir,precompilation_results)
     except Exception as e:
         print('⛔', test['test_path'])
         failed_compilation_tests.append(test['name'])
@@ -283,3 +348,7 @@ for test in tests:
 print('Failed Chapel compilations tests:', failed_compilation_tests)
 print('Failed Python tests:', failed_python_tests)
 print('Tests to fix:', failed_tests)
+
+with open('gh.out', 'w') as text_file:
+    sep = ','
+    text_file.write(f'failed-compilations="{sep.join(failed_compilation_tests)}"')

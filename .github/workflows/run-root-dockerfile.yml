@@ -1,16 +1,16 @@
-name: Test Docker Image Action (Hello Action)
+name: Run ChAI Test
 
 on: 
   push:
-    branches: [ main ]
+    branches: [ main, im-dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, im-dev ]
 
 
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Numerical Correspondence Testing Job
     steps:
       # To use this repository's private action,
       # you must check out the repository
