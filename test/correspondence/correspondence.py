@@ -28,7 +28,7 @@ parser.add_argument('--test-only', type=Path, nargs='*', help='Run a specific te
 
 parser.add_argument('--print-compiler-errors', action='store_true', help='Print compiler errors.')
 
-parser.add_argument('--max-concurrent-compilations', type=int, default=3, help='Maximum concurrent chpl compilations at once.')
+parser.add_argument('--max-concurrent-compilations', type=int, default=5, help='Maximum concurrent chpl compilations at once.')
 
 
 args = parser.parse_args()
@@ -217,28 +217,21 @@ def precompile_chapel_tests(tests):
         return await asyncio.gather(*(sem_coro(c) for c in coros))
 
     async def spawn_async_compilations(tests):
-        tasks = [asyncio.create_task(
-                    precompile_chapel_async(
-                        test_name=test['name'],
-                        test_path=test['absolute_path'],
-                        chai_path=chai_dir
-                        )
+        tasks = [precompile_chapel_async(
+                    test_name=test['name'],
+                    test_path=test['absolute_path'],
+                    chai_path=chai_dir
                     ) for test in tests]
         return await gather_with_concurrency(max_concurrent_compilations,*tasks)
-    
+
     results = asyncio.run(spawn_async_compilations(tests))
 
     precompilation_results = {}
 
     for test,result in zip(tests,results):
         test_name = test['name']
-        precompilation_results[test_name] = {'result': result}
-        # if result[0] != 0:
-        #     if args.print_compiler_errors:
-        #         print('Failed to compile', test['test_path'])
-        #         print(result[1])
-        #         print(result[2])
-        #     raise Exception(f'Failed to compile {test["name"]}.')
+        precompilation_results[test_name] = {'test': test, 'result': result}
+    
     return precompilation_results
 
 def compile_chapel(test_name,test_path,chai_path,precompilation_results):
