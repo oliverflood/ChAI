@@ -9,6 +9,7 @@ COPY deb /
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt update > /dev/null && \
     apt upgrade -y > /dev/null && \
+    apt install -y apt-utils > /dev/null && \
     apt install -y python3-pip > /dev/null && \
     (apt install -y ./chapel-2.3.0-1.ubuntu22.arm64.deb > /dev/null) || (apt install -y ./chapel-2.3.0-1.ubuntu22.amd64.deb > /dev/null)
 
