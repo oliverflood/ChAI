@@ -18,7 +18,7 @@ COPY examples /examples
 COPY test /test
 
 # Run tests
-RUN cd test/correspondence && python3 correspondence.py
+RUN cd test/correspondence && python3 correspondence.py && (cat gh.out >> $GITHUB_OUTPUT)
 RUN cd test/correspondence && python3 correspondence.py --print-compiler-errors
 
 

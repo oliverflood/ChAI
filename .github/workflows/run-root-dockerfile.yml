@@ -20,3 +20,6 @@ jobs:
       - name: Run root docker action step
         uses: ./.github/actions/main-docker # Uses an action in the root directory
         id: hello-docker
+      - name: Get the outputs
+        run: |
+          echo "All outputs: ${{ steps.hello-docker.outputs }}"

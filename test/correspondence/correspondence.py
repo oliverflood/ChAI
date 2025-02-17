@@ -348,3 +348,6 @@ for test in tests:
 print('Failed Chapel compilations tests:', failed_compilation_tests)
 print('Failed Python tests:', failed_python_tests)
 print('Tests to fix:', failed_tests)
+
+with open('gh.out', 'w') as text_file:
+    text_file.write(f'failed-compilations="{','.join(failed_compilation_tests)}"')
