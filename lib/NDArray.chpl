@@ -2006,7 +2006,6 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
 }
 
 
-// TODO: Make this work over arbitrary dimensions
 proc ndarray.softmax(): ndarray(this.rank, this.eltType)
     where isSubtype(this.eltType, real)
 {
@@ -2032,6 +2031,19 @@ proc ndarray.softmin(): ndarray(this.rank, this.eltType)
     where isSubtype(this.eltType, real)
 {
     return (-this).softmax();
+}
+
+
+proc ndarray.dropout(): ndarray(this.rank, this.eltType) {
+    const real[this.domain] randomData;
+    Random.fillRandom(randomData, 0, 1);
+
+    ref thisData = this.data;
+    forall i in this.domain.every() {
+        thisData[i] *= randomData[i];
+    }
+
+    return this;
 }
 
 

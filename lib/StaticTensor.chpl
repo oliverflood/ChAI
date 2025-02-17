@@ -1025,24 +1025,7 @@ proc ref staticTensor.read(fr: IO.fileReader(?)) throws {
 }
 
 
-/*
-// Randomly zeroes some elements of the tensor with probability p.
-// Netizens say that this is useful for regularization.
-proc staticTensor.dropout(p: real(64) = 0.5): staticTensor(rank, eltType)
-    where isSubtype(eltType, real)
-{
-    var dropoutSelection = [this.domain] real;
-    Random.fillRandom(dropoutSelection);
-
-    var dropped: [this.domain] eltType;
-    forall i in this.domain {
-        dropped[i] =
-            if dropoutSelection[i] <= p then
-                0
-            else
-                this[i];
-    }
-    
-    return new staticTensor(dropped);
+proc staticTensor.dropout(): staticTensor(this.rank, this.eltType) {
+    var ctx = new dropoutOp(this.rank, this.eltType);
+    return tensorFromCtx(this.rank, this.eltType, ctx);
 }
-*/

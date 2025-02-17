@@ -1030,6 +1030,8 @@ record negOp : serializable {
     proc forward(): ndarray(rank, eltType) {
         return new ndarray(eltType, input.array.domain, -1);
     }
+
+    proc spec : GradOpSpec do return new dict(("operation", "-"));
 }
 
 
@@ -1049,4 +1051,18 @@ record batchNormOp : serializable {
     }
 
     proc spec : GradOpSpec do return new dict(("operation","BatchNorm"));
+}
+
+
+record dropoutOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared  BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
 }
