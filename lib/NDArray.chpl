@@ -2035,7 +2035,7 @@ proc ndarray.softmin(): ndarray(this.rank, this.eltType)
 
 
 proc ndarray.dropout(): ndarray(this.rank, this.eltType) {
-    const real[this.domain] randomData;
+    const randomData: int[this.domain];
     Random.fillRandom(randomData, 0, 1);
 
     ref thisData = this.data;
