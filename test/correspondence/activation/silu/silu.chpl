@@ -1,10 +1,10 @@
 use Tensor;
 
 var a = Tensor.zeros(2,3).silu();
-writeln(a.degenerateFlatten());
+Testing.numericPrint(a);
 
-var b = (Tensor.zeros(2,3,4) - 1.0).silu();
-writeln(b.degenerateFlatten());
+var b = (Tensor.zeros(2,3,4) - 60.0).silu();
+Testing.numericPrint(b);
 
-var c = (Tensor.zeros(10) + 4.0).silu();
-writeln(c.degenerateFlatten());
+var c = (Tensor.zeros(10) + 40.0).silu();
+Testing.numericPrint(c);

@@ -17,5 +17,16 @@ target/
 .cls-commands.json
 .venv
 __pycache__/
+cat_breeds/data
+cat_breeds/cat-breeds
+cat_breeds/playground.py
+cat_breeds/mnistexample.py
+cat_breeds/models/*.pt
 !Dockerfile
 node_modules/
+cat_breeds/models/*
+# chapel-2.3.0-1.ubuntu22.amd64.deb
+# chapel-2.3.0-1.ubuntu22.arm64.deb
+new_sun.png
+new_sun*.png
+new_sun_hello.png

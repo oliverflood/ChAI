@@ -1024,6 +1024,32 @@ class MaxPool : Module(?) {
     }
 }
 
+class BatchNorm : Module(?) {
+    var movingAvg: Tensor(eltType);
+    var movingVar: Tensor(eltType);
+    var weight: owned Parameter(eltType);
+    var bias: owned Parameter(eltType);
+    var num_features: int;
+
+    proc init(type eltType = real, num_features: int) {
+        super.init(eltType);
+        this.movingAvg = Tensor.zeros(num_features);
+        this.movingVar = Tensor.ones(num_features);
+        this.weight = new Parameter(Tensor.ones(num_features));
+        this.bias = new Parameter(Tensor.zeros(num_features));
+        this.num_features = num_features;
+    }
+
+    override proc forward(input: Tensor(eltType)): Tensor(eltType) {
+        return Tensor.batchnorm(input, weight.data, bias.data, movingAvg, movingVar, num_features);
+    }
+
+    override proc setup() {
+        addModule("weight", weight);
+        addModule("bias", bias);
+    }
+}
+
 class AdaptiveAvgPool2D : Module(?) {
   // only handles square pooling
   var outputSize: int;

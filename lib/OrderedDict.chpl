@@ -92,11 +92,22 @@ record dict : serializable {
     //     for i in 0..<this.size do 
     //         yield this.getVal(i);
 
-    proc ref this(k: keyType) ref throws {
-        if !table.contains(k) then
-            throw new Error("Key not found: " + k:string);
-        return table[k];
-    }
+    // This function needed for Sequential's init, which is
+    // used in moduleFromSpec, so I added it even though
+    // Iain got rid of it.
+    iter these() do
+        for k in order {
+            ref v = table[k];
+            yield (k,v);
+        }
+
+    // This function causes an error in Network.chpl:182
+    // "Error: ambiguous access of 'dict(string,string)' by '[string]'"
+    // proc ref this(k: keyType) ref throws {
+    //     if !table.contains(k) then
+    //         throw new Error("Key not found: " + k:string);
+    //     return table[k];
+    // }
 
     // iter values() ref : valType do 
     //     for k in keys() do 

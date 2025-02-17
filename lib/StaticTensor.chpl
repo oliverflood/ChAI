@@ -5,18 +5,20 @@ import Random;
 import Utilities as util;
 use Utilities.Standard;
 
+use Env;
+
 type tensor = staticTensor(?);
 
 record staticTensor : serializable {
     param rank: int;
-    type eltType = real(64);
+    type eltType = defaultEltType;
     var resource: shared BaseTensorResource(eltType,rank);
     forwarding resource only to, array, grad, device ;//backward;
     proc meta do return this.resource;
 
     proc _dom do return resource.array.domain;
 
-    proc init(param rank: int, type eltType = real(64)) {
+    proc init(param rank: int, type eltType = defaultEltType) {
         this.rank = rank;
         this.eltType = eltType;
         this.resource = new shared TensorResource(eltType,rank,new baseValue());
@@ -39,7 +41,7 @@ record staticTensor : serializable {
         this.resource = new shared TensorResource(ar);
     }
 
-    proc init(dom: domain(?),type eltType = real) {
+    proc init(dom: domain(?),type eltType = defaultEltType) {
         const normal = util.normalizeDomain(dom);
         param rank = normal.rank;
         on Remote.defaultDevice var ar: shared Remote(ndarray(rank,eltType)) = new ndarray(normal,eltType);
@@ -127,51 +129,69 @@ operator /(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-operator +(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
-        where isNumericType(scalarType) {
-    return staticTensor.valueLike(a,c : eltType) + a;
+
+inline proc type staticTensor.scalarMapOp(param op: string, a: staticTensor(?rank,?eltType),c: eltType): staticTensor(rank,eltType) {
+    var t = new staticTensor(rank,eltType);
+    t.to(a.device);
+    on t.device do
+        t.array = ndarray.scalarMapOp(op,a.array,c);
+    return t;
 }
+
+inline proc type staticTensor.scalarMapOp(param op: string, c: ?eltType, a: staticTensor(?rank,eltType)): staticTensor(rank,eltType) {
+    var t = new staticTensor(rank,eltType);
+    t.to(a.device);
+    on t.device do
+        t.array = ndarray.scalarMapOp(op,c,a.array);
+    return t;
+}
+
+operator +(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("+",c : eltType,a);
 
 operator +(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
-        where isNumericType(scalarType) {
-    return a + staticTensor.valueLike(a,c : eltType);
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("+",a,c : eltType);
 
 operator -(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
-        where isNumericType(scalarType) {
-    return staticTensor.valueLike(a,c : eltType) - a;
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("-",c : eltType,a);
 
 operator -(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
-        where isNumericType(scalarType) {
-    return a - staticTensor.valueLike(a,c : eltType);
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("-",a,c : eltType);
 
 operator *(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
-        where isNumericType(scalarType) {
-    return staticTensor.valueLike(a,c : eltType) * a;
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("*",c : eltType,a);
 
 operator *(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
-        where isNumericType(scalarType) {
-    return a * staticTensor.valueLike(a,c : eltType);
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("*",a,c : eltType);
 
 operator /(c: ?scalarType, a: staticTensor(?rank,?eltType)): staticTensor(rank,eltType) 
-        where isNumericType(scalarType) {
-    return staticTensor.valueLike(a,c : eltType) / a;
-}
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("/",c : eltType,a);
 
 operator /(a: staticTensor(?rank,?eltType),c: ?scalarType): staticTensor(rank,eltType)
-        where isNumericType(scalarType) {
-    return a / staticTensor.valueLike(a,c : eltType);
+        where isNumericType(scalarType) do
+    return staticTensor.scalarMapOp("/",a,c : eltType);
+
+operator ==(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)): bool {
+    var flag: bool;
+    on a.device do 
+        flag = a.array == b.array;
+    return flag;
 }
+
 
 proc staticTensor.reshape(dom: domain(?)) {
     param newRank = dom.rank;
     var ctx = new reshapeOp(rank,newRank,eltType,dom.shape,meta);
     return tensorFromCtx(newRank,eltType,ctx);
 }
+
 proc staticTensor.reshape(newShape: int ...?newRank) {
     var ctx = new reshapeOp(rank,newRank,eltType,newShape,meta);
     return tensorFromCtx(newRank,eltType,ctx);
@@ -382,6 +402,18 @@ proc staticTensor.softmax(): staticTensor(rank,eltType) {
     return e / ss;
 }
 
+proc type staticTensor.batchNorm(
+    features: staticTensor(?featureRank,?eltType),
+    weight: staticTensor(1,eltType),
+    bias: staticTensor(1,eltType),
+    movingAvg: staticTensor(1,eltType), 
+    movingVar: staticTensor(1,eltType),
+    numFeatures: int
+): staticTensor(featureRank, eltType) {
+
+    var ctx = new batchNormOp(eltType, features.meta, weight.meta, bias.meta, movingAvg.meta, movingVar.meta, numFeatures);
+    return tensorFromCtx(featureRank, eltType, ctx);
+}
 
 proc matvec(mat: staticTensor(2,?eltType),vec: staticTensor(1,eltType)): staticTensor(1,eltType) {
     const (n,) = vec.array.domain.shape;
@@ -480,22 +512,22 @@ proc staticTensor.adaptiveAvgPool2d(outputSize: int): staticTensor(3,eltType) wh
     return pool;
 }
 
-proc type staticTensor.arange(to: int,type eltType = real,shape: ?rank*int): staticTensor(rank,eltType) {
+proc type staticTensor.arange(to: int,type eltType = defaultEltType,shape: ?rank*int): staticTensor(rank,eltType) {
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType = foreach (_,x) in zip(dom,0..<to) do x:eltType;
     return new staticTensor(A);
 }
 
-proc type staticTensor.arange(shape: int...?rank): staticTensor(rank,real) {
+proc type staticTensor.arange(shape: int...?rank): staticTensor(rank,defaultEltType) {
     const _shape: rank * int = shape;
     const dom = util.domainFromShape((..._shape));
     const to = dom.size;
-    const A: [dom] real = foreach (_,x) in zip(dom,0..<to) do x:real;
+    const A: [dom] defaultEltType = foreach (_,x) in zip(dom,0..<to) do x:defaultEltType;
     return new staticTensor(A);
 }
 
 
-proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: eltType = (0:eltType)): staticTensor(rank,eltType) {
+proc type staticTensor.fromShape(type eltType = defaultEltType,shape: int...?rank,value: eltType = (0:eltType)): staticTensor(rank,eltType) {
     const v = value;
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType;
@@ -504,14 +536,14 @@ proc type staticTensor.fromShape(type eltType = real,shape: int...?rank,value: e
     return t;
 }
 
-proc type staticTensor.zeros(shape: int...?rank): staticTensor(rank,real) do
-    return staticTensor.fromShape(real,(...shape),0.0);
+proc type staticTensor.zeros(shape: int...?rank): staticTensor(rank,defaultEltType) do
+    return staticTensor.fromShape(defaultEltType,(...shape),0.0);
 
 proc type staticTensor.zeros(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),0 : eltType);
 
-proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,real) do
-    return staticTensor.fromShape(real,(...shape),value=1.0);
+proc type staticTensor.ones(shape: int...?rank): staticTensor(rank,defaultEltType) do
+    return staticTensor.fromShape(defaultEltType,(...shape),value=1.0);
 
 proc type staticTensor.ones(type eltType,shape: int...?rank): staticTensor(rank,eltType) do
     return staticTensor.fromShape(eltType,(...shape),value=1 : eltType);
@@ -548,8 +580,6 @@ config const diag = false;
 config const size = 3;
 
 proc main() {
-
-
 
     if diag {
         use GpuDiagnostics;

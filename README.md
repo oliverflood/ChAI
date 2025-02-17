@@ -93,3 +93,9 @@ it cannot be iterated over, but it can be dynamically cast back to a
 `StaticTensor` when needed. Both `StaticTensor` and `DynamicTensor` support
 the same operations; `DynamicTensor` performs a dynamic cast to `StaticTensor`
 under the hood.
+
+
+Note: To change the maximum `rank` of `staticTensor(rank,eltType)`, you can specify a `config param` as a compilation argument. For example, 
+```bash
+$ chpl -M <ChAI>/lib -sEnv.maxNeededRank=15 my_program.chpl
+```

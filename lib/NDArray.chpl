@@ -1,19 +1,24 @@
+
+
 import ChapelArray;
-import IO;
-use Remote;
 import Math;
+import Random;
+import IO;
+
+use Env;
+
+use Remote;
+use SimpleDomain;
 
 import Utilities as util;
 use Utilities.Standard;
 use Utilities.Types;
 
-use SimpleDomain;
-
 type domainType = _domain(?);
 
 record ndarray : serializable {
     param rank: int;
-    type eltType = real(32);
+    type eltType = defaultEltType;
     var _domain: domain(rank,int);
     var data: [_domain] eltType = noinit;
 
@@ -74,18 +79,18 @@ record ndarray : serializable {
         this.init(eltType,{(...ranges)});
     }
 
-    proc init(param rank: int, type eltType = real(32)) {
+    proc init(param rank: int, type eltType = defaultEltType) {
         const shape: rank * int;
         this.init(eltType,shape);
     }
 
-    proc init(type eltType = real(32), const shape: int ...?rank) do
+    proc init(type eltType = defaultEltType, const shape: int ...?rank) do
         this.init(eltType,shape);
 
     proc init(const dom: rect(?rank), type eltType) do
         this.init(eltType,dom);  // This could be optimized by refactoring whole init system. 
 
-    proc init(const dom: ?t,type eltType = real(32)) 
+    proc init(const dom: ?t,type eltType = defaultEltType) 
             where isDomainType(t) {
         this.init(eltType,dom);
     }
@@ -102,6 +107,12 @@ record ndarray : serializable {
         this.eltType = eltType;
         this._domain = A._domain;
         this.data = A.data;
+    }
+
+    proc init(type eltType, ref rs: Random.randomStream(eltType), const dom: ?t)
+        where isDomainType(t) {
+        this.init(eltType,dom);
+        rs.fill(data);
     }
 
     // proc init(it: _iteratorRecord) {
@@ -461,10 +472,17 @@ record ndarray : serializable {
         return me;
     }
 
+    proc min(): ndarray(1,eltType) {
+        var me = new ndarray({0..<1},eltType);
+        const myData = this.data;
+        me.data[0] = Math.min reduce myData;
+        return me;
+    }
+
     proc max(): ndarray(1,eltType) {
         var me = new ndarray({0..<1},eltType);
         const myData = this.data;
-        me.data[0] = max reduce myData;
+        me.data[0] = Math.max reduce myData;
         return me;
     }
 
@@ -661,7 +679,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = min(max(0, x), 6);
+            rld[i] = Math.min(Math.max(0, x), 6);
         }
         return rl;
     }
@@ -675,7 +693,7 @@ record ndarray : serializable {
         const scale: eltType = 1.0507009873554804934193349852946;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = scale * (max(0, x) + min(0, alpha * (Math.exp(x) - 1)));
+            rld[i] = scale * (Math.max(0, x) + Math.min(0, alpha * (Math.exp(x) - 1)));
         }
         return rl;
     }
@@ -722,11 +740,11 @@ record ndarray : serializable {
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
         var a: [dom] eltType;
-        fillRandom(a);
+        Random.fillRandom(a);
         forall i in dom.every() {
             const x = thisData[i];
-            a[i] = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
-            rld[i] = max(0, x) + min(0, a * x);
+            const ai = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
+            rld[i] = Math.max(0, x) + Math.min(0, ai * x);
         }
         return rl;
     }
@@ -747,15 +765,16 @@ record ndarray : serializable {
     }
 
     inline proc hardsigmoid() {
-    const ref thisData = data;
-    const dom = this.domain;
-    var rl = new ndarray(dom, eltType);
-    ref rld = rl.data;
-    forall i in dom.every() {
-        const x = thisData[i];
-        rld[i] = max(0, min(1, x/6.0 + 0.5));
+        const ref thisData = data;
+        const dom = this.domain;
+        var rl = new ndarray(dom, eltType);
+        ref rld = rl.data;
+        forall i in dom.every() {
+            const x = thisData[i];
+            rld[i] = Math.max(0, Math.min(1, x/6.0 + 0.5));
+        }
+        return rl;
     }
-    return rl;
 
     inline proc hardshrink(l: eltType=0.5) {
         const ref thisData = data;
@@ -781,7 +800,7 @@ record ndarray : serializable {
             const float_max: eltType = Types.max(eltType);
             const xgmaxval: eltType = Math.ceil(1.0 / float_max * (x - max_val)); // x greater than max_val: 1 if true, 0 otherwise
             const xlminval: eltType = Math.ceil(1.0 / float_max * (x - min_val)); // x less than min_val: 1 if true, o otherwise
-            rld[i] = Math.max(x, min_val) * (1 - xlminval) + min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
+            rld[i] = Math.max(x, min_val) * (1 - xlminval) + Math.min(x, max_val) * xgmaxval + x * xlminval * (1 - xgmaxval);
         }
         return rl;
     }
@@ -835,7 +854,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = max(0.0, x) + min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * Math.exp(x / alpha) - 1.0);
         }
         return rl;
     }
@@ -847,7 +866,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = max(0, x) + negative_slope * min(0, x);
+            rld[i] = Math.max(0, x) + negative_slope * Math.min(0, x);
         }
         return rl;
     }
@@ -867,7 +886,6 @@ record ndarray : serializable {
         }
         return rl;
     }
-}
 
     proc degenerateFlatten(): [] eltType {
         const myDom = this.domain;
@@ -884,13 +902,13 @@ record ndarray : serializable {
 
 
 
-proc type ndarray.arange(type eltType = real(32),shape: ?rank*int): ndarray(rank,eltType) {
+proc type ndarray.arange(type eltType = defaultEltType,shape: ?rank*int): ndarray(rank,eltType) {
     const dom = util.domainFromShape((...shape));
     const A: [dom] eltType = foreach (i,_) in dom.everyZip() do i : eltType;
     return new ndarray(A);
 }
-proc type ndarray.arange(shape: int...?rank): ndarray(rank,real(32)) do
-    return ndarray.arange(eltType=real(32), shape);
+proc type ndarray.arange(shape: int...?rank): ndarray(rank,defaultEltType) do
+    return ndarray.arange(eltType=defaultEltType, shape);
 
 
 
@@ -1041,6 +1059,99 @@ operator /(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,el
         cData[i] = aData[i] / bData[i];
     return c;
 }
+
+inline proc type ndarray.valueLike(a: ndarray(?rank,?eltType),value: eltType): ndarray(rank,eltType) do
+    return new ndarray(eltType=eltType,dom=a.domain,fill=value);
+
+// a * c
+inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: eltType): ndarray(rank,eltType) {
+    const dom = a.domain;
+    var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
+    ref uData = u.data;
+    const ref aData = a.data;
+    forall i in dom.every() {
+        select op {
+            when "+" do 
+                uData[i] = aData[i] + c;
+            when "-" do 
+                uData[i] = aData[i] - c;
+            when "*" do 
+                uData[i] = aData[i] * c;
+            when "/" do 
+                uData[i] = aData[i] / c;
+            otherwise do 
+                compilerError("Unknown operator ", op);
+        }
+    }
+    return u;
+}
+
+// c * a
+inline proc type ndarray.scalarMapOp(param op: string, c: ?eltType, a: ndarray(?rank,eltType)): ndarray(rank,eltType) {
+    const dom = a.domain;
+    var u: ndarray(rank,eltType) = new ndarray(a.domain,eltType);
+    ref uData = u.data;
+    const ref aData = a.data;
+    forall i in dom.every() {
+        select op {
+            when "+" do 
+                uData[i] = c + aData[i];
+            when "-" do 
+                uData[i] = c - aData[i];
+            when "*" do 
+                uData[i] = c * aData[i];
+            when "/" do 
+                uData[i] = c / aData[i];
+            otherwise do 
+                compilerError("Unknown operator ", op);
+        }
+    }
+    return u;
+}
+
+// Left A with right C
+inline proc type ndarray.scalarMapOp(param op: string, a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) && scalarType != eltType do
+    return ndarray.scalarMapOp(op,a,c : eltType);
+
+// Left C with right A
+inline proc type ndarray.scalarMapOp(param op: string, c: ?scalarType, a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) && scalarType != eltType do
+    return ndarray.scalarMapOp(op,c : eltType,a);
+
+
+operator +(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("+",a,c);
+
+operator +(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("+",c,a);
+
+operator -(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("-",a,c);
+
+operator -(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("-",c,a);
+
+operator *(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("*",a,c);
+
+operator *(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("*",c,a);
+
+operator /(a: ndarray(?rank,?eltType),c: ?scalarType): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("/",a,c);
+
+operator /(c: ?scalarType,a: ndarray(?rank,?eltType)): ndarray(rank,eltType)
+        where isNumericType(scalarType) do
+    return ndarray.scalarMapOp("/",c,a);
+
 
 // operator +(a: remote(ndarray(?rank,?eltType)),b: remote(ndarray(rank,eltType))): remote(ndarray(rank,eltType)) {
 //     const device = a.device;
@@ -1451,6 +1562,38 @@ proc type ndarray.matvecmul(mat: ndarray(2,?eltType),vec: ndarray(1,eltType)): n
     return u;
 }
 
+proc type ndarray.batchNorm(
+    features: ndarray(?rank,?eltType),
+    weight: ndarray(1,eltType),
+    bias: ndarray(1, eltType),
+    movingAvg: ndarray(1, eltType),
+    movingVar: ndarray(1, eltType),
+    n: int // num_features
+): ndarray(rank,eltType) {
+    // writeln("IN ndarray.batchNorm");
+    if rank < 2 then halt("Rank must be greater than 2");
+    if rank > 4 then halt("Rank must be less than 4");
+    const fshape = features.shape;
+
+    ref f = features.data;
+    ref w = weight.data;
+    ref b = bias.data;
+    ref a = movingAvg.data;
+    ref v = ndarray.sqrt(movingVar).data;
+
+    var outDom = util.domainFromShape((...fshape));
+    var outFeatures = new ndarray(outDom,eltType);
+    ref dat = outFeatures.data;
+
+    forall idx in outDom.every() {
+        var c = idx[1];
+        dat[idx] = w[c]*((f[idx]-a[c])/v[c])+b[c];
+    }
+
+    return outFeatures;
+
+}
+
 
 inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): ndarray(rank,eltType) {
     const dom_ = {(...rngs)};
@@ -1465,7 +1608,142 @@ inline proc type ndarray.fromRanges(type eltType = real, rngs: range...?rank): n
     return a;
 }
 
+module ndarrayRandom {
+    private import Random;
 
+    var globalSeedSetFlag: bool = false;
+    var globalSeed: int = -1;
+
+    proc seed: int {
+        if globalSeedSetFlag {
+            var rs = new Random.randomStream(int,globalSeed);
+            globalSeed = rs.next();
+            return globalSeed;
+        } else {
+            var rs = new Random.randomStream(int);
+            return rs.next();
+        }
+    }
+
+    proc setGlobalSeed(newSeed: int) {
+        globalSeedSetFlag = true;
+        var rs = new Random.randomStream(int,newSeed);
+        globalSeed = rs.next();
+    }
+
+    proc getRandomStream(type eltType): Random.randomStream(eltType) {
+        if globalSeedSetFlag {
+            return new Random.randomStream(eltType,seed);
+        } else {
+            return new Random.randomStream(eltType);
+        }
+    }
+}
+
+proc type ndarray.setGlobalRandomSeed(seed: int) do
+    ndarrayRandom.setGlobalSeed(seed);
+
+proc type ndarray.getNextSeed(): int do
+    return ndarrayRandom.seed;
+
+proc type ndarray.getRandomStream(type eltType): Random.randomStream(eltType) do
+    return ndarrayRandom.getRandomStream(eltType);
+
+proc type ndarray.randomArray(
+    shape: int...?rank,
+    type eltType = defaultEltType,
+    in rs: Random.randomStream(eltType) = ndarray.getRandomStream(eltType)): ndarray(rank,eltType) {
+    const dom = util.domainFromShape((...shape));
+    return new ndarray(eltType,rs,dom);
+}
+
+proc type ndarray.random(shape: int...?rank,type eltType = defaultEltType): ndarray(rank,eltType) do
+    return ndarray.randomArray((...shape),eltType,ndarray.getRandomStream(eltType));
+
+proc type ndarray.random(shape: int...?rank): ndarray(rank,defaultEltType) do
+    return ndarray.random((...shape),eltType = defaultEltType);
+
+proc type ndarray.random(shape: ?rank*int,type eltType = defaultEltType,seed: int = ndarray.getNextSeed()): ndarray(rank,eltType) do
+    return ndarray.randomArray((...shape),eltType,new Random.randomStream(eltType,seed));
+
+
+proc type ndarray.loadImage(imagePath: string, type eltType = defaultEltType): ndarray(3,eltType) {
+    import Image;
+
+    param chanBits = Image.bitsPerColor; 
+    param chanGran = 2 ** chanBits; // Channel granularity for each channel
+    const cgInEltType: eltType = chanGran : eltType;
+
+    inline proc getColorFromPixel(pixel: Image.pixelType, param offset: int) {
+        return (pixel >> Image.colorOffset(offset)) & Image.colorMask;
+    }
+
+    inline proc getChannelValue(pixel: Image.pixelType, param offset: int): eltType {
+        if isRealType(eltType) {
+            const color: eltType = getColorFromPixel(pixel,offset);
+            return color / cgInEltType;
+        } else {
+            compilerError("Only real types are supported for now.");
+        }
+    }
+
+    const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
+
+    const imgType = util.getImageType(imagePath);
+    const pixelData = Image.readImage(imagePath,format=imgType);
+    const (height,width) = pixelData.shape;
+
+    const imgDom = util.domainFromShape(3,height,width);
+    var img = new ndarray(imgDom,eltType);
+    ref imgData = img.data;
+
+    forall (pixel,(i,j)) in zip(pixelData,pixelData.domain) do
+        for param c in 0..<pixelFormat.size do
+            imgData[c,i,j] = getChannelValue(pixel,c); // getColorFromPixel(pixel,pixelFormat[c]);
+
+    return img;
+}
+
+proc ref ndarray.saveImage(imagePath: string) where rank == 3 {
+
+    // compilerWarning("I have not implemented ndarray.saveImage");
+    import Image;
+
+    param chanBits = Image.bitsPerColor; 
+    param chanGran = 2 ** chanBits; // Channel granularity for each channel
+    const cgInEltType: eltType = chanGran : eltType;
+
+    const imgType = util.getImageType(imagePath);
+
+    inline proc getColorAsPixel(color: Image.pixelType, param offset: int) {
+        return (color & Image.colorMask) << Image.colorOffset(offset);
+    }
+
+    inline proc getChannelValue(channel: eltType, param offset: int): Image.pixelType {
+        if isRealType(eltType) {
+            const pixel = (channel * cgInEltType) : Image.pixelType;
+            return getColorAsPixel(pixel,offset);
+        } else {
+            compilerError("Only real types are supported for now.");
+        }
+    }
+
+    const pixelFormat = (Image.rgbColor.red,Image.rgbColor.green,Image.rgbColor.blue);
+
+    const (_,height,width) = this.shape;
+    const pixelDom = util.domainFromShape(height,width);
+    var pixelData: [pixelDom] Image.pixelType;
+    ref imgData = this.data;
+
+    forall (i,j) in pixelDom {
+        var pixel: Image.pixelType;
+        for param c in 0..<pixelFormat.size do
+            pixel |= getChannelValue(imgData[c,i,j],c);
+        pixelData[i,j] = pixel;
+    }
+
+    Image.writeImage(imagePath,format=imgType,pixels=pixelData);
+}
 
 // For printing. 
 proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer),ref serializer: IO.defaultSerializer) {
@@ -1481,7 +1759,10 @@ proc ndarray.serialize(writer: IO.fileWriter(locking=false, IO.defaultSerializer
             }
             writer.write("[");
         }
-        writer.writef("%{##.#}",x);
+        if eltType == int then
+            writer.writef("%{#}",x);
+        else
+            writer.writef("%{##.#}",x);
 
         if idx[rank - 1] < shape[rank - 1] - 1 {
             if rank == 1 then
