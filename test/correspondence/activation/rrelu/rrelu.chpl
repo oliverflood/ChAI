@@ -2,11 +2,9 @@ use Tensor;
 
 
 var a = Tensor.zeros(2,3).rrelu();
-writeln(a);
 Testing.numericPrint(a);
 
 var b = (Tensor.zeros(2,3,4) - 60.0).rrelu();
-writeln(b);
 Testing.numericPrint(b);
 
 if false {

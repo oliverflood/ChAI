@@ -166,6 +166,9 @@ class Recorder(object):
     def __init__(self):
         self.record_count = 0
         self.records = {}
+    
+    # def __getitem__(self,key):
+    #     return self.records[key]
 
     def add_record(self,line):
         self.records[self.record_count] = self.new_record_denotation(line)
@@ -385,43 +388,101 @@ for test in tests:
 
     # print(f'Running {test_name}...')
     chapel_outputs = run_chapel_test(test_name,test_path)
-    chapel_output = chapel_outputs['actual']
+    chapel_numeric_output = chapel_outputs['actual']
     chapel_recorder = chapel_outputs['recorder']
 
-    if args.print_outputs:
-        print('Begin Python output')
-        print(python_output)
-        print('End Python output')
-        print('Begin Chapel output')
-        print(chapel_output)
-        print('End Chapel output')
-        print('-----------------------------')
-        print('Python recorder:', python_recorder.records)
-        print('-----------------------------')
-        print('Chapel recorder:', chapel_recorder.records)
+    python_output_results = python_recorder.records
+    chapel_output_results = chapel_recorder.records
 
-    python_output_tokens = tokenize_output(python_numeric_output)
-    chapel_output_tokens = tokenize_output(chapel_output)
+    print('chapel_outputs:', chapel_outputs)
+    print('chapel_recorder:', chapel_recorder.records)
 
-    if len(python_output_tokens) != len(chapel_output_tokens):
-        # use caution emoji
-        print('🚧', 'Chapel and Python output tokens differ for', test['test_path'])
+    print('python_recorder:', python_recorder.records)
+
+    for py_t,ch_t in zip(python_recorder.records,chapel_recorder.records):
+        print(py_t == ch_t, py_t, ch_t)
+    
+
+
+
+
+
+    for py_out,ch_out in zip(python_output_results,chapel_output_results):
+        print(type(py_out),type(ch_out))
+    
+    failed = True
+
+    # output_size = min(len(python_output_results),len(chapel_output_results))
+    # for i in range(output_size):
+    #     try:
+    #         pr = python_output_results[i]
+    #         cr = chapel_output_results[i]
+    #         if pr != cr:
+    #             failed = True
+    #             if args.print_numeric_diffs:
+    #                 print(f'❌ {pr} != {cr}')
+    #     except IndexError as e:
+    #         if args.print_numeric_diffs:
+    #             print('IndexError:', e, 'for', test['test_path'], 'at index', i, 'in', 'python_results:', len(python_results), 'chapel_results:', len(chapel_results))
+    #         failed = True
+    #         break
+
+    if failed:
+        print(failure_emoji, test['test_path'])
+        failed_tests.append(test['name'])
+    else:
+        print(success_emoji, test['test_path'])
+
+    continue
+
+
+
+    # if args.print_outputs:
+    #     print('Begin Python output')
+    #     print(python_output)
+    #     print('End Python output')
+    #     print('Begin Chapel output')
+    #     print(chapel_output)
+    #     print('End Chapel output')
+    #     print('-----------------------------')
+    #     print('Python recorder:', python_recorder.records)
+    #     print('-----------------------------')
+    #     print('Chapel recorder:', chapel_recorder.records)
+
+    # if args.print_outputs:
+    #     print('Begin Python output')
+    #     print(python_output)
+    #     print('End Python output')
+    #     print('Begin Chapel output')
+    #     print(chapel_output)
+    #     print('End Chapel output')
+    #     print('-----------------------------')
+    #     print('Python recorder:', python_recorder.records)
+    #     print('-----------------------------')
+    #     print('Chapel recorder:', chapel_recorder.records)
+
+    # python_output_tokens = tokenize_output(python_numeric_output)
+    # chapel_output_tokens = tokenize_output(chapel_numeric_output)
+
+    # if len(python_output_tokens) != len(chapel_output_tokens):
+    #     # use caution emoji
+    #     print('🚧', 'Chapel and Python output tokens differ for', test['test_path'])
 
 
     python_results = None
     chapel_results = None
 
-    try:
-        python_results = parse_output(python_output_tokens)
-    except Exception as e:
-        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.py')
-        # print('Error:',e)
+    # try:
+    #     python_results = parse_output(python_output_tokens)
+    # except Exception as e:
+    #     print('🚧', 'Failed to parse output for', test_path / f'{test_name}.py')
+    #     # print('Error:',e)
     
-    try:
-        chapel_results = parse_output(chapel_output_tokens)
-    except Exception as e:
-        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.chpl')
-        # print('Error:',e)
+    # try:
+    #     chapel_results = parse_output(chapel_output_tokens)
+    # except Exception as e:
+    #     print('🚧', 'Failed to parse output for', test_path / f'{test_name}.chpl')
+    #     # print('Error:',e)
     
     # if args.print_outputs:
     #     if python_results is None:
