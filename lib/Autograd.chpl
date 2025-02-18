@@ -417,13 +417,8 @@ record hardtanhOp : serializable {
 }
 
 record eluOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var alpha: eltType;
-
-    proc init(type eltType=defaultEltType, alpha: eltType=1.0) {
-        this.alpha = alpha;
-    }
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
