@@ -705,7 +705,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = log(1 / (1 + Math.exp(-x)));
+            rld[i] = Math.log(1 / (1 + Math.exp(-x)));
         }
         return rl;
     }
