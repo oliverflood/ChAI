@@ -270,8 +270,8 @@ proc staticTensor.hardsigmoid() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.hardshrink() {
-    var ctx = new hardshrinkOp(meta);
+proc staticTensor.hardShrink(alpha: eltType = 0.5) {
+    var ctx = new hardShrinkOp(meta,alpha);
     return tensorFromCtx(rank,eltType,ctx);
 }
 

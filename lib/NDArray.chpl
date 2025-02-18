@@ -776,7 +776,7 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc hardshrink(l: eltType=0.5) {
+    inline proc hardShrink(alpha: eltType=0.5) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
@@ -784,7 +784,7 @@ record ndarray : serializable {
         forall i in dom.every() {
             const x = thisData[i];
             const floatMax = Types.max(eltType);
-            const xmap0 = ceil(1.0 / floatMax * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
+            const xmap0 = Math.ceil(1.0 / floatMax * (x - alpha) * (x + alpha)); // 0 if x in [-l, l], 1 otherwise 
             rld[i] = x * xmap0;
         }
         return rl;

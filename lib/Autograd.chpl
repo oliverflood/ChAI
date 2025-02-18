@@ -384,13 +384,14 @@ record hardsigmoidOp : serializable {
         return input.array.hardsigmoid();
 }
 
-record hardshrinkOp : serializable {
+record hardShrinkOp : serializable {
     var input: shared BaseTensorResource(?);
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.hardshrink();
+        return input.array.hardShrink(alpha);
 }
 
 record thresholdOp : serializable {
