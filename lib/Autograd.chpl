@@ -459,14 +459,8 @@ record celuOp : serializable {
 }
 
 record leakyreluOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var negativeSlope: eltType;
-
-    proc init(type eltType=defaultEltType, negativeSlope: eltType = Math.exp(-2.0)) {
-        this.eltType = eltType;
-        this.negativeSlope = negativeSlope;
-    }
+    var negativeSlope: input.eltType;
 
     proc children do return (input,);
 
@@ -475,14 +469,8 @@ record leakyreluOp : serializable {
 }
 
 record softshrinkOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var l: eltType;
-
-    proc init(type eltType=defaultEltType, l: eltType=0.5) {
-        if l < 0 then util.err("argument to softshrink function must be non-negative");
-        this.l = l;
-    }
+    var l: input.eltType;
 
     proc children do return (input,);
 
