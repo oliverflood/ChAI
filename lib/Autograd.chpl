@@ -394,16 +394,9 @@ record hardshrinkOp : serializable {
 }
 
 record thresholdOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var threshold: eltType; // PyTorch has no defaults for threshold
-    var value: eltType;
-
-    proc init(type eltType=defaultEltType, threshold: eltType, value: eltType) {
-        this.eltType = eltType;
-        this.threshold = threshold;
-        this.value = value;
-    }
+    var threshold: input.eltType;
+    var value: input.eltType;
 
     proc children do return (input,);
 
