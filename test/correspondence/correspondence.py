@@ -378,7 +378,7 @@ for test in tests:
         print('🐍', test['test_path'])
         failed_python_tests.append(test['name'])
         continue
-    # print(f'Compiling {test_name}...')
+
     try:
         compile_chapel(test_name,test_path,chai_dir,precompilation_results)
     except Exception as e:
@@ -386,31 +386,29 @@ for test in tests:
         failed_compilation_tests.append(test['name'])
         continue
 
-    # print(f'Running {test_name}...')
-    chapel_outputs = run_chapel_test(test_name,test_path)
-    chapel_numeric_output = chapel_outputs['actual']
-    chapel_recorder = chapel_outputs['recorder']
+    try:
+        chapel_outputs = run_chapel_test(test_name,test_path)
+        chapel_numeric_output = chapel_outputs['actual']
+        chapel_recorder = chapel_outputs['recorder']
+    except Exception as e:
+        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.chpl')
+        continue
+
 
     python_output_results = python_recorder.records
     chapel_output_results = chapel_recorder.records
 
-    print('chapel_outputs:', chapel_outputs)
-    print('chapel_recorder:', chapel_recorder.records)
+    # print('chapel_outputs:', chapel_outputs)
+    # print('chapel_recorder:', chapel_recorder.records)
+    # print('python_recorder:', python_recorder.records)
 
-    print('python_recorder:', python_recorder.records)
-
+    failed = False
     for py_t,ch_t in zip(python_recorder.records,chapel_recorder.records):
-        print(py_t == ch_t, py_t, ch_t)
+        if py_t != ch_t:
+            failed = True
+            if args.print_numeric_diffs:
+                print(f'🚸 {test_name}: {py_t} != {ch_t}')
     
-
-
-
-
-
-    for py_out,ch_out in zip(python_output_results,chapel_output_results):
-        print(type(py_out),type(ch_out))
-    
-    failed = True
 
     # output_size = min(len(python_output_results),len(chapel_output_results))
     # for i in range(output_size):
