@@ -97,6 +97,13 @@ operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,t
     return new staticTensor(b);
 }
 
+proc staticTensor.shapeArray(): [] int {
+    var sa: [0..<this.rank] int;
+    on this.device do
+        sa = this.array.shapeArray();
+    return sa;
+}
+
 proc tensorFromCtx(param rank: int, type eltType, ctx: ?ctxType): staticTensor(rank,eltType) {
     var newMeta = new owned TensorResource(eltType,rank,ctx);
     newMeta.forward();

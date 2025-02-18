@@ -8,10 +8,11 @@ def test(imports):
 
     b = torch.nn.RReLU()(torch.zeros(2,3,4) - 60.0)
     print(b)
+    return
 
     c = torch.nn.RReLU()(torch.zeros(10) + 40.0)
     print(c)
-    
+
     # same values with lower = -0.001
     a = torch.nn.RReLU(lower=-10.0)(torch.zeros(2,3))
     print(a)

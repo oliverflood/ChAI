@@ -898,6 +898,9 @@ record ndarray : serializable {
         }
         return flat;
     }
+
+    proc shapeArray(): [] int do
+        return util.tupleToArray((...this.shape));
 }
 
 

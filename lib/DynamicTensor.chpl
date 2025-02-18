@@ -181,6 +181,13 @@ operator :(t: staticTensor(?rank,?eltType), type T: dynamicTensor(eltType)): dyn
     return t.eraseRank();
 
 
+proc dynamicTensor.shapeArray(): [] int {
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            return this.forceRank(rank).shapeArray();
+    halt("Could not identify rank in dynamicTensor.shape");
+}
+
 proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor(eltType)): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if a.checkRank(rank) && b.checkRank(rank) {

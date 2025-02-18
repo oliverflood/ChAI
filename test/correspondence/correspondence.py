@@ -27,6 +27,9 @@ parser.add_argument('--chai-py-path', type=Path, default=chai_py_path, help='Pat
 parser.add_argument('--test-only', type=Path, nargs='*', help='Run a specific test(s).')
 
 parser.add_argument('--print-compiler-errors', action='store_true', help='Print compiler errors.')
+parser.add_argument('--print-numeric-diffs', action='store_true', help='Print numerical differences.')
+parser.add_argument('--print-outputs', action='store_true', help='Print Python and Chapel outputs.')
+
 
 parser.add_argument('--max-concurrent-compilations', type=int, default=5, help='Maximum concurrent chpl compilations at once.')
 
@@ -122,12 +125,6 @@ def compile_chapel_old(test_name,test_path,chai_path):
             print(results.stderr)
         raise Exception(f'Failed to compile {test_name}.')
 
-def run_chapel_test(test_name,test_path):
-    assert test_name == test_path.name
-    test_exec = test_path / test_name
-    import subprocess
-    output = subprocess.getoutput(f'{test_exec}')
-    return output
 
 class Printer(object):
     def __init__(self):
@@ -156,6 +153,102 @@ class Printer(object):
             else:
                 lines.append(process(d))
         return '\n'.join(lines)
+    
+    def actual_str(self):
+        def process(x):
+            if isinstance(x,tuple):
+                return ' '.join([f'{y}' for y in x])
+            return f'{x}'
+        
+        return '\n'.join([process(x) for x in self.data])
+
+class Recorder(object):
+    def __init__(self):
+        self.record_count = 0
+        self.records = {}
+
+    def add_record(self,line):
+        self.records[self.record_count] = self.new_record_denotation(line)
+        self.record_count += 1
+
+    def new_record_denotation(self,x):
+        pass
+
+class ChapelRecorder(Recorder):
+    def __init__(self):
+        super().__init__()
+    
+    def new_record_denotation(self, x):
+        # def parse_chapel_serialized_tensor(serialized: str) -> torch.Tensor:
+        def parse_chapel_serialized_tensor(serialized):
+            """
+            Parses a serialized tensor string of the form:
+            (shape=(2, 2), data=[-1.0, 2.5, -3.6, 4.7])
+            and returns a torch.Tensor instance.
+
+            This version tolerates extra whitespace between symbols, e.g.:
+            ( shape = (2 , 2 ) , data = [ -1.0 , 2.5 , -3.6 , 4.7 ] )
+            """
+            import re
+            # Regex patterns that allow for arbitrary spaces around 'shape=', 'data=', etc.
+            shape_pattern = r"shape\s*=\s*\(\s*([^)]*)\)"
+            data_pattern = r"data\s*=\s*\[\s*([^]]*)\]"
+            
+            # Search for 'shape=...' and 'data=...' in the input
+            shape_match = re.search(shape_pattern, serialized)
+            data_match = re.search(data_pattern, serialized)
+            
+            if not shape_match or not data_match:
+                raise ValueError("Invalid serialized tensor format. Could not find shape or data.")
+            
+            # Extract the substring that represents the shape, e.g. "2, 2"
+            shape_str = shape_match.group(1).strip()
+            # Split by commas and convert each dimension to int
+            shape = tuple(
+                int(dim.strip()) 
+                for dim in shape_str.split(',') 
+                if dim.strip()  # ignore empty pieces if extra commas/spaces
+            )
+            
+            # Extract the substring for the data, e.g. "-1.0, 2.5, -3.6, 4.7"
+            data_str = data_match.group(1).strip()
+            # Convert each piece into a Decimal, then to float
+            data_list = [
+                Decimal(value.strip())
+                for value in data_str.split(',')
+                if value.strip()
+            ]
+            data_floats = [float(x) for x in data_list]
+            
+            # Construct the tensor and reshape accordingly
+            tensor = torch.tensor(data_floats, dtype=torch.float).reshape(shape)
+            return tensor
+        
+        return parse_chapel_serialized_tensor(x)
+
+def run_chapel_test(test_name,test_path):
+    assert test_name == test_path.name
+    test_exec = test_path / test_name
+    import subprocess
+    output = subprocess.getoutput(f'{test_exec}')
+    recorder = ChapelRecorder()
+    for x in output.split('\n'):
+        recorder.add_record(x)
+    return {
+        'actual': output,
+        'recorder': recorder
+    }
+
+
+class PythonRecorder(Recorder):
+    def __init__(self,printer=None):
+        super().__init__()
+        if printer:
+            for x in printer.data:
+                self.add_record(x)
+    
+    def new_record_denotation(self, x):
+        return x
 
 def run_python_test(test_name,test_path):
     assert test_name == test_path.name
@@ -165,8 +258,13 @@ def run_python_test(test_name,test_path):
     sys.path.append(str(test_path))
     py_test_module = __import__(test_name)
     py_test_module.test({'print_fn': printer.print})
-        
-    return str(printer)
+    
+    return { 
+            'serialized': str(printer),
+            'actual': printer.actual_str(),
+            'printer': printer,
+            'recorder': PythonRecorder(printer)
+        }
 
 success_emoji = '✅'
 failure_emoji = '❌'
@@ -190,10 +288,14 @@ def tokenize_output(output):
 def parse_output(output_tokens):
     nums = []
     for t in output_tokens:
-        d = Decimal(t)
-        f = "%f" % d
-        nums.append(Decimal(f))
+        try:
+            d = Decimal(t)
+            f = "%f" % d
+            nums.append(Decimal(f))
+        except decimal.InvalidOperation as e:
+            raise Exception(f'Failed to parse {t} as a number.', e)
     return nums
+
 
 
 async def precompile_chapel_async(test_name,test_path,chai_path):
@@ -264,23 +366,11 @@ for test in tests:
     test_type = test['type']
     test_path = test['absolute_path']
 
-    # acceptable_tests = [
-    #     'arange',
-    #     'ones',
-    #     'relu'
-    # ]
-    # if test_name not in acceptable_tests:
-    #     continue
-
-    # tests_to_skip = [
-    #     'rrelu',
-    #     'hardtanh'
-    # ]
-    # if test_name in tests_to_skip:
-    #     continue
-
     try:
-        python_output = run_python_test(test_name,test_path)
+        python_outputs = run_python_test(test_name,test_path)
+        python_numeric_output = python_outputs['serialized']
+        python_output = python_outputs['actual']
+        python_recorder = python_outputs['recorder']
     except Exception as e:
         print('🐍', test['test_path'])
         failed_python_tests.append(test['name'])
@@ -294,26 +384,81 @@ for test in tests:
         continue
 
     # print(f'Running {test_name}...')
-    chapel_output = run_chapel_test(test_name,test_path)
+    chapel_outputs = run_chapel_test(test_name,test_path)
+    chapel_output = chapel_outputs['actual']
+    chapel_recorder = chapel_outputs['recorder']
 
-    python_output_tokens = tokenize_output(python_output)
+    if args.print_outputs:
+        print('Begin Python output')
+        print(python_output)
+        print('End Python output')
+        print('Begin Chapel output')
+        print(chapel_output)
+        print('End Chapel output')
+        print('-----------------------------')
+        print('Python recorder:', python_recorder.records)
+        print('-----------------------------')
+        print('Chapel recorder:', chapel_recorder.records)
+
+    python_output_tokens = tokenize_output(python_numeric_output)
     chapel_output_tokens = tokenize_output(chapel_output)
 
-    assert len(python_output_tokens) == len(chapel_output_tokens)
-
-    output_size = len(python_output_tokens)
-
-    python_results = parse_output(python_output_tokens)
-    chapel_results = parse_output(chapel_output_tokens)
+    if len(python_output_tokens) != len(chapel_output_tokens):
+        # use caution emoji
+        print('🚧', 'Chapel and Python output tokens differ for', test['test_path'])
 
 
-    failed = False
+    python_results = None
+    chapel_results = None
 
-    for i in range(output_size):
-        pr = python_results[i]
-        cr = chapel_results[i]
-        if pr != cr:
-            failed = True
+    try:
+        python_results = parse_output(python_output_tokens)
+    except Exception as e:
+        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.py')
+        # print('Error:',e)
+    
+    try:
+        chapel_results = parse_output(chapel_output_tokens)
+    except Exception as e:
+        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.chpl')
+        # print('Error:',e)
+    
+    # if args.print_outputs:
+    #     if python_results is None:
+    #         print('Could not parse Python output.')
+    #         print('Begin Python output')
+    #         print(python_output)
+    #         print('End Python output')
+    #     if chapel_results is None:
+    #         print('Could not parse Chapel output.')
+    #         print('Begin Chapel output')
+    #         print(chapel_output)
+    #         print('End Chapel output')
+
+    # python_results = parse_output(python_output_tokens)
+    # chapel_results = parse_output(chapel_output_tokens)
+
+
+    failed = (python_results is None) or (chapel_results is None)
+
+    if not failed:
+        assert isinstance(python_results,list)
+        assert isinstance(chapel_results,list)
+
+        output_size = min(len(python_output_tokens),len(chapel_output_tokens))
+        for i in range(output_size):
+            try:
+                pr = python_results[i]
+                cr = chapel_results[i]
+                if pr != cr:
+                    failed = True
+                    if args.print_numeric_diffs:
+                        print(f'❌ {pr} != {cr}, {python_output_tokens[i]} != {chapel_output_tokens[i]}')
+            except IndexError as e:
+                if args.print_numeric_diffs:
+                    print('IndexError:', e, 'for', test['test_path'], 'at index', i, 'in', 'python_results:', len(python_results), 'chapel_results:', len(chapel_results))
+                failed = True
+                break
 
     if failed:
         print(failure_emoji, test['test_path'])

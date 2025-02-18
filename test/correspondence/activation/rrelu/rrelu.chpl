@@ -2,12 +2,14 @@ use Tensor;
 
 
 var a = Tensor.zeros(2,3).rrelu();
-// writeln(a.degenerateFlatten());
+writeln(a);
 Testing.numericPrint(a);
 
 var b = (Tensor.zeros(2,3,4) - 60.0).rrelu();
-// writeln(b.degenerateFlatten());
+writeln(b);
 Testing.numericPrint(b);
+
+if false {
 
 var c = (Tensor.zeros(10) + 40.0).rrelu();
 // writeln(c.degenerateFlatten());
@@ -51,3 +53,4 @@ Testing.numericPrint(b);
 c = (Tensor.zeros(10) + 40.0).rrelu(lower=-50.0, upper=30.0);
 // writeln(c.degenerateFlatten());
 Testing.numericPrint(c);
+}

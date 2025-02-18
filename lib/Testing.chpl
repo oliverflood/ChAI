@@ -27,7 +27,20 @@ module Testing {
             where isSubtype(tensorType, ndarray) 
                     || isSubtype(tensorType, staticTensor)
                     || isSubtype(tensorType, dynamicTensor) {
+        
+        proc parens(s: string): string do
+            return "(" + s + ")";
+
+        proc brackets(s: string): string do
+            return "[" + s + "]";
+
+        const shapeArray = t.shapeArray();
+        const shapeStr = ",".join([si in shapeArray] si : string);
+
         const data = numericExport(t);
-        writeln(data);
+        const dataStr = ",".join(data);
+
+        const tensorStr = parens("shape=" + parens(shapeStr) + ", data=" + brackets(dataStr));
+        writeln(tensorStr);
     }
 }
