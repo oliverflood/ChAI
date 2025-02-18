@@ -305,9 +305,9 @@ proc staticTensor.leakyrelu(negativeSlope: eltType = exp(-2.0)) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.softshrink(l: eltType = 0.5) {
-    if l < 0 then util.err("argument to softshrink function must be non-negative");
-    var ctx = new softshrinkOp(meta, l);
+proc staticTensor.softshrink(alpha: eltType = 0.5) {
+    if alpha < 0 then util.err("argument to softshrink function must be non-negative");
+    var ctx = new softshrinkOp(meta, alpha);
     return tensorFromCtx(rank, eltType, ctx);
 }
 

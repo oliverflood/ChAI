@@ -470,12 +470,12 @@ record leakyreluOp : serializable {
 
 record softshrinkOp : serializable {
     var input: shared BaseTensorResource(?);
-    var l: input.eltType;
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.softshrink(l);
+        return input.array.softshrink(alpha);
 }
 
 record squareOp : serializable {

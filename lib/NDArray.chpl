@@ -871,18 +871,18 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc softshrink(l: eltType=0.5) {  // l must be non-negative
-        if l < 0 then util.err("argument to softshrink function must be non-negative");
+    inline proc softshrink(alpha: eltType=0.5) {  // l must be non-negative
+        if alpha < 0 then util.err("Argument to softshrink function must be non-negative");
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
+        const floatMax: eltType = Types.max(eltType);
         forall i in dom.every() {
             const x = thisData[i];
-            const floatMax: eltType = Types.max(eltType);
-            const xgl = Math.ceil(1.0 / floatMax * (x - l)); // x greater than lambda: 1 if true, otherwise
-            const xlnl = 1 - Math.ceil(1.0 / floatMax * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
-            rld[i] = xgl * (x - l) + xlnl * (x + l);
+            const xgl = Math.ceil(1.0 / floatMax * (x - alpha)); // x greater than lambda: 1 if true, otherwise
+            const xlnl = 1 - Math.ceil(1.0 / floatMax * (x + alpha)); // x less than negative lambda, 1 if true, 0 otherwise
+            rld[i] = xgl * (x - alpha) + xlnl * (x + alpha);
         }
         return rl;
     }
