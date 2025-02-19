@@ -854,7 +854,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * (Math.exp(x / alpha) - 1.0));
         }
         return rl;
     }
