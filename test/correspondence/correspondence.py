@@ -176,6 +176,9 @@ class Recorder(object):
 
     def new_record_denotation(self,x):
         pass
+    
+    def get_records(self):
+        return [self.records[x] for x in range(self.record_count)]
 
 class ChapelRecorder(Recorder):
     def __init__(self):
@@ -248,7 +251,11 @@ class PythonRecorder(Recorder):
         super().__init__()
         if printer:
             for x in printer.data:
-                self.add_record(x)
+                if isinstance(x,tuple):
+                    for y in x:
+                        self.add_record(y)
+                else:
+                    self.add_record(x)
     
     def new_record_denotation(self, x):
         return x
@@ -367,7 +374,15 @@ failed_tests = []
 for test in tests:
     test_name = test['name']
     test_type = test['type']
-    test_path = test['absolute_path']
+    test_path = test['absolute_path']  
+    python_test_path = test_path / f'{test_name}.py'
+    chapel_test_path = test_path / f'{test_name}.chpl'
+
+    def test_failed(reason=None):
+        if reason is not None:
+            print('🚧', reason)
+        print(failure_emoji, test['test_path'])
+        failed_tests.append(test['name'])
 
     try:
         python_outputs = run_python_test(test_name,test_path)
@@ -391,43 +406,39 @@ for test in tests:
         chapel_numeric_output = chapel_outputs['actual']
         chapel_recorder = chapel_outputs['recorder']
     except Exception as e:
-        print('🚧', 'Failed to parse output for', test_path / f'{test_name}.chpl')
+        test_failed(f'Failed to parse output for {chapel_test_path}')
         continue
 
 
-    python_output_results = python_recorder.records
-    chapel_output_results = chapel_recorder.records
-
-    # print('chapel_outputs:', chapel_outputs)
-    # print('chapel_recorder:', chapel_recorder.records)
-    # print('python_recorder:', python_recorder.records)
-
+    python_output_results = python_recorder.get_records()
+    chapel_output_results = chapel_recorder.get_records()
+    if len(python_output_results) != len(chapel_output_results):
+        test_failed(f'The number of Python and Chapel outputs do not match! Python outputs = {len(python_output_results)} != {len(chapel_output_results)} = Chapel outputs.')
+        continue
+    
     failed = False
-    for py_t,ch_t in zip(python_recorder.records,chapel_recorder.records):
-        if py_t != ch_t:
+    idx = 1
+    for py_t,ch_t in zip(python_output_results,chapel_output_results):
+        if not torch.equal(py_t,ch_t):
             failed = True
             if args.print_numeric_diffs:
-                print(f'🚸 {test_name}: {py_t} != {ch_t}')
-    
+                print(f'💢 {test_name} (i={idx}): {py_t} != {ch_t}\ndiff:\n{py_t - ch_t}')
+        idx += 1
 
-    # output_size = min(len(python_output_results),len(chapel_output_results))
-    # for i in range(output_size):
-    #     try:
-    #         pr = python_output_results[i]
-    #         cr = chapel_output_results[i]
-    #         if pr != cr:
-    #             failed = True
-    #             if args.print_numeric_diffs:
-    #                 print(f'❌ {pr} != {cr}')
-    #     except IndexError as e:
-    #         if args.print_numeric_diffs:
-    #             print('IndexError:', e, 'for', test['test_path'], 'at index', i, 'in', 'python_results:', len(python_results), 'chapel_results:', len(chapel_results))
-    #         failed = True
-    #         break
+    if failed and args.print_outputs:
+        print('Begin Python output')
+        print(python_output)
+        print('End Python output')
+        print('Begin Chapel output')
+        print(chapel_numeric_output)
+        print('End Chapel output')
+        print('-----------------------------')
+        print('Python recorder:', python_recorder.records)
+        print('-----------------------------')
+        print('Chapel recorder:', chapel_recorder.records)
 
     if failed:
-        print(failure_emoji, test['test_path'])
-        failed_tests.append(test['name'])
+        test_failed()
     else:
         print(success_emoji, test['test_path'])
 
