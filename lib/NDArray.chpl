@@ -995,6 +995,10 @@ proc zipArr(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType),f): ndarray(rank
     return c;
 }
 
+operator +(a: ndarray(?rank, ?eltType)): ndarray(rank, eltType) {
+    return a;
+}
+
 operator +(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,eltType) {
     const dom = a.domain;
 
@@ -1018,6 +1022,18 @@ operator *(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,el
     forall i in dom.every() do
         cData[i] = aData[i] * bData[i];
     return c;
+}
+
+operator -(a: ndarray(?rank, ?eltType)): ndarray(rank, eltType) {
+    const dom = a.domain;
+    var negged = new ndarray(dom, eltType);
+    ref negData = negged.data;
+    const ref data = a.data;
+    forall i in dom.every() {
+        negData[i] = data[i];
+    }
+
+    return negged;
 }
 
 operator -(a: ndarray(?rank,?eltType),b: ndarray(rank,eltType)): ndarray(rank,eltType) {
@@ -1987,6 +2003,47 @@ proc type ndarray.einsum(param subscripts: string,a: ndarray(?rankA,?eltType), b
     }
     // compilerError("Must sum across one axis!");
     return a;
+}
+
+
+proc ndarray.softmax(): ndarray(this.rank, this.eltType)
+    where isSubtype(this.eltType, real)
+{
+    const dom = this.domain;
+    const ref thisData = this.data;
+
+    var denom: this.eltType = 0.0;
+    forall i in dom.every() with (+ reduce denom) {
+        denom += Math.exp(thisData[i]);
+    }
+
+    var softmaxxed = new ndarray(this.eltType, dom);
+    ref softmaxData = softmaxxed.data;
+    forall i in dom.every() {
+        softmaxData[i] = Math.exp(thisData[i]) / denom;
+    }
+
+    return softmaxxed;
+}
+
+
+proc ndarray.softmin(): ndarray(this.rank, this.eltType)
+    where isSubtype(this.eltType, real)
+{
+    return (-this).softmax();
+}
+
+
+proc ndarray.dropout(): ndarray(this.rank, this.eltType) {
+    const randomData: int[this.domain];
+    Random.fillRandom(randomData, 0, 1);
+
+    ref thisData = this.data;
+    forall i in this.domain.every() {
+        thisData[i] *= randomData[i];
+    }
+
+    return this;
 }
 
 

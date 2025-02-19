@@ -1,8 +1,7 @@
-
-
 use NDArray;
 use Remote;
 use Autograd;
+import Random;
 import Utilities as util;
 use Utilities.Standard;
 
@@ -107,6 +106,12 @@ proc tensorFromCtx(param rank: int, type eltType, ctx: ?ctxType): staticTensor(r
 operator +(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
     var ctx = new addOp(rank,eltType,a.meta,b.meta);
     return tensorFromCtx(rank,eltType,ctx);
+}
+
+
+operator -(a: staticTensor(?rank, ?eltType)): staticTensor(rank, eltType) {
+    var ctx = new negOp(rank, eltType, a.meta);
+    return tensorFromCtx(rank, eltType, ctx);
 }
 
 operator -(a: staticTensor(?rank,?eltType), b: staticTensor(rank,eltType)) {
@@ -1017,4 +1022,10 @@ proc ref staticTensor.read(fr: IO.fileReader(?)) throws {
         ref ar = this.array;
         ar = devArr;
     }
+}
+
+
+proc staticTensor.dropout(): staticTensor(this.rank, this.eltType) {
+    var ctx = new dropoutOp(this.rank, this.eltType);
+    return tensorFromCtx(this.rank, this.eltType, ctx);
 }
