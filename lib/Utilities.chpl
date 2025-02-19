@@ -297,6 +297,13 @@ module Utilities {
         return Image.imageType.bmp;
     }
 
+    proc tupleToArray(t ...?n) where isHomogeneousTuple(t) {
+        var arr: [0..<n] t(0).type;
+        for param i in 0..<n do
+            arr[i] = t(i);
+        return arr;
+    }
+
     module Standard {
         private use ChplConfig;
 
@@ -315,6 +322,14 @@ module Utilities {
         proc _tuple.eltType type where isHomogeneousTuple(this) {
             return this(0).type;
         }
+
+        // proc _tuple.toArray(): [] this.eltType
+        //         where isHomogeneousTuple(this) {
+        //     var arr: [0..<this.size] this.eltType;
+        //     for param i in 0..<this.size do
+        //         arr[i] = this(i);
+        //     return arr;
+        // }
 
         proc _tuple.map(f): this.size * this.imageType(f) where isHomogeneousTuple(this) {
             param rank: int = this.size;

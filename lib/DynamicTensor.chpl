@@ -180,6 +180,13 @@ operator :(t: staticTensor(?rank,?eltType), type T: dynamicTensor(eltType)): dyn
     return t.eraseRank();
 
 
+proc dynamicTensor.shapeArray(): [] int {
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            return this.forceRank(rank).shapeArray();
+    halt("Could not identify rank in dynamicTensor.shape");
+}
+
 proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor(eltType)): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if a.checkRank(rank) && b.checkRank(rank) {
@@ -441,10 +448,10 @@ proc dynamicTensor.softsign(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0): dynamicTensor(eltType) {
+proc dynamicTensor.rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0, training: bool = false): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).rrelu(lower, upper).eraseRank();
+            return this.forceRank(rank).rrelu(lower, upper, training).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.rrelu.");
     return new dynamicTensor(eltType);
@@ -468,10 +475,10 @@ proc dynamicTensor.hardsigmoid(): dynamicTensor(eltType) {
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.hardshrink(): dynamicTensor(eltType) {
+proc dynamicTensor.hardShrink(alpha: eltType = 0.5): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).hardshrink().eraseRank();
+            return this.forceRank(rank).hardShrink(alpha).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.hardshrink.");
     return new dynamicTensor(eltType);
@@ -486,12 +493,12 @@ proc dynamicTensor.threshold(threshold: eltType, value: eltType): dynamicTensor(
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.hardtanh(minVal: eltType = -1.0, maxVal: eltType = 1.0): dynamicTensor(eltType) {
+proc dynamicTensor.hardTanh(minVal: eltType = -1.0, maxVal: eltType = 1.0): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).hardtanh(minVal, maxVal).eraseRank();
+            return this.forceRank(rank).hardTanh(minVal, maxVal).eraseRank();
     }
-    halt("Could not determine rank in dynamicTensor.hardtanh.");
+    halt("Could not determine rank in dynamicTensor.hardTanh.");
     return new dynamicTensor(eltType);
 }
 
@@ -531,11 +538,11 @@ proc dynamicTensor.leakyrelu(negativeSlope: eltType = 1.0): dynamicTensor(eltTyp
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.softshrink(l: eltType = 0.5): dynamicTensor(eltType) {
-    if l < 0 then util.err("argument to softshrink function must be non-negative");
+proc dynamicTensor.softshrink(alpha: eltType = 0.5): dynamicTensor(eltType) {
+    if alpha < 0 then util.err("Argument to softshrink function must be non-negative");
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).softshrink(l).eraseRank();
+            return this.forceRank(rank).softshrink(alpha).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.softshrink.");
     return new dynamicTensor(eltType);

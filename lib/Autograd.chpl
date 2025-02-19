@@ -359,11 +359,12 @@ record rreluOp : serializable {
     var input: shared BaseTensorResource(?);
     var lower: input.eltType;
     var upper: input.eltType;
+    var training: bool;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.rrelu(lower, upper);
+        return input.array.rrelu(lower, upper, training);
 }
 
 record hardswishOp : serializable {
@@ -384,26 +385,20 @@ record hardsigmoidOp : serializable {
         return input.array.hardsigmoid();
 }
 
-record hardshrinkOp : serializable {
+record hardShrinkOp : serializable {
     var input: shared BaseTensorResource(?);
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.hardshrink();
+        return input.array.hardShrink(alpha);
 }
 
 record thresholdOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var threshold: eltType; // PyTorch has no defaults for threshold
-    var value: eltType;
-
-    proc init(type eltType=defaultEltType, threshold: eltType, value: eltType) {
-        this.eltType = eltType;
-        this.threshold = threshold;
-        this.value = value;
-    }
+    var threshold: input.eltType;
+    var value: input.eltType;
 
     proc children do return (input,);
 
@@ -411,7 +406,7 @@ record thresholdOp : serializable {
         return input.array.threshold(threshold, value);
 }
 
-record hardtanhOp : serializable {
+record hardTanhOp : serializable {
     var input: shared BaseTensorResource(?);
     var minVal: input.eltType;
     var maxVal: input.eltType;
@@ -419,17 +414,12 @@ record hardtanhOp : serializable {
     proc children do return (input,);
 
     proc forward() do
-        return input.array.threshold(minVal, maxVal);
+        return input.array.hardTanh(minVal, maxVal);
 }
 
 record eluOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var alpha: eltType;
-
-    proc init(type eltType=defaultEltType, alpha: eltType=1.0) {
-        this.alpha = alpha;
-    }
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
@@ -459,14 +449,8 @@ record celuOp : serializable {
 }
 
 record leakyreluOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var negativeSlope: eltType;
-
-    proc init(type eltType=defaultEltType, negativeSlope: eltType = Math.exp(-2.0)) {
-        this.eltType = eltType;
-        this.negativeSlope = negativeSlope;
-    }
+    var negativeSlope: input.eltType;
 
     proc children do return (input,);
 
@@ -475,19 +459,13 @@ record leakyreluOp : serializable {
 }
 
 record softshrinkOp : serializable {
-    type eltType = defaultEltType;
     var input: shared BaseTensorResource(?);
-    var l: eltType;
-
-    proc init(type eltType=defaultEltType, l: eltType=0.5) {
-        if l < 0 then util.err("argument to softshrink function must be non-negative");
-        this.l = l;
-    }
+    var alpha: input.eltType;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.softshrink(l);
+        return input.array.softshrink(alpha);
 }
 
 record squareOp : serializable {

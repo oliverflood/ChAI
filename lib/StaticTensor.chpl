@@ -96,6 +96,13 @@ operator :(in t: staticTensor(?rank,?eltType), type toType): staticTensor(rank,t
     return new staticTensor(b);
 }
 
+proc staticTensor.shapeArray(): [] int {
+    var sa: [0..<this.rank] int;
+    on this.device do
+        sa = this.array.shapeArray();
+    return sa;
+}
+
 proc tensorFromCtx(param rank: int, type eltType, ctx: ?ctxType): staticTensor(rank,eltType) {
     var newMeta = new owned TensorResource(eltType,rank,ctx);
     newMeta.forward();
@@ -260,8 +267,8 @@ proc staticTensor.softsign() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0) {
-    var ctx = new rreluOp(meta, lower, upper);
+proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0, training: bool = false) {
+    var ctx = new rreluOp(meta, lower, upper, training);
     return tensorFromCtx(rank,eltType,ctx);
 }
 
@@ -275,8 +282,8 @@ proc staticTensor.hardsigmoid() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.hardshrink() {
-    var ctx = new hardshrinkOp(meta);
+proc staticTensor.hardShrink(alpha: eltType = 0.5) {
+    var ctx = new hardShrinkOp(meta,alpha);
     return tensorFromCtx(rank,eltType,ctx);
 }
 
@@ -285,8 +292,8 @@ proc staticTensor.threshold(threshold: eltType, value: eltType) { // PyTorch has
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.hardtanh(minVal: eltType = -1.0, maxVal: eltType = 1.0) {
-    var ctx = new hardtanhOp(meta, minVal, maxVal);
+proc staticTensor.hardTanh(minVal: eltType = -1.0, maxVal: eltType = 1.0) {
+    var ctx = new hardTanhOp(meta, minVal, maxVal);
     return tensorFromCtx(rank, eltType, ctx);
 }
 
@@ -310,9 +317,9 @@ proc staticTensor.leakyrelu(negativeSlope: eltType = exp(-2.0)) {
     return tensorFromCtx(rank, eltType, ctx);
 }
 
-proc staticTensor.softshrink(l: eltType = 0.5) {
-    if l < 0 then util.err("argument to softshrink function must be non-negative");
-    var ctx = new softshrinkOp(meta, l);
+proc staticTensor.softshrink(alpha: eltType = 0.5) {
+    if alpha < 0 then util.err("argument to softshrink function must be non-negative");
+    var ctx = new softshrinkOp(meta, alpha);
     return tensorFromCtx(rank, eltType, ctx);
 }
 

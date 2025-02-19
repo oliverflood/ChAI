@@ -705,7 +705,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = log(1 / (1 + Math.exp(-x)));
+            rld[i] = Math.log(1 / (1 + Math.exp(-x)));
         }
         return rl;
     }
@@ -734,17 +734,18 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0) {
+    inline proc rrelu(lower: eltType=1.0/8.0, upper: eltType=1.0/3.0, training: bool=false) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
-        var a: [dom] eltType;
-        Random.fillRandom(a);
+        var a: [dom] eltType = (lower + upper) / 2.0;
+        if training then
+            Random.fillRandom(a,min=lower,max=upper);
         forall i in dom.every() {
             const x = thisData[i];
-            const ai = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
-            rld[i] = Math.max(0, x) + Math.min(0, ai * x);
+            const alpha = a[i];
+            rld[i] = Math.max(0, x) + alpha * Math.min(0,x);
         }
         return rl;
     }
@@ -776,7 +777,7 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc hardshrink(l: eltType=0.5) {
+    inline proc hardShrink(alpha: eltType=0.5) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
@@ -784,13 +785,13 @@ record ndarray : serializable {
         forall i in dom.every() {
             const x = thisData[i];
             const floatMax = Types.max(eltType);
-            const xmap0 = ceil(1.0 / floatMax * (x - l) * (x + l)); // 0 if x in [-l, l], 1 otherwise 
+            const xmap0 = Math.ceil(1.0 / floatMax * (x - alpha) * (x + alpha)); // 0 if x in [-l, l], 1 otherwise 
             rld[i] = x * xmap0;
         }
         return rl;
     }
 
-    inline proc hardtanh(minVal: eltType=-1.0, maxVal: eltType=1.0) {
+    inline proc hardTanh(minVal: eltType=-1.0, maxVal: eltType=1.0) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
@@ -854,7 +855,7 @@ record ndarray : serializable {
         ref rld = rl.data;
         forall i in dom.every() {
             const x = thisData[i];
-            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * Math.exp(x / alpha) - 1.0);
+            rld[i] = Math.max(0.0, x) + Math.min(0.0, alpha * (Math.exp(x / alpha) - 1.0));
         }
         return rl;
     }
@@ -871,18 +872,18 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc softshrink(l: eltType=0.5) {  // l must be non-negative
-        if l < 0 then util.err("argument to softshrink function must be non-negative");
+    inline proc softshrink(alpha: eltType=0.5) {  // l must be non-negative
+        if alpha < 0 then util.err("Argument to softshrink function must be non-negative");
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
+        const floatMax: eltType = Types.max(eltType);
         forall i in dom.every() {
             const x = thisData[i];
-            const floatMax: eltType = Types.max(eltType);
-            const xgl = Math.ceil(1.0 / floatMax * (x - l)); // x greater than lambda: 1 if true, otherwise
-            const xlnl = 1 - Math.ceil(1.0 / floatMax * (x + l)); // x less than negative lambda, 1 if true, 0 otherwise
-            rld[i] = xgl * (x - l) + xlnl * (x + l);
+            const xgl = Math.ceil(1.0 / floatMax * (x - alpha)); // x greater than lambda: 1 if true, otherwise
+            const xlnl = 1 - Math.ceil(1.0 / floatMax * (x + alpha)); // x less than negative lambda, 1 if true, 0 otherwise
+            rld[i] = xgl * (x - alpha) + xlnl * (x + alpha);
         }
         return rl;
     }
@@ -898,6 +899,9 @@ record ndarray : serializable {
         }
         return flat;
     }
+
+    proc shapeArray(): [] int do
+        return util.tupleToArray((...this.shape));
 }
 
 
