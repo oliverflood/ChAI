@@ -970,6 +970,23 @@ record conv2DOp : serializable {
     proc spec : GradOpSpec do return new dict(("operation","Conv2D"),("stride",stride:string),("padding",padding:string));
 }
 
+
+record negOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(eltType, rank);
+
+    proc children do return (input, );
+
+    proc forward(): ndarray(rank, eltType) {
+        return new ndarray(eltType, input.array.domain, -1);
+    }
+
+    proc spec : GradOpSpec do return new dict(("operation", "-"));
+}
+
+
 record batchNormOp : serializable {
     type eltType = defaultEltType;
     var features: shared BaseTensorResource(?); // what to put here?
@@ -986,4 +1003,46 @@ record batchNormOp : serializable {
     }
 
     proc spec : GradOpSpec do return new dict(("operation","BatchNorm"));
+}
+
+
+record dropoutOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared  BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
+}
+
+
+record softmaxOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
+}
+
+
+record softminOp : serializable {
+    param rank: int;
+    type eltType;
+
+    var input: shared BaseTensorResource(?);
+
+    proc children do return (input,);
+
+    proc forward(): ndarray(rank, eltType) {
+        return input.array;
+    }
 }
