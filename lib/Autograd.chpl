@@ -406,7 +406,7 @@ record thresholdOp : serializable {
         return input.array.threshold(threshold, value);
 }
 
-record hardtanhOp : serializable {
+record hardTanhOp : serializable {
     var input: shared BaseTensorResource(?);
     var minVal: input.eltType;
     var maxVal: input.eltType;
@@ -414,7 +414,7 @@ record hardtanhOp : serializable {
     proc children do return (input,);
 
     proc forward() do
-        return input.array.threshold(minVal, maxVal);
+        return input.array.hardTanh(minVal, maxVal);
 }
 
 record eluOp : serializable {

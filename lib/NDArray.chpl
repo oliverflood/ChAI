@@ -791,7 +791,7 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc hardtanh(minVal: eltType=-1.0, maxVal: eltType=1.0) {
+    inline proc hardTanh(minVal: eltType=-1.0, maxVal: eltType=1.0) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);

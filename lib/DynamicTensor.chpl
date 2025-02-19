@@ -490,12 +490,12 @@ proc dynamicTensor.threshold(threshold: eltType, value: eltType): dynamicTensor(
     return new dynamicTensor(eltType);
 }
 
-proc dynamicTensor.hardtanh(minVal: eltType = -1.0, maxVal: eltType = 1.0): dynamicTensor(eltType) {
+proc dynamicTensor.hardTanh(minVal: eltType = -1.0, maxVal: eltType = 1.0): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.forceRank(rank).hardtanh(minVal, maxVal).eraseRank();
+            return this.forceRank(rank).hardTanh(minVal, maxVal).eraseRank();
     }
-    halt("Could not determine rank in dynamicTensor.hardtanh.");
+    halt("Could not determine rank in dynamicTensor.hardTanh.");
     return new dynamicTensor(eltType);
 }
 
