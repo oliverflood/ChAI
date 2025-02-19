@@ -102,11 +102,12 @@ for test_type, test_type_dir in correspondence_test_types.items():
                 'type': test_type,
                 'name': test_name,
                 'relative_path': test_dir.relative_to(correspondence_dir),
+                'display_name': test_dir.relative_to(correspondence_dir),
                 'test_path': test_dir.relative_to(chai_dir),
                 'absolute_path': test_dir
             }
             tests.append(test_info)
-            print('🌱', test_info['relative_path'])
+            print('🌱', test_info['display_name'])
 
 
 def compile_chapel_old(test_name,test_path,chai_path):
@@ -374,14 +375,15 @@ failed_tests = []
 for test in tests:
     test_name = test['name']
     test_type = test['type']
-    test_path = test['absolute_path']  
+    test_path = test['display_name']  
+    display_name = test['relative_path']
     python_test_path = test_path / f'{test_name}.py'
     chapel_test_path = test_path / f'{test_name}.chpl'
 
     def test_failed(reason=None):
         if reason is not None:
             print('🚧', reason)
-        print(failure_emoji, test['test_path'])
+        print(failure_emoji, display_name)
         failed_tests.append(test['name'])
 
     try:
@@ -390,14 +392,14 @@ for test in tests:
         python_output = python_outputs['actual']
         python_recorder = python_outputs['recorder']
     except Exception as e:
-        print('🐍', test['test_path'])
+        print('🐍', display_name)
         failed_python_tests.append(test['name'])
         continue
 
     try:
         compile_chapel(test_name,test_path,chai_dir,precompilation_results)
     except Exception as e:
-        print('⛔', test['test_path'])
+        print('⛔', display_name)
         failed_compilation_tests.append(test['name'])
         continue
 
@@ -422,7 +424,7 @@ for test in tests:
         if not torch.equal(py_t,ch_t):
             failed = True
             if args.print_numeric_diffs:
-                print(f'💢 {test_name} (i={idx}): {py_t} != {ch_t}\ndiff:\n{py_t - ch_t}')
+                print(f'💢 {display_name} (i={idx}): {py_t} != {ch_t}\ndiff:\n{py_t - ch_t}')
         idx += 1
 
     if failed and args.print_outputs:
@@ -440,7 +442,8 @@ for test in tests:
     if failed:
         test_failed()
     else:
-        print(success_emoji, test['test_path'])
+        print(success_emoji, display_name)
+        # print(success_emoji, test['test_path'])
 
     continue
 
