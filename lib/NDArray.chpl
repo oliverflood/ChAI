@@ -734,17 +734,18 @@ record ndarray : serializable {
         return rl;
     }
 
-    inline proc rrelu(lower: eltType=0.125, upper: eltType=1.0/3.0) {
+    inline proc rrelu(lower: eltType=1.0/8.0, upper: eltType=1.0/3.0, training: bool=false) {
         const ref thisData = data;
         const dom = this.domain;
         var rl = new ndarray(dom, eltType);
         ref rld = rl.data;
-        var a: [dom] eltType;
-        Random.fillRandom(a);
+        var a: [dom] eltType = (lower + upper) / 2.0;
+        if training then
+            Random.fillRandom(a,min=lower,max=upper);
         forall i in dom.every() {
             const x = thisData[i];
-            const ai = 0.125 + (1.0 / 3.0 - 0.125) * a[i]; // scale it so that it is between 1/8, 1/3
-            rld[i] = Math.max(0, x) + Math.min(0, ai * x);
+            const alpha = a[i];
+            rld[i] = Math.max(0, x) + alpha * Math.min(0,x);
         }
         return rl;
     }

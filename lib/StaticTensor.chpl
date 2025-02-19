@@ -262,8 +262,8 @@ proc staticTensor.softsign() {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0) {
-    var ctx = new rreluOp(meta, lower, upper);
+proc staticTensor.rrelu(lower: eltType = 0.125, upper: eltType = 1.0/3.0, training: bool = false) {
+    var ctx = new rreluOp(meta, lower, upper, training);
     return tensorFromCtx(rank,eltType,ctx);
 }
 

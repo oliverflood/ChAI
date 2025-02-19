@@ -359,11 +359,12 @@ record rreluOp : serializable {
     var input: shared BaseTensorResource(?);
     var lower: input.eltType;
     var upper: input.eltType;
+    var training: bool;
 
     proc children do return (input,);
 
     proc forward() do
-        return input.array.rrelu(lower, upper);
+        return input.array.rrelu(lower, upper, training);
 }
 
 record hardswishOp : serializable {
