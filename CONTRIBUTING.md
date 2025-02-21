@@ -1,6 +1,41 @@
 # Contributing
 
 
+#### Dimension
+A positive integer $n$ is a *dimension*. The set of all dimensions is denoted by $\mathbb{N}^+ = \mathbb{N} \setminus \{0\}$.
+
+#### Shape
+For a dimension $n \in \mathbb{N}^+$, a tuple $s \in \mathbb{N}^n$ is a *shape of dimension $n$*.
+
+#### Domain
+For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples, 
+<!-- $i \in \mathbb{N}^n$ such that $i_k < s_k$ for $k \in \{1,2,\ldots,n\}$. -->
+
+$$
+\textsf{dom}(s) = \{i \in \mathbb{N}^n \mid \forall k\in \mathbb{N}, 1 \leq k \leq n \implies k \in i_k < s_k\}.
+$$
+
+<!-- $$
+\textsf{dom}(s) = \{i \in \mathbb{N}^n \mid i_k < s_k \text{ for } k \in \{1,2,\ldots,n\}\}.
+$$ -->
+
+For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples $i \in \mathbb{N}^n$ such that $i_k < s_k$ for $k \in \{1,2,\ldots,n\}$.
+
+A tuple $s \in \mathbb{N}^n$ is a *shape* if $n$ is a dimension.
+
+
+
+
+# h
+
+
+# HELLO
+
+
+ The set of all shapes is denoted by $\mathbb{N}^+_\text{shape} = \mathbb{N}^+ \times \mathbb{N}^+ \times \cdots \times \mathbb{N}^+$.
+A *shape* is a tuple of dimensions, that is, .
+A *shape* is a tuple of dimensions, that is, the set of all shapes is denoted by $\mathbb{N}^+_\text{shape} = \mathbb{N}^+ \times \mathbb{N}^+ \times \cdots \times \mathbb{N}^+$.
+
 Suppose you want to raise the elements of a tensor $T\in\mathbb{T}^n(\mathbb{F})$ by a power $a\in \mathbb{F}$ and multiply the result by a scalar $b \in \mathbb{F}$, via the map:
 $$
 t_i \mapsto b \cdot {t_i}^a
