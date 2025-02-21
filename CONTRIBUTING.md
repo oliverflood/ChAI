@@ -1,16 +1,16 @@
 # Contributing
 
 
-Suppose you want to raise the elements of a tensor $T\in\mathbb{T}^n(\mathbb{F})$ by a power $a\in \mathbb{F}$ and multiply the result by a scalar $b \in \mathbb{F}$, via the map
+Suppose you want to raise the elements of a tensor $T\in\mathbb{T}^n(\mathbb{F})$ by a power $a\in \mathbb{F}$ and multiply the result by a scalar $b \in \mathbb{F}$, via the map:
 $$
 t_i \mapsto b \cdot {t_i}^a
 $$
-where $t_i = T(i) \in \mathbb{F}$ for $i \in \textsf{dom}(T)$.
+where $t_i = T(i) \in \mathbb{F}$ for $i \in \textsf{dom}(T)$. 
 We will call this operation a power operation of exponent $a$ and scalar $b$, and write 
 $$
 \text{pow}(T, a, b) = \left[b \cdot {t_i}^a\right]_{i \in \textsf{dom}(T)} = \left[u_i\right]_{i \in \textsf{dom}(U)} = U.
 $$
-where $U\in\mathbb{T}^n(\mathbb{F})$ is the output tensor, where $u_i = b \cdot {t_i}^a$, since $\textsf{dom}(T) = \textsf{dom}(U)$. In Chapel notation, we will write `.pow(a, b)`.
+where $U\in\mathbb{T}^n(\mathbb{F})$ is the output tensor, where $u_i = b \cdot {t_i}^a=\text{pow}(t_i,a,b)$, since $\textsf{dom}(T) = \textsf{dom}(U)$. In Chapel notation, we will write `.pow(a, b)`.
 
 You have two options to implement this in ChAI: the easy way (less performant) and the preferred way (more performant), which is recommended.
 
@@ -99,8 +99,7 @@ $$
 $$
 so the hard part is to find $\frac{\partial U}{\partial T}$.
 
-Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is, 
-$\textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right)$.
+Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is $$\frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},$$ so $$\textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).$$
 Then since each element $u_i$ in $U$ is dependent on the corresponding $t_i$ in $T$, and since $\textsf{dom}(T) = \textsf{dom}(U)$, the derivative $\frac{\partial U}{\partial T}$ is the same shape as $T$, $U$, and $\frac{\partial L}{\partial U}$. That is,
 $$
 \textsf{dom}(T) = \textsf{dom}(U) = \textsf{dom}\left(\frac{\partial U}{\partial T}\right) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
