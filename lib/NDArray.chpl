@@ -344,15 +344,34 @@ record ndarray : serializable {
 
     proc mean(axes: int...?axesCount): ndarray(rank,eltType) {
         const myShape = this.shape;
+
         var sums: ndarray(rank,eltType) = this.sum((...axes));
+        const newShape = sums.shape;
+
+        var numsReduced: axesCount*int;
+        for param i in 0..<axesCount do
+            numsReduced(i) = myShape(axes(i));
+
+        const numsReducedEltType: axesCount*eltType = numsReduced : (axesCount*eltType);
+        // for param i in 0..<axesCount do
+        //     numsReducedEltType(i) = numsReduced(i) : eltType;
+
+        const shapeDiff = 
+
         ref sumsData = sums.data;
+
         forall i in sums.domain.every() {
-            var denom: eltType = 0.0;
-            for param j in 0..<axesCount {
-                const numsReduced = myShape(axes(j));
-                denom += 1.0 / (numsReduced : eltType);
-            }
-            sumsData[i] *= denom;
+            // var denom: eltType = 0.0;
+            // for param j in 0..<axesCount {
+            //     const numsReduced = myShape(axes(j));
+            //     denom += 1.0 / (numsReduced : eltType);
+            // }
+            // sumsData[i] *= denom;
+            const x = sumsData[i];
+            var acc: eltType = 0;
+            for param j in 0..<axesCount do
+                acc += x / numsReducedEltType(j);
+            sumsData[i] = acc;
         }
         return sums;
     }
