@@ -333,6 +333,9 @@ record ndarray : serializable {
         return acc;
     }
 
+    proc sum(): ndarray(rank,eltType) do
+        return this.sum((...this.nDimTuple()));
+
     proc sum(axes: int...?axesCount): ndarray(rank,eltType) {
         var acc: ndarray(rank,eltType) = new ndarray(data);
         for param i in 0..<axesCount {
@@ -347,9 +350,6 @@ record ndarray : serializable {
             tpl(i) = i;
         return tpl;
     }
-
-    proc sum(): ndarray(rank,eltType) do
-        return this.sum((...this.nDimTuple()));
 
     proc mean(): ndarray(rank,eltType) do
         return this.mean((...this.nDimTuple()));

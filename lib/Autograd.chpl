@@ -799,13 +799,16 @@ record sumOp : serializable {
                 return newRank;
 
     proc forward() {
-        if newRank == 0 then
-            if rank == 1 then
-                return input.array.sum(0);
-            else
-                return input.array.sum((...axes)).squeeze(1);
+        if keepDim then
+            return input.array.sum((...axes));
         else
-            return input.array.sum((...axes)).squeeze(outRank);
+            if outRank == 0 then
+                if rank == 1 then
+                    return input.array.sum(0);
+                else
+                    return input.array.sum((...axes)).squeeze(1);
+            else
+                return input.array.sum((...axes)).squeeze(outRank);
     }
     proc backward(grad: ndarray(outRank,eltType)): (ndarray(rank,eltType),) {
         const inputShape: rank * int = input.array.data.shape;
