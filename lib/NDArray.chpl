@@ -361,6 +361,9 @@ record ndarray : serializable {
         return this.sum((...axes)) / denom;
     }
 
+    proc mean(): ndarray(rank,eltType) do
+        return this.mean((...this.nDimTuple()));
+
     proc shrink(narg: 2*int ... rank,param exactBounds = false): ndarray(rank,eltType) {
         var newShape: rank * int;
         var sliceRanges: rank * range;
