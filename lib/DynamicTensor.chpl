@@ -334,11 +334,10 @@ proc dynamicTensor.sum(axes: ?axesCount*int, keepDim: bool): dynamicTensor(eltTy
     const bools = (true,false);
     for param rank in 1..maxRank do
         if this.checkRank(rank) then
-            for param bi in 0..<bools.size do
-                if keepDim then
-                    return this.forceRank(rank).sum((...axes),keepDim=true).eraseRank();
-                else
-                    return this.forceRank(rank).sum((...axes),keepDim=false).eraseRank();
+            if keepDim then
+                return this.forceRank(rank).sum((...axes),keepDim=true).eraseRank();
+            else
+                return this.forceRank(rank).sum((...axes),keepDim=false).eraseRank();
 
     // for param rank in 1..maxRank {
     //     if this.checkRank(rank) then
