@@ -11,13 +11,13 @@ For a dimension $n \in \mathbb{N}^+$, a tuple $s \in \mathbb{N}^n$ is a *shape o
 For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples, 
 <!-- $i \in \mathbb{N}^n$ such that $i_k < s_k$ for $k \in \{1,2,\ldots,n\}$. -->
 
-$$
+```math
 \textsf{dom}(s) = \{i \in \mathbb{N}^n \mid \forall k\in \mathbb{N}, 1 \leq k \leq n \implies i_k < s_k\}.
-$$
+```
 
-<!-- $$
+```math
 \textsf{dom}(s) = \{i \in \mathbb{N}^n \mid i_k < s_k \text{ for } k \in \{1,2,\ldots,n\}\}.
-$$ -->
+```
 
 For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples $i \in \mathbb{N}^n$ such that $i_k < s_k$ for $k \in \{1,2,\ldots,n\}$.
 
@@ -30,11 +30,9 @@ A *shape* is a tuple of dimensions, that is, .
 A *shape* is a tuple of dimensions, that is, the set of all shapes is denoted by $\mathbb{N}^+_\text{shape} = \mathbb{N}^+ \times \mathbb{N}^+ \times \cdots \times \mathbb{N}^+$.
 
 Suppose you want to raise the elements of a tensor $T\in\mathbb{T}^n(\mathbb{F})$ by a power $a\in \mathbb{F}$ and multiply the result by a scalar $b \in \mathbb{F}$, via the map:
-
-$$
+```math
 t_i \mapsto b \cdot {t_i}^a
-$$
-
+```
 where $t_i = T(i) \in \mathbb{F}$ for $i \in \textsf{dom}(T)$. 
 We will call this operation a power operation of exponent $a$ and scalar $b$, and write 
 
@@ -121,64 +119,54 @@ record powOp : serializable {
 ```
 The `powOp` struct is a record that contains the input tensor, the exponent $a$, and the scalar $b$. The `forward` method computes the forward pass of the power operation, while the `backward` method computes the backward pass. The `spec` method returns a dictionary that contains the operation name and the values of $a$ and $b$.
 
-<!--
+
 The backward pass is computed via
 
-$$
+```math
 \frac{\partial L}{\partial T} = \frac{\partial L}{\partial U} \cdot \frac{\partial U}{\partial T}
-$$
+```
 
 where $L$ is the loss, $U$ is the output tensor, and $T$ is the input tensor. The tensor $\frac{\partial L}{\partial U}$ is the gradient of the loss with respect to the output tensor, and $\frac{\partial U}{\partial T}$ is the derivative of the output tensor with respect to the input tensor. $\frac{\partial L}{\partial U}$ is given as input `grad` to `powOp.backward`, so then we are to compute 
 
-$$
+```math
 \frac{\partial L}{\partial T} = \frac{\partial L}{\partial U} \cdot \frac{\partial U}{\partial T},
-$$
+```
 
 so the hard part is to find $\frac{\partial U}{\partial T}$.
 
 Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is 
 
-$$
+```math
 \frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},
-$$ 
-
+```
 so 
-
-$$
+```math
 \textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
-$$
+```
 
 Then since each element $u_i$ in $U$ is dependent on the corresponding $t_i$ in $T$, and since $\textsf{dom}(T) = \textsf{dom}(U)$, the derivative $\frac{\partial U}{\partial T}$ is the same shape as $T$, $U$, and $\frac{\partial L}{\partial U}$. That is,
-
-$$
+```math
 \textsf{dom}(T) = \textsf{dom}(U) = \textsf{dom}\left(\frac{\partial U}{\partial T}\right) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
-$$
-
+```
 Therefore, we can write
-
-$$
+```math
 \frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)}
 \qquad \text{and} \qquad
 \frac{\partial U}{\partial T} = \left[\frac{\partial u_i}{\partial t_i}\right]_{i \in \textsf{dom}(T)}.
-$$
-
+```
 The derivative $\frac{\partial U}{\partial T}$ is computed as
-
-$$
+```math
 \frac{\partial U}{\partial T} 
 = \left[\frac{\partial u_i}{\partial t_i}\right]_{i \in \textsf{dom}(T)} 
 = \left[\frac{\partial}{\partial t_i}\left(b\cdot {t_i}^a\right)\right]_{i \in \textsf{dom}(T)} 
 = \left[b\cdot\frac{\partial}{\partial t_i}{t_i}^a\right]_{i \in \textsf{dom}(T)} 
 = \left[b\cdot a \cdot {t_i}^{a - 1}\right]_{i \in \textsf{dom}(T)} 
 = \left[b a {t^{a-1}}\right]_{i \in \textsf{dom}(T)}
-$$
-
+```
 so we have
-
-$$
+```math
 \frac{\partial U}{\partial T} = b a {t^{a-1}}.
-$$
--->
+```
 
 Finally, you need to add the `pow` method to the `staticTensor` and `dynamicTensor` records:
 - `lib/StaticTensor.chpl`
