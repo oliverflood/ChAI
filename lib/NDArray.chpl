@@ -342,6 +342,21 @@ record ndarray : serializable {
         return acc;
     }
 
+    proc mean(axes: int...?axesCount): ndarray(rank,eltType) {
+        const myShape = this.shape;
+        var sums: ndarray(rank,eltType) = this.sum((...axes));
+        ref sumsData = sums.data;
+        forall i in sums.domain.every() {
+            var denom: eltType = 0.0;
+            for param j in 0..<axesCount {
+                const numsReduced = myShape(axes(j));
+                denom += 1.0 / (numsReduced : eltType);
+            }
+            sumsData[i] *= denom;
+        }
+        return sums;
+    }
+
     proc shrink(narg: 2*int ... rank,param exactBounds = false): ndarray(rank,eltType) {
         var newShape: rank * int;
         var sliceRanges: rank * range;
