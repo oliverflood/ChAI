@@ -158,7 +158,7 @@ operator :(in t: dynamicTensor(?eltType), type toType): dynamicTensor(toType) {
     if eltType == toType then return t;
     for param rank in 1..maxRank do
         if t.checkRank(rank) then
-            return (tforceRank(rank) : toType).eraseRank();
+            return (t.forceRank(rank) : toType).eraseRank();
     halt("Could not identify rank for this: ", t);
 }
 
