@@ -36,7 +36,13 @@ t_i \mapsto b \cdot {t_i}^a
 $$
 
 where $t_i = T(i) \in \mathbb{F}$ for $i \in \textsf{dom}(T)$. 
-We will call this operation a power operation of exponent $a$ and scalar $b$, and write $\text{pow}(T, a, b) = \left[b \cdot {t_i}^a\right]_{i \in \textsf{dom}(T)} = \left[u_i\right]_{i \in \textsf{dom}(U)} = U.$ where $U\in\mathbb{T}^n(\mathbb{F})$ is the output tensor, where $u_i = b \cdot {t_i}^a=\text{pow}(t_i,a,b)$, since $\textsf{dom}(T) = \textsf{dom}(U)$. In Chapel notation, we will write `.pow(a, b)`.
+We will call this operation a power operation of exponent $a$ and scalar $b$, and write 
+
+```math
+\text{pow}(T, a, b) = \left[b \cdot {t_i}^a\right]_{i \in \textsf{dom}(T)} = \left[u_i\right]_{i \in \textsf{dom}(U)} = U.
+```
+
+where $U\in\mathbb{T}^n(\mathbb{F})$ is the output tensor, where $u_i = b \cdot {t_i}^a=\text{pow}(t_i,a,b)$, since $\textsf{dom}(T) = \textsf{dom}(U)$. In Chapel notation, we will write `.pow(a, b)`.
 
 You have two options to implement this in ChAI: the easy way (less performant) and the preferred way (more performant), which is recommended.
 
