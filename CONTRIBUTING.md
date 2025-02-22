@@ -133,15 +133,22 @@ so the hard part is to find $\frac{\partial U}{\partial T}$.
 
 Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is 
 
-$$\frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},$$ 
+$$\frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},
+$$ 
+
 so 
+
 $$\textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
 $$
+
 Then since each element $u_i$ in $U$ is dependent on the corresponding $t_i$ in $T$, and since $\textsf{dom}(T) = \textsf{dom}(U)$, the derivative $\frac{\partial U}{\partial T}$ is the same shape as $T$, $U$, and $\frac{\partial L}{\partial U}$. That is,
+
 $$
 \textsf{dom}(T) = \textsf{dom}(U) = \textsf{dom}\left(\frac{\partial U}{\partial T}\right) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
 $$
+
 Therefore, we can write
+
 $$
 \frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)}
 \qquad \text{and} \qquad
@@ -149,6 +156,7 @@ $$
 $$
 
 The derivative $\frac{\partial U}{\partial T}$ is computed as
+
 $$
 \frac{\partial U}{\partial T} 
 = \left[\frac{\partial u_i}{\partial t_i}\right]_{i \in \textsf{dom}(T)} 
@@ -157,7 +165,9 @@ $$
 = \left[b\cdot a \cdot {t_i}^{a - 1}\right]_{i \in \textsf{dom}(T)} 
 = \left[b a {t^{a-1}}\right]_{i \in \textsf{dom}(T)}
 $$
+
 so we have
+
 $$
 \frac{\partial U}{\partial T} = b a {t^{a-1}}.
 $$
