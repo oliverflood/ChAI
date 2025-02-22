@@ -12,7 +12,7 @@ For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples,
 <!-- $i \in \mathbb{N}^n$ such that $i_k < s_k$ for $k \in \{1,2,\ldots,n\}$. -->
 
 $$
-\textsf{dom}(s) = \{i \in \mathbb{N}^n \mid \forall k\in \mathbb{N}, 1 \leq k \leq n \implies k \in i_k < s_k\}.
+\textsf{dom}(s) = \{i \in \mathbb{N}^n \mid \forall k\in \mathbb{N}, 1 \leq k \leq n \implies i_k < s_k\}.
 $$
 
 <!-- $$
@@ -23,13 +23,6 @@ For a shape $s \in \mathbb{N}^n$, the *domain* of $s$ is the set of all tuples $
 
 A tuple $s \in \mathbb{N}^n$ is a *shape* if $n$ is a dimension.
 
-
-
-
-# h
-
-
-# HELLO
 
 
  The set of all shapes is denoted by $\mathbb{N}^+_\text{shape} = \mathbb{N}^+ \times \mathbb{N}^+ \times \cdots \times \mathbb{N}^+$.
@@ -125,16 +118,25 @@ record powOp : serializable {
 The `powOp` struct is a record that contains the input tensor, the exponent $a$, and the scalar $b$. The `forward` method computes the forward pass of the power operation, while the `backward` method computes the backward pass. The `spec` method returns a dictionary that contains the operation name and the values of $a$ and $b$.
 
 The backward pass is computed via
+
 $$
 \frac{\partial L}{\partial T} = \frac{\partial L}{\partial U} \cdot \frac{\partial U}{\partial T}
 $$
+
 where $L$ is the loss, $U$ is the output tensor, and $T$ is the input tensor. The tensor $\frac{\partial L}{\partial U}$ is the gradient of the loss with respect to the output tensor, and $\frac{\partial U}{\partial T}$ is the derivative of the output tensor with respect to the input tensor. $\frac{\partial L}{\partial U}$ is given as input `grad` to `powOp.backward`, so then we are to compute 
+
 $$
 \frac{\partial L}{\partial T} = \frac{\partial L}{\partial U} \cdot \frac{\partial U}{\partial T},
 $$
+
 so the hard part is to find $\frac{\partial U}{\partial T}$.
 
-Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is $$\frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},$$ so $$\textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).$$
+Since $L$ is a scalar, $\frac{\partial L}{\partial U}$ is a tensor of the same shape as $U$, that is 
+
+$$\frac{\partial L}{\partial U} = \left[\frac{\partial L}{\partial u_i}\right]_{i \in \textsf{dom}(U)},$$ 
+so 
+$$\textsf{dom}(U) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
+$$
 Then since each element $u_i$ in $U$ is dependent on the corresponding $t_i$ in $T$, and since $\textsf{dom}(T) = \textsf{dom}(U)$, the derivative $\frac{\partial U}{\partial T}$ is the same shape as $T$, $U$, and $\frac{\partial L}{\partial U}$. That is,
 $$
 \textsf{dom}(T) = \textsf{dom}(U) = \textsf{dom}\left(\frac{\partial U}{\partial T}\right) = \textsf{dom}\left(\frac{\partial L}{\partial U}\right).
