@@ -24,4 +24,4 @@ writeln(b.mean(1));
 
 
 writeln(b.mean(0,1));
-// writeln(b.mean(1,2));
+writeln(b.mean(1,2));

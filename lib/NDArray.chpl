@@ -338,50 +338,17 @@ record ndarray : serializable {
         for param i in 0..<axesCount {
             acc = acc.sumOneAxis(axes(i));
         }
-        // for param i in 0..<axesCount {
-        //     acc = acc.sumOneAxis(axes(i) - i);
-        // }
         return acc;
     }
 
     proc mean(axes: int...?axesCount): ndarray(rank,eltType) {
-        const myShape = this.shape;
-
-        var sums: ndarray(rank,eltType) = this.sum((...axes));
-        const newShape = sums.shape;
-
-        var numsReduced: axesCount*int;
-        for param i in 0..<axesCount do
-            numsReduced(i) = myShape(axes(i));
-
-        const numsReducedEltType: axesCount*eltType = numsReduced : (axesCount*eltType);
-        // for param i in 0..<axesCount do
-        //     numsReducedEltType(i) = numsReduced(i) : eltType;
-
-        var shapeDiff: rank * int;
-        for param i in 0..<rank do
-            shapeDiff(i) = myShape(i) - newShape(i);
-
-        // writeln(myShape,newShape,shapeDiff,numsReduced);
-
-        ref sumsData = sums.data;
-
-        forall i in sums.domain.every() {
-            // var denom: eltType = 0.0;
-            // for param j in 0..<axesCount {
-            //     const numsReduced = myShape(axes(j));
-            //     denom += 1.0 / (numsReduced : eltType);
-            // }
-            // sumsData[i] *= denom;
-            const x = sumsData[i];
-            var acc: eltType = 1;
-            // for param j in 0..<axesCount do
-            //     acc += x / numsReducedEltType(j);
-            for param j in 0..<axesCount do
-                acc *= numsReducedEltType(j);
-            sumsData[i] = x / acc;
+        const shape = this.shape;
+        var denom: eltType = 1.0;
+        for param i in 0..<axesCount {
+            const reducedN = shape(axes(i));
+            denom *= reducedN : eltType;
         }
-        return sums;
+        return this.sum((...axes)) / denom;
     }
 
     proc shrink(narg: 2*int ... rank,param exactBounds = false): ndarray(rank,eltType) {
