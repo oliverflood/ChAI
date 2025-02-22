@@ -341,6 +341,16 @@ record ndarray : serializable {
         return acc;
     }
 
+    proc nDimTuple(): rank * int {
+        var tpl: rank * int;
+        for param i in 0..<rank do
+            tpl(i) = i;
+        return tpl;
+    }
+
+    proc sum(): ndarray(rank,eltType) do
+        return this.sum((...this.nDimTuple()));
+
     proc mean(axes: int...?axesCount): ndarray(rank,eltType) {
         const shape = this.shape;
         var denom: eltType = 1.0;

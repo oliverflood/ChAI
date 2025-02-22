@@ -25,3 +25,38 @@ writeln(b.mean(1));
 
 writeln(b.mean(0,1));
 writeln(b.mean(1,2));
+
+{
+    var a = ndarray.arange(2,3);
+
+    var i = 0;
+
+    i += 1;
+    writeln("Test ",i,": ",a.sum(0));
+
+    i += 1;
+    writeln("Test ",i,": ",a.sum(1));
+
+    i += 1;
+    writeln("Test ",i,": ",a.sum());
+
+    var b = ndarray.arange(2,3,4);
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(0));
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(1));
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(2));
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(0,1));
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(1,2));
+
+    i += 1;
+    writeln("Test ",i,": ",b.sum(0,2));
+}
