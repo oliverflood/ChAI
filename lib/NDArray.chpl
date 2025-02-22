@@ -335,10 +335,12 @@ record ndarray : serializable {
 
     proc sum(axes: int...?axesCount): ndarray(rank,eltType) {
         var acc: ndarray(rank,eltType) = new ndarray(data);
-        // var offset = 0;
         for param i in 0..<axesCount {
-            acc = acc.sumOneAxis(axes(i) - i);
+            acc = acc.sumOneAxis(axes(i));
         }
+        // for param i in 0..<axesCount {
+        //     acc = acc.sumOneAxis(axes(i) - i);
+        // }
         return acc;
     }
 
@@ -356,7 +358,11 @@ record ndarray : serializable {
         // for param i in 0..<axesCount do
         //     numsReducedEltType(i) = numsReduced(i) : eltType;
 
-        const shapeDiff = 
+        var shapeDiff: rank * int;
+        for param i in 0..<rank do
+            shapeDiff(i) = myShape(i) - newShape(i);
+
+        // writeln(myShape,newShape,shapeDiff,numsReduced);
 
         ref sumsData = sums.data;
 
@@ -368,10 +374,12 @@ record ndarray : serializable {
             // }
             // sumsData[i] *= denom;
             const x = sumsData[i];
-            var acc: eltType = 0;
+            var acc: eltType = 1;
+            // for param j in 0..<axesCount do
+            //     acc += x / numsReducedEltType(j);
             for param j in 0..<axesCount do
-                acc += x / numsReducedEltType(j);
-            sumsData[i] = acc;
+                acc *= numsReducedEltType(j);
+            sumsData[i] = x / acc;
         }
         return sums;
     }

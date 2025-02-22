@@ -16,5 +16,12 @@ var b = ndarray.arange(2,3,4);
 
 writeln(b);
 
+writeln(b.sum(0,1));
+writeln(b.sum(1));
+
+writeln(b.mean(0));
+writeln(b.mean(1));
+
+
 writeln(b.mean(0,1));
-writeln(b.mean(1,2));
+// writeln(b.mean(1,2));
