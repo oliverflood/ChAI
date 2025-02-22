@@ -364,14 +364,20 @@ proc staticTensor.sum(axes: int...?r) {
     return tensorFromCtx(newDim,eltType,ctx);
 }
 
-proc staticTensor.mean(axes: int...?r) {
-    if rank - r < 0 {
+proc staticTensor.mean(axes: ?axesCount * int, param keepDim: bool = true) {
+    if rank - axesCount < 0 then
         compilerError("Cannot mean more axes than rank. ");
-    }
-    var ctx = new meanOp(rank,eltType,r,axes,meta);
+    var ctx = new meanOp(rank,eltType,axesCount,axes,meta,keepDim);
+    return tensorFromCtx(ctx.outRank,eltType,ctx);
+}
 
-    param newDim = ctx.outRank; // if rank - r == 0 then 1 else rank - r;
-    return tensorFromCtx(newDim,eltType,ctx);
+proc staticTensor.mean(param keepDim: bool = true) {
+    const axes = this.array.nDimTuple();
+    return this.mean(axes,keepDim);
+}
+
+proc staticTensor.mean(axes: int...?axesCount) {
+    return this.mean(axes,keepDim=true);
 }
 
 proc staticTensor.unsqueeze(dim: int): staticTensor(rank + 1,eltType) {

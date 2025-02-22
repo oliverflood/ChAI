@@ -854,31 +854,34 @@ record meanOp : serializable {
     param reduceRank: int;
     var axes: reduceRank * int;
     var input: shared BaseTensorResource(eltType,rank);
+    param keepDim: bool = false;
 
     proc children do return (input,);
 
     proc newDim param : int do
         return rank - reduceRank;
 
-    proc outRank param : int {
-        if newDim == 0 then
-            if rank == 1 then
-                return rank;
-            else
-                return 1;
+    proc outRank param : int do
+        if keepDim then
+            return rank;
         else
-            return newDim;
-    }
+            if newDim == 0 then
+                return 1;
+            else
+                return newDim;
 
     proc forward() {
-        if outRank == 0 then
-            if rank == 1 then
-                return input.array.mean(0);
-            else
-                return input.array.mean((...axes)).squeeze(1);
+        if keepDim then
+            return input.array.mean((...axes));
         else
-            return input.array.mean((...axes)).squeeze(outRank);
-        
+            if outRank == 0 then
+                if rank == 1 then
+                    return input.array.mean(0);
+                else
+                    return input.array.mean((...axes)).squeeze(1);
+            else
+                return input.array.mean((...axes)).squeeze(outRank);
+            
         // if newDim == 0 {
         //     if rank == 1 {
         //         return input.array.sum(0);
