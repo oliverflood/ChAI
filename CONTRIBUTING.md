@@ -1,5 +1,6 @@
 # Contributing
 
+Note: You have to read this using VSCode or some other latex-enabled markdown viewer. GitHub does not render the latex equations correctly. 
 
 #### Dimension
 A positive integer $n$ is a *dimension*. The set of all dimensions is denoted by $\mathbb{N}^+ = \mathbb{N} \setminus \{0\}$.
