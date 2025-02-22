@@ -60,3 +60,18 @@ writeln(b.mean(1,2));
     i += 1;
     writeln("Test ",i,": ",b.sum(0,2));
 }
+
+// proc foo(args: int...?nargs) {
+//     writeln("args: ",args);
+//     writeln("nargs: ",nargs);
+// }
+
+// foo(1,2,3);
+// foo()
+
+{
+    var b = staticTensor.arange(2,3,4);
+    writeln(b.mean(0));
+    writeln(b.mean(1));
+    writeln(b.mean(0,1));
+}

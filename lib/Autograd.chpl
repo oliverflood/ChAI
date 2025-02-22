@@ -848,6 +848,50 @@ record sumOp : serializable {
 
 }
 
+record meanOp : serializable {
+    param rank: int;
+    type eltType = defaultEltType;
+    param reduceRank: int;
+    var axes: reduceRank * int;
+    var input: shared BaseTensorResource(eltType,rank);
+
+    proc children do return (input,);
+
+    proc newDim param : int do
+        return rank - reduceRank;
+
+    proc outRank param : int {
+        if newDim == 0 then
+            if rank == 1 then
+                return rank;
+            else
+                return 1;
+        else
+            return newDim;
+    }
+
+    proc forward() {
+        if outRank == 0 then
+            if rank == 1 then
+                return input.array.mean(0);
+            else
+                return input.array.mean((...axes)).squeeze(1);
+        else
+            return input.array.mean((...axes)).squeeze(outRank);
+        
+        // if newDim == 0 {
+        //     if rank == 1 {
+        //         return input.array.sum(0);
+        //     }
+        //     return input.array.sum((...axes)).squeeze(1);
+        // }
+        // return input.array.mean((...axes)).squeeze(outRank);
+    }
+
+    proc spec : GradOpSpec do return new dict(("operation","Sum"),("axes",axes:string));
+
+}
+
 record maxOp : serializable {
     param rank: int;
     type eltType = defaultEltType;

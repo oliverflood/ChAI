@@ -364,6 +364,16 @@ proc staticTensor.sum(axes: int...?r) {
     return tensorFromCtx(newDim,eltType,ctx);
 }
 
+proc staticTensor.mean(axes: int...?r) {
+    if rank - r < 0 {
+        compilerError("Cannot mean more axes than rank. ");
+    }
+    var ctx = new meanOp(rank,eltType,r,axes,meta);
+
+    param newDim = ctx.outRank; // if rank - r == 0 then 1 else rank - r;
+    return tensorFromCtx(newDim,eltType,ctx);
+}
+
 proc staticTensor.unsqueeze(dim: int): staticTensor(rank + 1,eltType) {
     const shape = this.array.domain.shape;
     param newRank: int = rank + 1;
