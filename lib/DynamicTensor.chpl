@@ -106,7 +106,7 @@ record dynamicTensor : serializable {
     proc to(device: locale) {
         for param rank in 1..maxRank {
             if checkRank(rank) {
-                this.tensorize(rank).to(device);
+                thisforceRank(rank).to(device);
                 return this;
             }
         }
@@ -117,7 +117,7 @@ record dynamicTensor : serializable {
     proc device: locale {
         for param rank in 1..maxRank {
             if checkRank(rank) {
-                return this.tensorize(rank).device;
+                return thisforceRank(rank).device;
             }
         }
         halt("Unable to find my own rank.");
@@ -135,7 +135,7 @@ record dynamicTensor : serializable {
 
 
     proc toNDArray(param rank: int) : ndarray(rank,eltType) {
-        var tt = this.tensorize(rank);
+        var tt = thisforceRank(rank);
         const prevDev = tt.device;
         tt.to(here);
         const nda: ndarray(rank,eltType) = tt.array;
@@ -158,7 +158,7 @@ operator :(in t: dynamicTensor(?eltType), type toType): dynamicTensor(toType) {
     if eltType == toType then return t;
     for param rank in 1..maxRank do
         if t.checkRank(rank) then
-            return (t.tensorize(rank) : toType).eraseRank();
+            return (tforceRank(rank) : toType).eraseRank();
     halt("Could not identify rank for this: ", t);
 }
 
@@ -190,8 +190,8 @@ proc dynamicTensor.shapeArray(): [] int {
 proc zipBinOp(param opName: string, a: dynamicTensor(?eltType), b: dynamicTensor(eltType)): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if a.checkRank(rank) && b.checkRank(rank) {
-            const at: staticTensor(rank,eltType) = a.tensorize(rank);
-            const bt: staticTensor(rank,eltType) = b.tensorize(rank);
+            const at: staticTensor(rank,eltType) = aforceRank(rank);
+            const bt: staticTensor(rank,eltType) = bforceRank(rank);
             select opName {
                 when "+" do
                     return (at + bt).eraseRank();
@@ -330,28 +330,42 @@ operator ==(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): bool {
     }
     halt("Could not determine rank in dynamicTensor == dynamicTensor.");
 }
-proc dynamicTensor.sum(axes: ?axesCount*int, keepDim: bool): dynamicTensor(eltType) {
-    const bools = (true,false);
+proc dynamicTensor.sum(axes: ?axesCount*int, keepDim: bool = true): dynamicTensor(eltType) {
     for param rank in 1..maxRank do
         if this.checkRank(rank) then
-            if keepDim then
-                return this.forceRank(rank).sum((...axes),keepDim=true).eraseRank();
-            else
-                return this.forceRank(rank).sum((...axes),keepDim=false).eraseRank();
+            return this.forceRank(rank).sum(axes,keepDim).eraseRank();
+    halt("Could not determine rank in dynamicTensor.sum.");
+    return new dynamicTensor(eltType);
+}
 
-    // for param rank in 1..maxRank {
-    //     if this.checkRank(rank) then
-    //         return this.tensorize(rank).sum((...axes)).eraseRank();
-    // }
+proc dynamicTensor.sum(keepDim: bool = true): dynamicTensor(eltType) {
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            return this.forceRank(rank).sum(keepDim=true).eraseRank();
+    halt("Could not determine rank in dynamicTensor.sum.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.sum(axes: int...?axesCount): dynamicTensor(eltType) {
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            return this.forceRank(rank).sum((...axes)).eraseRank();
     halt("Could not determine rank in dynamicTensor.sum.");
     return new dynamicTensor(eltType);
 }
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
-    for param rank in 1..maxRank {
+    for param rank in 1..maxRank do
         if this.checkRank(rank) then
-            return this.tensorize(rank).sum((...axes)).eraseRank();
-    }
+            return this.forceRank(rank).sum((...axes)).eraseRank();
+    halt("Could not determine rank in dynamicTensor.sum.");
+    return new dynamicTensor(eltType);
+}
+
+proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            return this.forceRank(rank).sum((...axes)).eraseRank();
     halt("Could not determine rank in dynamicTensor.sum.");
     return new dynamicTensor(eltType);
 }
@@ -631,7 +645,7 @@ proc dynamicTensor.maxPool(poolSize: int, stride: int, padding: int, dilation: i
 proc dynamicTensor.adaptiveAvgPool2d(outputSize: int): dynamicTensor(eltType) {
     for param rank in 3..3 {
         if this.checkRank(rank) then
-            return this.tensorize(rank).adaptiveAvgPool2d(outputSize).eraseRank();
+            return thisforceRank(rank).adaptiveAvgPool2d(outputSize).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.adaptiveAvgPool2d.");
     return new dynamicTensor(eltType);
@@ -641,7 +655,7 @@ proc dynamicTensor.adaptiveAvgPool2d(outputSize: int): dynamicTensor(eltType) {
 proc dynamicTensor.reshape(args...): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.tensorize(rank).reshape((...args)).eraseRank();
+            return thisforceRank(rank).reshape((...args)).eraseRank();
     }
     halt("Could not determine rank in dynamicTensor.reshape.");
     return new dynamicTensor(eltType);
@@ -649,18 +663,18 @@ proc dynamicTensor.reshape(args...): dynamicTensor(eltType) {
 
 proc dynamicTensor.slice(rngs: range...?rank): dynamicTensor(eltType) {
     if rank != this.runtimeRank then halt("Rank mismatch in dynamicTensor.slice.");
-    return this.tensorize(rank).slice((...rngs)).eraseRank();
+    return thisforceRank(rank).slice((...rngs)).eraseRank();
 }
 
 proc dynamicTensor.slice(dom: domain(?)): dynamicTensor(eltType) {
     if dom.rank != this.runtimeRank then halt("Rank mismatch in dynamicTensor.slice.");
-    return this.tensorize(dom.rank).slice(dom).eraseRank();
+    return thisforceRank(dom.rank).slice(dom).eraseRank();
 }
 
 proc dynamicTensor.flatten(): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) {
-            var t = this.tensorize(rank);
+            var t = thisforceRank(rank);
             const size = t.domain.size;
             return t.reshape(size).eraseRank();
         }
@@ -770,7 +784,7 @@ proc main() {
     writeln(t3.reshape(5,3));
 
     var t4 = t3.reshape(5,3);
-    var t4t: staticTensor(2,real) = t4.tensorize(2);
+    var t4t: staticTensor(2,real) = t4forceRank(2);
     t4t.array.data[1,1] = 70;
     t4.array(2).data[0,0] = 99;
     t4.data(2)[2,2] = 200;
@@ -912,7 +926,7 @@ proc type dynamicTensor.readInPlace(fr: IO.fileReader(?),type dtype = real(32), 
 proc dynamicTensor.dropout(p: real(64) = 0.5): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
         if this.checkRank(rank) then
-            return this.tensorize(rank).dropout().eraseRank();
+            return thisforceRank(rank).dropout().eraseRank();
     }
 
     halt("Could not determine rank in dynamicTensor.dropout.");

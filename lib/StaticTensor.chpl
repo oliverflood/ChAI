@@ -361,9 +361,25 @@ proc staticTensor.sum(axes: ?axesCount * int, param keepDim: bool = true) {
     return tensorFromCtx(ctx.outRank,eltType,ctx);
 }
 
-proc staticTensor.sum(param keepDim: bool = true) {
+proc staticTensor.sum(axes: ?axesCount * int, keepDim: bool = true) {
+    if rank - axesCount < 0 then
+        compilerError("Cannot mean more axes than rank. ");
+    const bools = (true,false);
+    for param i in 0..<bools.size do
+        if keepDim then
+            return this.sum(axes,keepDim=true);
+        else
+            return this.sum(axes,keepDim=false);
+}
+
+proc staticTensor.sum(keepDim: bool = true) {
     const axes = this.array.nDimTuple();
-    return this.sum(axes,keepDim);
+    const bools = (true,false);
+    for param i in 0..<bools.size do
+        if keepDim then
+            return this.sum(axes,keepDim=true);
+        else
+            return this.sum(axes,keepDim=false);
 }
 
 proc staticTensor.sum(axes: int...?axesCount) {
