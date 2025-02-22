@@ -330,6 +330,23 @@ operator ==(a: dynamicTensor(?eltType),b: dynamicTensor(eltType)): bool {
     }
     halt("Could not determine rank in dynamicTensor == dynamicTensor.");
 }
+proc dynamicTensor.sum(axes: ?axesCount*int, keepDim: bool): dynamicTensor(eltType) {
+    const bools = (true,false);
+    for param rank in 1..maxRank do
+        if this.checkRank(rank) then
+            for param bi in 0..<bools.size do
+                if keepDim then
+                    return this.forceRank(rank).sum((...axes),keepDim=true).eraseRank();
+                else
+                    return this.forceRank(rank).sum((...axes),keepDim=false).eraseRank();
+
+    // for param rank in 1..maxRank {
+    //     if this.checkRank(rank) then
+    //         return this.tensorize(rank).sum((...axes)).eraseRank();
+    // }
+    halt("Could not determine rank in dynamicTensor.sum.");
+    return new dynamicTensor(eltType);
+}
 
 proc dynamicTensor.sum(axes: int...?r): dynamicTensor(eltType) {
     for param rank in 1..maxRank {
