@@ -354,14 +354,53 @@ proc staticTensor.slice(rngs: range...rank) {
     return tensorFromCtx(rank,eltType,ctx);
 }
 
-proc staticTensor.sum(axes: int...?r) {
-    if rank - r < 0 {
-        compilerError("Cannot sum more axes than rank. ");
-    }
-    var ctx = new sumOp(rank,eltType,r,axes,meta);
+proc staticTensor.sum(axes: ?axesCount * int, param keepDim: bool = true) {
+    if rank - axesCount < 0 then
+        compilerError("Cannot mean more axes than rank. ");
+    var ctx = new sumOp(rank,eltType,axesCount,axes,meta,keepDim);
+    return tensorFromCtx(ctx.outRank,eltType,ctx);
+}
 
-    param newDim = ctx.outRank; // if rank - r == 0 then 1 else rank - r;
-    return tensorFromCtx(newDim,eltType,ctx);
+proc staticTensor.sum(axes: ?axesCount * int, keepDim: bool = true) {
+    if rank - axesCount < 0 then
+        compilerError("Cannot mean more axes than rank. ");
+    const bools = (true,false);
+    for param i in 0..<bools.size do
+        if keepDim then
+            return this.sum(axes,keepDim=true);
+        else
+            return this.sum(axes,keepDim=false);
+}
+
+proc staticTensor.sum(keepDim: bool = true) {
+    const axes = this.array.nDimTuple();
+    const bools = (true,false);
+    for param i in 0..<bools.size do
+        if keepDim then
+            return this.sum(axes,keepDim=true);
+        else
+            return this.sum(axes,keepDim=false);
+}
+
+proc staticTensor.sum(axes: int...?axesCount) {
+    return this.sum(axes,keepDim=true);
+}
+
+
+proc staticTensor.mean(axes: ?axesCount * int, param keepDim: bool = true) {
+    if rank - axesCount < 0 then
+        compilerError("Cannot mean more axes than rank. ");
+    var ctx = new meanOp(rank,eltType,axesCount,axes,meta,keepDim);
+    return tensorFromCtx(ctx.outRank,eltType,ctx);
+}
+
+proc staticTensor.mean(param keepDim: bool = true) {
+    const axes = this.array.nDimTuple();
+    return this.mean(axes,keepDim);
+}
+
+proc staticTensor.mean(axes: int...?axesCount) {
+    return this.mean(axes,keepDim=true);
 }
 
 proc staticTensor.unsqueeze(dim: int): staticTensor(rank + 1,eltType) {

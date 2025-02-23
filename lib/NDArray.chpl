@@ -333,15 +333,36 @@ record ndarray : serializable {
         return acc;
     }
 
+    proc sum(): ndarray(rank,eltType) do
+        return this.sum((...this.nDimTuple()));
+
     proc sum(axes: int...?axesCount): ndarray(rank,eltType) {
         var acc: ndarray(rank,eltType) = new ndarray(data);
-        // var offset = 0;
         for param i in 0..<axesCount {
-            acc = acc.sumOneAxis(axes(i) - i);
+            acc = acc.sumOneAxis(axes(i));
         }
         return acc;
     }
 
+    proc nDimTuple(): rank * int {
+        var tpl: rank * int;
+        for param i in 0..<rank do
+            tpl(i) = i;
+        return tpl;
+    }
+
+    proc mean(): ndarray(rank,eltType) do
+        return this.mean((...this.nDimTuple()));
+
+    proc mean(axes: int...?axesCount): ndarray(rank,eltType) {
+        const shape = this.shape;
+        var denom: eltType = 1.0;
+        for param i in 0..<axesCount {
+            const reducedN = shape(axes(i));
+            denom *= reducedN : eltType;
+        }
+        return this.sum((...axes)) / denom;
+    }
     proc shrink(narg: 2*int ... rank,param exactBounds = false): ndarray(rank,eltType) {
         var newShape: rank * int;
         var sliceRanges: rank * range;
