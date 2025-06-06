@@ -187,6 +187,8 @@ bridge_tensor_t dropout2d(bridge_tensor_t input, double p, bool training);
 
 bridge_tensor_t dropout3d(bridge_tensor_t input, double p, bool training);
 
+void run_tiny_stories(void);
+
 #undef proto_bridge_simple
 
 #ifdef __cplusplus

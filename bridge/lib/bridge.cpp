@@ -838,3 +838,9 @@ extern "C" bridge_tensor_t dropout3d(
 
     return torch_to_bridge(t_output);
 }
+
+#include <tinystories.hpp>
+
+extern "C" void run_tiny_stories(void) {
+    tinystories::run_tinystories();
+}
