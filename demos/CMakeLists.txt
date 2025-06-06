@@ -5,3 +5,4 @@ add_subdirectory(video)
 # add_subdirectory(torchtest)
 add_subdirectory(torchtest_bridge)
 
+add_subdirectory(tinystories_iain)

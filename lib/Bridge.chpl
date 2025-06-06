@@ -122,6 +122,8 @@ module Bridge {
 
     extern "show_webcam" proc showWebcam(): void;
 
+    extern "run_tiny_stories" proc runTinyStories(): void;
+
     // extern "capture_webcam_bridge" proc captureWebcam(
     //     in cam_index: int(32)): bridge_tensor_t;
 
